@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Research copies of reference repositories (must never be vendored).
+# Anchored to repo root so docs/research/ is NOT ignored.
+/research/
+
+# Pi runtime and private state (when NewFang runs on Pi)
+sessions/
+workflows/
+auth.json
+trust.json
+models-store.json
+# Local, machine-specific settings (a committed settings template may override this later)
+settings.local.json
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Downloaded/generated binaries
+bin/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
