@@ -10,10 +10,11 @@ NewFang is a personal development operating system built on the Pi coding-agent 
 [docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) for the canonical product
 statement.
 
-The repository is in **Phase 0: research and architecture discovery**. There is no production
-runtime yet. The deliverables of this phase are documents under `docs/`. Do not create production
-source directories, Pi extensions, or dependencies to "look complete." Build runnable code only
-when an accepted plan phase calls for it.
+Phase 0 (research/architecture) is complete. Through **Packet 2** the repository has a runnable Pi
+extension (`.pi/extensions/newfang.ts` + modular `src/`) with canonical `.newfang/` state, schema
+versioning/migration, and a compact project-operations layer (backlog, decisions, assumptions,
+risks). Build only what the accepted plan phase calls for; do not add features outside the current
+packet's scope. The next phase is **Phase 3 — planning-document intake and repository orientation**.
 
 ## Core doctrine
 
@@ -92,9 +93,10 @@ Repository completion claims cover only what is in the repository and verified t
 - Commit messages: imperative subject, body explaining why. Co-authorship trailer per harness
   convention.
 
-## Toolchain (as audited 2026-07-24)
+## Toolchain (pinned)
 
-- Node.js: multiple versions available via nvm; a recent Node (>= 22) is the working default.
-- Package managers present: npm, pnpm, yarn, bun. TypeScript and Deno present.
-- Pi is **not** installed globally at Phase 0. Installing `@earendil-works/pi-coding-agent` is the
-  first task of the first implementation phase, not a Phase 0 action.
+- Runtime is managed by **mise** (`mise.toml` pins Node `22.23.1`). Run project commands through it,
+  e.g. `mise exec -- npm run verify`.
+- Pi is installed **project-locally** at `@earendil-works/pi-coding-agent@0.82.0` (a devDependency),
+  not globally. Dev tools: TypeScript `7.0.2`, `@types/node` `22.20.1`, prettier `3.9.6`,
+  typebox `1.1.38`. Exact versions are locked in `package-lock.json`.

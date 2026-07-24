@@ -9,6 +9,7 @@ export interface StatePaths {
   projectJson: string;
   eventsJsonl: string;
   receiptsDir: string;
+  backupsDir: string;
   viewsDir: string;
   statusView: string;
 }
@@ -20,6 +21,7 @@ export function statePaths(root: string): StatePaths {
     projectJson: join(dir, "project.json"),
     eventsJsonl: join(dir, "events.jsonl"),
     receiptsDir: join(dir, "receipts"),
+    backupsDir: join(dir, "backups"),
     viewsDir: join(dir, "views"),
     statusView: join(dir, "views", "PROJECT_STATUS.md"),
   };

@@ -12,7 +12,6 @@ build/
 
 # Pi runtime and private state (when NewFang runs on Pi)
 sessions/
-workflows/
 auth.json
 trust.json
 models-store.json
@@ -38,3 +37,6 @@ bin/
 .DS_Store
 .vscode/
 .idea/
+
+# Local canonical-state backups (not tracked)
+.newfang/backups/

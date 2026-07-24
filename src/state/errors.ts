@@ -26,6 +26,33 @@ export class StateValidationError extends NewfangStateError {
   }
 }
 
+/** Canonical state is version 1 and must be migrated explicitly before use. Never auto-migrated. */
+export class MigrationRequiredError extends NewfangStateError {
+  fromVersion: number;
+  toVersion: number;
+  constructor(fromVersion: number, toVersion: number) {
+    super(
+      `NewFang state is schema version ${fromVersion}; version ${toVersion} is required. ` +
+        "Run /newfang migrate to inspect and /newfang migrate --apply to migrate.",
+    );
+    this.name = "MigrationRequiredError";
+    this.fromVersion = fromVersion;
+    this.toVersion = toVersion;
+  }
+}
+
+/** Canonical state uses an unknown schema version. Never rewritten. */
+export class UnknownSchemaVersionError extends NewfangStateError {
+  found: unknown;
+  constructor(found: unknown) {
+    super(
+      `Unknown NewFang schema version: ${String(found)}. This build does not understand it and will not rewrite it.`,
+    );
+    this.name = "UnknownSchemaVersionError";
+    this.found = found;
+  }
+}
+
 /** Canonical state uses a schema version this build does not understand. Never auto-rewritten. */
 export class SchemaVersionError extends NewfangStateError {
   found: number;

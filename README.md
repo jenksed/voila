@@ -7,17 +7,21 @@ not merely generating code.
 
 ## Status
 
-**Phase 0 complete; Packet 1 complete — runnable foundation.** The repository contains the product
-direction, an evidence-backed capability audit, an architecture recommendation with locked ADRs, and
-a **runnable NewFang extension foundation**: a thin Pi adapter (`.pi/extensions/newfang.ts`), a
-canonical `.newfang/` state store, and the `/newfang init | status | doctor` commands with a minimal
-home view — pinned to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1`, tested (31 tests),
-and smoke-verified against real Pi.
+**Phase 0 + Packets 1–2 complete — runnable foundation with project operations.** The repository
+contains the product direction, an evidence-backed capability audit, an architecture recommendation
+with locked ADRs, and a **runnable NewFang Pi extension**: a thin adapter (`.pi/extensions/newfang.ts`),
+a canonical `.newfang/` state store with **explicit schema versioning/migration**, a compact
+**project-operations layer** (work items, decisions, assumptions, risks), 7 LLM-callable Pi tools,
+and `/newfang init | status | backlog | decisions | assumptions | risks | migrate | doctor`. Pinned
+to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (59 tests), and
+smoke-verified against real Pi. The repo **dogfoods its own** `.newfang/` state.
 
-This is a **foundation only**, not the MVP. There is no planning intake, backlog, claims,
-verification gates, delegation, approval bundles, background terminals, sandboxing, remote execution,
-or theming yet. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
-[docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) for what comes next.
+This is **not** the full MVP. There is no planning-document intake, repository orientation, claims,
+verification receipts, completion gate, approval bundles, delegation, background processes,
+sandboxing, remote execution, model routing, or release automation. See
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
+[docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) for what comes next
+(Phase 3: planning-document intake and repository orientation).
 
 ## What NewFang is (and is not)
 
@@ -48,6 +52,7 @@ The authoritative product statement is [docs/product/PRODUCT_DIRECTION.md](docs/
 | Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records (0001–0007) |
 | Setup | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, pinned versions, commands, smoke test |
 | Verification | [docs/verification/PACKET_1_FOUNDATION.md](docs/verification/PACKET_1_FOUNDATION.md) | Packet 1 foundation verification record |
+| Verification | [docs/verification/PACKET_2_PROJECT_OPERATIONS.md](docs/verification/PACKET_2_PROJECT_OPERATIONS.md) | Packet 2 project-operations verification record |
 
 ## Operating instructions
 

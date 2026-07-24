@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 2,
+  "projectId": "d2244f1b-8894-44d1-b976-d6a0116ac324",
+  "displayName": "newfang",
+  "phase": "build",
+  "health": "green",
+  "nextAction": "Phase 3: build planning-document intake and repository orientation — preserve the source document, classify its contents, produce an understanding check, and surface the next action (NF-2).",
+  "activeWorkItemId": "NF-2",
+  "sequences": {
+    "workItem": 8,
+    "decision": 6,
+    "assumption": 3,
+    "risk": 5
+  },
+  "workItems": [
+    {
+      "id": "NF-1",
+      "kind": "outcome",
+      "title": "Complete the minimal project-operations layer (Packet 2)",
+      "status": "in_progress",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "schema v2 with explicit 1->2 migration",
+        "work items, decisions, assumptions, risks persist canonically",
+        "Pi tools and commands with compact output"
+      ],
+      "dependsOn": [],
+      "createdAt": "2026-07-24T23:21:08.823Z",
+      "updatedAt": "2026-07-24T23:21:08.823Z"
+    },
+    {
+      "id": "NF-2",
+      "kind": "outcome",
+      "title": "Build planning-document intake and repository orientation (Phase 3)",
+      "status": "ready",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "preserve the original plan/document",
+        "classify contents (decisions, constraints, questions, risks)",
+        "produce an understanding check and next action"
+      ],
+      "dependsOn": [],
+      "createdAt": "2026-07-24T23:21:08.826Z",
+      "updatedAt": "2026-07-24T23:21:08.826Z"
+    },
+    {
+      "id": "NF-3",
+      "kind": "outcome",
+      "title": "Build claims, receipts, and completion gates (Phase 4)",
+      "status": "backlog",
+      "priority": "high",
+      "acceptanceCriteria": [],
+      "dependsOn": [
+        "NF-2"
+      ],
+      "createdAt": "2026-07-24T23:21:08.830Z",
+      "updatedAt": "2026-07-24T23:21:08.830Z"
+    },
+    {
+      "id": "NF-4",
+      "kind": "task",
+      "title": "Add delivery behavior: commit suggestions and delivery summary (Phase 6)",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [],
+      "dependsOn": [
+        "NF-3"
+      ],
+      "createdAt": "2026-07-24T23:21:08.837Z",
+      "updatedAt": "2026-07-24T23:21:08.837Z"
+    },
+    {
+      "id": "NF-5",
+      "kind": "task",
+      "title": "Evaluate bounded delegation prototype (Phase 5)",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [],
+      "dependsOn": [],
+      "createdAt": "2026-07-24T23:21:08.843Z",
+      "updatedAt": "2026-07-24T23:21:08.843Z"
+    },
+    {
+      "id": "NF-6",
+      "kind": "outcome",
+      "title": "Reach the self-hosting gate",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [],
+      "dependsOn": [
+        "NF-2",
+        "NF-3",
+        "NF-4"
+      ],
+      "createdAt": "2026-07-24T23:21:08.847Z",
+      "updatedAt": "2026-07-24T23:21:08.847Z"
+    },
+    {
+      "id": "NF-7",
+      "kind": "outcome",
+      "title": "Build newfang-approval-bundles under NewFang's own process",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [],
+      "dependsOn": [
+        "NF-6"
+      ],
+      "createdAt": "2026-07-24T23:21:08.854Z",
+      "updatedAt": "2026-07-24T23:21:08.854Z"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "DEC-1",
+      "title": "Extensions-first architecture",
+      "decision": "Ship NewFang as project-local Pi extensions first; package second; SDK/RPC held in reserve.",
+      "rationale": "See ADR-0002.",
+      "status": "accepted",
+      "createdAt": "2026-07-24T23:21:08.858Z",
+      "updatedAt": "2026-07-24T23:21:08.858Z"
+    },
+    {
+      "id": "DEC-2",
+      "title": "Canonical repository state in .newfang/",
+      "decision": "project.json is authoritative; events.jsonl is append-only history; PROJECT_STATUS.md is generated.",
+      "rationale": "See ADR-0003.",
+      "status": "accepted",
+      "createdAt": "2026-07-24T23:21:08.859Z",
+      "updatedAt": "2026-07-24T23:21:08.859Z"
+    },
+    {
+      "id": "DEC-3",
+      "title": "Thin Pi adapter, modular src/",
+      "decision": ".pi/extensions/newfang.ts is a thin adapter; domain/state/tools live in src/ and are Pi-free.",
+      "rationale": "See ADR-0007.",
+      "status": "accepted",
+      "createdAt": "2026-07-24T23:21:08.861Z",
+      "updatedAt": "2026-07-24T23:21:08.861Z"
+    },
+    {
+      "id": "DEC-4",
+      "title": "Roles as skills before runtime agents",
+      "decision": "Permanent roles are product concepts/skills/prompts in the MVP, not runtime agents.",
+      "rationale": "See ADR-0005.",
+      "status": "accepted",
+      "createdAt": "2026-07-24T23:21:08.863Z",
+      "updatedAt": "2026-07-24T23:21:08.863Z"
+    },
+    {
+      "id": "DEC-5",
+      "title": "Sandboxing deferred and optional",
+      "decision": "Sandboxing is optional and off by default; not an MVP prerequisite.",
+      "rationale": "See ADR-0006.",
+      "status": "accepted",
+      "createdAt": "2026-07-24T23:21:08.868Z",
+      "updatedAt": "2026-07-24T23:21:08.868Z"
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "ASM-1",
+      "statement": "The Pi extension/SDK surfaces NewFang uses are stable enough at the pinned 0.82.0.",
+      "confidence": "medium",
+      "status": "open",
+      "createdAt": "2026-07-24T23:21:08.888Z",
+      "updatedAt": "2026-07-24T23:21:08.888Z"
+    },
+    {
+      "id": "ASM-2",
+      "statement": "A single primary macOS/Apple Silicon machine is the initial target.",
+      "confidence": "high",
+      "status": "open",
+      "createdAt": "2026-07-24T23:21:08.894Z",
+      "updatedAt": "2026-07-24T23:21:08.894Z"
+    }
+  ],
+  "risks": [
+    {
+      "id": "RSK-1",
+      "statement": "Pi version churn during the 0.8x series could break the extension.",
+      "likelihood": "medium",
+      "impact": "medium",
+      "status": "mitigated",
+      "mitigation": "Pin exact pi@0.82.0; thin adapter boundary; repo-authoritative state.",
+      "createdAt": "2026-07-24T23:21:08.872Z",
+      "updatedAt": "2026-07-24T23:21:08.872Z"
+    },
+    {
+      "id": "RSK-2",
+      "statement": "Single-writer assumption for .newfang/ could race under concurrent writers.",
+      "likelihood": "low",
+      "impact": "medium",
+      "status": "open",
+      "mitigation": "Atomic temp+rename writes now; add locking before background/parallel execution.",
+      "linkedWorkItems": [
+        "NF-5"
+      ],
+      "createdAt": "2026-07-24T23:21:08.875Z",
+      "updatedAt": "2026-07-24T23:21:08.875Z"
+    },
+    {
+      "id": "RSK-3",
+      "statement": "Terminal UI overload as modules grow.",
+      "likelihood": "medium",
+      "impact": "low",
+      "status": "open",
+      "mitigation": "Restrained home view; progressive disclosure.",
+      "createdAt": "2026-07-24T23:21:08.880Z",
+      "updatedAt": "2026-07-24T23:21:08.880Z"
+    },
+    {
+      "id": "RSK-4",
+      "statement": "Scope creep into project-management ceremony.",
+      "likelihood": "medium",
+      "impact": "medium",
+      "status": "open",
+      "mitigation": "Progressive rigor; strict, compact operations model.",
+      "createdAt": "2026-07-24T23:21:08.884Z",
+      "updatedAt": "2026-07-24T23:21:08.884Z"
+    }
+  ],
+  "createdAt": "2026-07-24T23:21:08.801Z",
+  "updatedAt": "2026-07-24T23:21:08.912Z",
+  "revision": 22
+}

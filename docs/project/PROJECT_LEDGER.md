@@ -15,11 +15,19 @@ ownership from intent through implementation, verification, and delivery. Canoni
 
 ## Current phase
 
-Phase 0 (research and architecture discovery) — complete. **Packet 1 (architecture lock + runnable
-foundation) — complete** as of 2026-07-24: docs amended and committed; Node/Pi pinned; the runnable
-NewFang extension foundation (canonical `.newfang/` store + `/newfang init|status|doctor` + minimal
-home view) built, tested (31/31), and smoke-verified against real Pi. Next: Phase 2 (backlog entities
-on canonical state) per the implementation plan.
+Phase 0 complete; Packet 1 complete. **Packet 2 (project operations + early dogfooding) — complete**
+as of 2026-07-24: schema v2 with explicit 1→2 migration; immutable update contract; work items,
+decisions, assumptions, risks with human-readable IDs; 7 Pi tools + new `/newfang` commands; minimal
+GitHub CI; and the NewFang repository now dogfoods its own `.newfang/` state. 59/59 tests pass;
+smoke-verified through real Pi. Next: **Phase 3 — planning-document intake and repository
+orientation** (dogfooded backlog item NF-2).
+
+### State-of-record note (dual state during transition)
+
+`.newfang/` is now NewFang's **runtime operational state** (authoritative `project.json`: backlog,
+decisions, assumptions, risks). This hand-maintained Markdown ledger remains the **bootstrap and
+narrative record** — packet history, evidence, and durable rationale — until a later consolidation
+decision reconciles the two. Neither silently overwrites the other.
 
 ## Accepted decisions
 
@@ -108,6 +116,14 @@ on canonical state) per the implementation plan.
   `/newfang init|status|doctor` + minimal home view; 31 unit/integration tests pass; smoke-verified
   through real Pi RPC (init/status/doctor + restart persistence); wrote `docs/DEVELOPMENT.md` and the
   verification record. Fixed a doctor Pi-version resolver that failed under Pi's jiti loader.
+- W5 (2026-07-24): Packet 2 — refactored `updateState` to an immutable reducer contract; added schema
+  v2 + explicit 1→2 migration (backup, atomic replace, `/newfang migrate [--apply]`); added the
+  compact project-operations model (work items, decisions, assumptions, risks) with `NF/DEC/ASM/RSK`
+  IDs, dependency/cycle validation, and completion protection; added 7 Pi tools and
+  `/newfang backlog|decisions|assumptions|risks|migrate`; extended doctor with integrity checks;
+  added minimal GitHub CI (`.github/workflows/ci.yml`); added `typebox@1.1.38`; dogfooded the repo's
+  own `.newfang/` state (7 items, 5 decisions, 4 risks, 2 assumptions). 59/59 tests pass; smoke +
+  verification record ([../verification/PACKET_2_PROJECT_OPERATIONS.md](../verification/PACKET_2_PROJECT_OPERATIONS.md)).
 
 ## Blockers / notes
 
@@ -120,10 +136,10 @@ on canonical state) per the implementation plan.
 
 ## Next justified action
 
-Packet 1 is complete (foundation committed). Begin **Phase 2** of
-[../plans/MVP_IMPLEMENTATION_PLAN.md](../plans/MVP_IMPLEMENTATION_PLAN.md): extend the canonical
-schema with backlog entities (built on the Packet 1 `project.json` store and atomic `updateState`),
-add backlog tools that write canonical state + append events, and add the resume load/validation test
-for the extended schema — do not yet add claims, verification gates, delegation, or approval bundles.
-Separately (not blocking): Joshua can run `/login` in `npm run pi` to configure a provider for
-model-dependent paths in later packets.
+Packet 2 is complete (project operations committed on `feat/project-operations`; not pushed). Begin
+**Phase 3 — planning-document intake and repository orientation** (dogfooded backlog item **NF-2**):
+preserve a source planning document, classify its contents (decisions, constraints, requirements,
+questions, risks), produce an understanding check, and surface the next action. Do not yet add
+claims, verification receipts, completion gates, delegation, or approval bundles. Separately (not
+blocking): Joshua can run `/login` in `npm run pi` to configure a provider for later model-dependent
+paths.

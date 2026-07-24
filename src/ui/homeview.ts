@@ -5,14 +5,16 @@ import { abbreviate } from "../domain/status.ts";
 
 /**
  * Restrained persistent home view: NewFang, phase, health, and an abbreviated next action.
- * When there is no project state, show a single concise initialization hint (not an error wall).
+ * Adds at most the active work-item ID (when set) and a blocked count (when nonzero).
+ * When there is no project state, shows a single concise initialization hint.
  */
 export function homeViewLines(state: ProjectState | null): string[] {
   if (state === null) {
     return ["NewFang · not initialized — run /newfang init"];
   }
-  return [
-    `NewFang · phase: ${state.phase} · health: ${state.health}`,
-    `→ ${abbreviate(state.nextAction, 72)}`,
-  ];
+  const blocked = state.workItems.filter((w) => w.status === "blocked").length;
+  const parts = [`NewFang · phase: ${state.phase} · health: ${state.health}`];
+  if (state.activeWorkItemId) parts.push(`active ${state.activeWorkItemId}`);
+  if (blocked > 0) parts.push(`blocked ${blocked}`);
+  return [parts.join(" · "), `→ ${abbreviate(state.nextAction, 72)}`];
 }
