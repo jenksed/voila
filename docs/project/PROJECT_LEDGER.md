@@ -16,8 +16,10 @@ ownership from intent through implementation, verification, and delivery. Canoni
 ## Current phase
 
 Phase 0 (research and architecture discovery) — complete. **Packet 1 (architecture lock + runnable
-foundation) in progress** as of 2026-07-24: Part A amendments applied and locked; Part B/C
-(environment + runnable foundation) is the active work.
+foundation) — complete** as of 2026-07-24: docs amended and committed; Node/Pi pinned; the runnable
+NewFang extension foundation (canonical `.newfang/` store + `/newfang init|status|doctor` + minimal
+home view) built, tested (31/31), and smoke-verified against real Pi. Next: Phase 2 (backlog entities
+on canonical state) per the implementation plan.
 
 ## Accepted decisions
 
@@ -67,6 +69,11 @@ foundation) in progress** as of 2026-07-24: Part A amendments applied and locked
 - R3: Terminal UI overload. Mitigation: minimal home view first, progressive modules.
 - R4: Delegation unreliability. Mitigation: start with one bounded task; fall back to direct execution.
 - R5: Scope creep into project-management ceremony. Mitigation: progressive rigor + MVP non-goals.
+- R6: Single-writer assumption for `.newfang/` — concurrent writers could race. Mitigation: atomic
+  temp+rename writes now; add locking before any multi-writer/background execution.
+- R7: Pi loads extensions via jiti, where `require.resolve`/`import.meta` behavior differs from plain
+  Node. Mitigation: filesystem-walk version resolution (fixed in W4); prefer fs-based resolution over
+  `require.resolve` in the adapter.
 
 ## Evidence (Phase 0)
 
@@ -76,6 +83,8 @@ foundation) in progress** as of 2026-07-24: Part A amendments applied and locked
   [../research/BEN_SETUP_AUDIT.md](../research/BEN_SETUP_AUDIT.md).
 - E3: Latest Pi version `0.82.0` (npm `latest`), `legacy-node20 = 0.74.2` — checked 2026-07-24.
 - E4: Environment inventory (Node/npm/pnpm/bun/deno/TS/git) — recorded in Packet 0 final report.
+- E5: Packet 1 foundation verification record (versions, 31/31 tests, headless smoke through real Pi
+  0.82.0, restart persistence) — [../verification/PACKET_1_FOUNDATION.md](../verification/PACKET_1_FOUNDATION.md).
 
 ## Work completed
 
@@ -92,7 +101,13 @@ foundation) in progress** as of 2026-07-24: Part A amendments applied and locked
   completion-gate to a state-transition rejection (A3); corrected approval bundles to a proactive
   execution contract and made delegation non-blocking for self-hosting (A4/A5); replaced
   broad-stability version language with version-sensitive language (A6); added an external-effects
-  policy to AGENTS.md (A7). Docs commit is the first of two Packet 1 commits.
+  policy to AGENTS.md (A7). Committed as `docs: establish NewFang product and architecture baseline`.
+- W4 (2026-07-24): Packet 1 Part B–E — pinned Node `22.23.1` (`mise.toml`) and installed
+  `@earendil-works/pi-coding-agent@0.82.0` project-locally; built the thin adapter
+  (`.pi/extensions/newfang.ts`) + modular `src/` (domain, state store, commands, ui, extension) +
+  `/newfang init|status|doctor` + minimal home view; 31 unit/integration tests pass; smoke-verified
+  through real Pi RPC (init/status/doctor + restart persistence); wrote `docs/DEVELOPMENT.md` and the
+  verification record. Fixed a doctor Pi-version resolver that failed under Pi's jiti loader.
 
 ## Blockers / notes
 
@@ -105,8 +120,10 @@ foundation) in progress** as of 2026-07-24: Part A amendments applied and locked
 
 ## Next justified action
 
-Commit the amended documentation baseline (Packet 1 commit 1), then complete Packet 1 Part B/C/D/E:
-pin Node `22.23.1` (project `mise.toml`) and install `@earendil-works/pi-coding-agent@0.82.0`
-project-locally; build the thin adapter + `.newfang/` canonical state store + `/newfang init|status|
-doctor` + minimal home view; add unit/command/integration tests; run the manual smoke test; write the
-bootstrap verification record; then create Packet 1 commit 2.
+Packet 1 is complete (foundation committed). Begin **Phase 2** of
+[../plans/MVP_IMPLEMENTATION_PLAN.md](../plans/MVP_IMPLEMENTATION_PLAN.md): extend the canonical
+schema with backlog entities (built on the Packet 1 `project.json` store and atomic `updateState`),
+add backlog tools that write canonical state + append events, and add the resume load/validation test
+for the extended schema — do not yet add claims, verification gates, delegation, or approval bundles.
+Separately (not blocking): Joshua can run `/login` in `npm run pi` to configure a provider for
+model-dependent paths in later packets.

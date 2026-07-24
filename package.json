@@ -1,0 +1,24 @@
+{
+  "name": "newfang",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Personal development operating system built on the Pi coding-agent harness.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "pi": "pi",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \".pi/**/*.ts\" \"test/**/*.ts\" \"*.json\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \".pi/**/*.ts\" \"test/**/*.ts\" \"*.json\"",
+    "verify": "npm run typecheck && npm run format:check && npm test"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.82.0",
+    "@types/node": "22.20.1",
+    "prettier": "3.9.6",
+    "typescript": "7.0.2"
+  }
+}
