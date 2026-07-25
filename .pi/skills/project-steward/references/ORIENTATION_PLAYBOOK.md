@@ -22,9 +22,10 @@ Read in this order and stop early when the questions are answered.
    `.newfang/briefs/PROJECT_BRIEF.md` if present. This is usually the fastest route to "what is in
    flight" and "what is next".
 4. **Package manifest** — `package.json` (or `pyproject.toml`, `Cargo.toml`, `go.mod`). Extract the
-   real script names for build/test/lint/verify. These are `verifiedCommands` with evidence
-   "declared in package.json scripts"; anything you infer without seeing it declared is a
-   `candidateCommand`.
+   real script names for build/test/lint/verify. Record these as `commands` with
+   `basis: "declared_in_documentation"` and an `evidenceNote` naming the manifest. Anything you infer
+   without seeing it declared is `basis: "candidate"`. If you actually ran a command this session, use
+   `basis: "observed_in_session"` and record `observedResult`.
 5. **Runtime/toolchain pins** — `mise.toml`, `.nvmrc`, `tsconfig.json`, CI workflow. Note the pinned
    versions and the CI gate.
 6. **Product/architecture docs** — only the index-level ones (e.g. `docs/` product direction,
@@ -50,8 +51,8 @@ Use `newfang_record_orientation`:
 - `purpose` — one or two sentences.
 - `instructionFiles` — path + sha256 (+ short note).
 - `keyDocuments`, `implementationAreas` — repository-relative paths.
-- `verifiedCommands` — `{purpose, command, evidence}`; evidence must be something you saw.
-- `candidateCommands` — plausible but unconfirmed.
+- `commands` — `{command, basis, observedResult?, evidenceNote?}`. `observedResult` is only valid with
+  `basis: "observed_in_session"`. Never describe a command as "verified".
 - `relevantWork` — what current work items this touches.
 - `risks`, `unknowns` — honest gaps.
 - `provenance` — the files you actually read.
@@ -60,4 +61,5 @@ Use `newfang_record_orientation`:
 
 - No web access unless the user explicitly asks for research.
 - No secrets, environment-variable values, absolute private paths, or full command logs.
-- No claims that a command works unless you saw it declared or ran it.
+- No claims that a command works unless you saw it declared (cite it) or ran it (record the result).
+- No use of the word "verified" for commands; NewFang has no verification receipts yet.

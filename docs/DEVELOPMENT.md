@@ -178,13 +178,21 @@ The daily-use workflow: source → orientation → structured draft → understa
 
 ```text
 .newfang/
-├── intakes/INT-n/{manifest.json, source.md, draft.json, UNDERSTANDING.md}
+├── intakes/INT-n/{manifest.json, source.md, drafts/NNNN.json, understandings/NNNN.md, reviews.jsonl}
 ├── orientations/ORI-n/{orientation.json, ORIENTATION.md}
 └── briefs/PROJECT_BRIEF.md
 ```
 
-`source.md` is written once and never rewritten — a revised interpretation is a new `draftRevision`.
-Canonical state stores only compact metadata, never document text or command output.
+`source.md` is written once and never rewritten — a revised interpretation is a new **numbered**
+`draftRevision`, and prior drafts plus their Understanding Checks are kept forever. `reviews.jsonl` is
+an append-only log of review decisions (`revision_requested` / `accepted` / `rejected`) with concise
+feedback only — no hidden reasoning, no transcripts. Canonical state stores only compact metadata
+(including `acceptedDraftRevision`), never document text or command output.
+
+Orientation records **command findings** with an explicit basis
+(`declared_in_documentation` | `observed_in_session` | `candidate`); `observedResult` is only valid for
+commands actually executed in that session. NewFang does not run or verify commands, so nothing is
+labeled "verified" — formal verification waits for Phase 4 receipts.
 
 ### Provenance
 

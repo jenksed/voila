@@ -6,7 +6,13 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { intakePaths, statePaths } from "../state/paths.ts";
-import { readDraft, readManifest } from "../state/intake-store.ts";
+import {
+  listDraftRevisions,
+  readDraft,
+  readManifest,
+  readReviews,
+  readUnderstanding,
+} from "../state/intake-store.ts";
 import { currentOrientationStatus } from "../state/orientation-store.ts";
 import { sha256 } from "../state/source.ts";
 import { loadState, readRawState } from "../state/store.ts";
@@ -357,10 +363,62 @@ async function intakeChecks(root: string, state: ProjectState): Promise<DoctorCh
       warnings.push(`${record.id}: manifest missing`);
     }
     if (record.draftRevision > 0) {
-      const draft = await readDraft(root, record.id);
-      if (!draft)
-        warnings.push(`${record.id}: draft.json missing for revision ${record.draftRevision}`);
-      if (!existsSync(paths.understanding)) warnings.push(`${record.id}: UNDERSTANDING.md missing`);
+      // The current revision's draft artifact must exist and agree with canonical metadata.
+      const draft = await readDraft(root, record.id, record.draftRevision);
+      if (!draft) {
+        problems.push(
+          `${record.id}: draft artifact missing for current revision ${record.draftRevision}`,
+        );
+      } else if (draft.draftRevision !== record.draftRevision) {
+        problems.push(
+          `${record.id}: draft artifact says revision ${draft.draftRevision}, canonical says ${record.draftRevision}`,
+        );
+      }
+
+      // Revisions must be monotonic 1..N with no gaps; each needs an understanding artifact.
+      const revisions = await listDraftRevisions(root, record.id);
+      const expected = Array.from({ length: record.draftRevision }, (_, i) => i + 1);
+      if (revisions.join(",") !== expected.join(",")) {
+        problems.push(
+          `${record.id}: draft revisions are not monotonic 1..${record.draftRevision} (found ${revisions.join(",") || "none"})`,
+        );
+      }
+      for (const rev of revisions) {
+        if ((await readUnderstanding(root, record.id, rev)) === null) {
+          warnings.push(`${record.id}: understanding artifact missing for revision ${rev}`);
+        }
+      }
+
+      // The manifest pointer must agree with canonical metadata.
+      try {
+        const manifest = await readManifest(root, record.id);
+        if (manifest.currentDraftRevision !== record.draftRevision) {
+          problems.push(
+            `${record.id}: manifest currentDraftRevision ${manifest.currentDraftRevision} disagrees with canonical ${record.draftRevision}`,
+          );
+        }
+      } catch {
+        // manifest absence is already reported above
+      }
+    }
+
+    // Accepted intakes need an accepted review record and a matching applied revision.
+    if (record.status === "accepted") {
+      const reviews = await readReviews(root, record.id);
+      const accepted = reviews.filter((r) => r.action === "accepted");
+      if (accepted.length === 0) {
+        problems.push(`${record.id}: accepted but no accepted review record in reviews.jsonl`);
+      }
+      if (record.acceptedDraftRevision === undefined) {
+        problems.push(`${record.id}: accepted but acceptedDraftRevision is not recorded`);
+      } else if (
+        accepted.length > 0 &&
+        !accepted.some((r) => r.reviewedRevision === record.acceptedDraftRevision)
+      ) {
+        problems.push(
+          `${record.id}: applied revision ${record.acceptedDraftRevision} does not match any accepted review record`,
+        );
+      }
     }
   }
 

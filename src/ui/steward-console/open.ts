@@ -5,8 +5,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { loadState } from "../../state/store.ts";
 import { MigrationRequiredError, StateNotFoundError } from "../../state/errors.ts";
-import { intakePaths } from "../../state/paths.ts";
-import { readDraft } from "../../state/intake-store.ts";
+import { readDraft, readUnderstanding } from "../../state/intake-store.ts";
 import { currentOrientationStatus } from "../../state/orientation-store.ts";
 import { blockingConflicts } from "../../domain/intake.ts";
 import { runIntakeApply, runIntakeReject } from "../../commands/intake.ts";
@@ -70,10 +69,10 @@ export async function buildModelForRoot(root: string, piVersion?: string): Promi
     const pending = state.intakes.find((i) => i.status === "review_required");
     if (pending) {
       const draft = await readDraft(root, pending.id);
-      const paths = intakePaths(root, pending.id);
-      const understanding = existsSync(paths.understanding)
-        ? (await readFile(paths.understanding, "utf8")).split("\n")
-        : ["(understanding view missing; re-stage the draft)"];
+      const understandingText = await readUnderstanding(root, pending.id, draft?.draftRevision);
+      const understanding = understandingText
+        ? understandingText.split("\n")
+        : ["(understanding view missing for this revision; re-stage the draft)"];
       pendingIntake = {
         id: pending.id,
         title: pending.title,

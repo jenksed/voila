@@ -50,10 +50,14 @@ function artifact(over: Record<string, unknown> = {}) {
     instructionFiles: [{ path: "AGENTS.md", sha256: sha(AGENTS), note: "rules" }],
     keyDocuments: ["README.md"],
     implementationAreas: ["src"],
-    verifiedCommands: [
-      { purpose: "tests", command: "npm test", evidence: "declared in package.json scripts" },
+    commands: [
+      {
+        command: "npm test",
+        basis: "declared_in_documentation",
+        evidenceNote: "declared in package.json scripts",
+      },
+      { command: "npm run build", basis: "candidate" },
     ],
-    candidateCommands: ["npm run build"],
     relevantWork: ["NF-1"],
     risks: ["churn"],
     unknowns: ["CI unproven"],
@@ -104,7 +108,7 @@ test("absolute paths, home paths, and secret-looking content are rejected", () =
     () =>
       validateOrientationArtifact(
         artifact({
-          verifiedCommands: [{ purpose: "x", command: "export TOKEN=abc", evidence: "y" }],
+          commands: [{ command: "export TOKEN=abc", basis: "candidate" }],
         }),
       ),
     ProjectOperationError,
@@ -207,4 +211,135 @@ test("orientation state survives reload", async () => {
   const second = await loadState(root);
   assert.deepEqual(second.orientations, first.orientations);
   assert.equal(second.currentOrientationId, "ORI-1");
+});
+
+// --- command evidence semantics (Packet 3 closure, Part A) ---
+
+test("candidate commands cannot carry an observed result", () => {
+  assert.throws(
+    () =>
+      validateOrientationArtifact(
+        artifact({
+          commands: [{ command: "npm test", basis: "candidate", observedResult: "passed" }],
+        }),
+      ),
+    ProjectOperationError,
+  );
+  // Same for a documented command that was never executed.
+  assert.throws(
+    () =>
+      validateOrientationArtifact(
+        artifact({
+          commands: [
+            {
+              command: "npm test",
+              basis: "declared_in_documentation",
+              evidenceNote: "package.json",
+              observedResult: "failed",
+            },
+          ],
+        }),
+      ),
+    ProjectOperationError,
+  );
+});
+
+test("documented commands must preserve their source", () => {
+  // Missing evidenceNote for a documented command is refused.
+  assert.throws(
+    () =>
+      validateOrientationArtifact(
+        artifact({ commands: [{ command: "npm test", basis: "declared_in_documentation" }] }),
+      ),
+    ProjectOperationError,
+  );
+  // With provenance it is accepted and the note is preserved.
+  const a = validateOrientationArtifact(
+    artifact({
+      commands: [
+        {
+          command: "npm test",
+          basis: "declared_in_documentation",
+          evidenceNote: "declared in package.json scripts",
+        },
+      ],
+    }),
+  );
+  assert.equal(a.commands[0]?.evidenceNote, "declared in package.json scripts");
+  assert.match(renderOrientationView("ORI-1", a), /declared in package\.json scripts/);
+});
+
+test("observed commands may record pass or fail", () => {
+  for (const observedResult of ["passed", "failed"] as const) {
+    const a = validateOrientationArtifact(
+      artifact({
+        commands: [
+          {
+            command: "npm run verify",
+            basis: "observed_in_session",
+            observedResult,
+            evidenceNote: "run during this orientation session",
+          },
+        ],
+      }),
+    );
+    assert.equal(a.commands[0]?.observedResult, observedResult);
+    assert.match(renderOrientationView("ORI-1", a), new RegExp(`result: ${observedResult}`));
+  }
+  // An invalid result value is refused.
+  assert.throws(
+    () =>
+      validateOrientationArtifact(
+        artifact({
+          commands: [{ command: "x", basis: "observed_in_session", observedResult: "maybe" }],
+        }),
+      ),
+    ProjectOperationError,
+  );
+});
+
+test("no orientation output describes commands as formally verified", () => {
+  const a = validateOrientationArtifact(
+    artifact({
+      commands: [
+        {
+          command: "npm test",
+          basis: "observed_in_session",
+          observedResult: "passed",
+          evidenceNote: "ran it",
+        },
+        { command: "npm run build", basis: "candidate" },
+      ],
+    }),
+  );
+  const view = renderOrientationView("ORI-1", a);
+  assert.ok(
+    !/\bverified\b/i.test(view.replace(/not verified by NewFang/gi, "")),
+    "no 'verified' claim",
+  );
+  assert.match(view, /recorded, not verified by NewFang/i, "states the limit explicitly");
+  assert.match(view, /observed in this session/);
+  assert.match(view, /candidate \(not executed\)/);
+  // The basis vocabulary itself avoids the word.
+  assert.ok(!Object.keys(a.commands[0] ?? {}).includes("verified"));
+});
+
+test("context injection does not overstate command confidence", async () => {
+  const root = await repo();
+  await recordOrientation(
+    root,
+    artifact({
+      head: await currentHead(root),
+      commands: [
+        { command: "npm test", basis: "observed_in_session", observedResult: "passed" },
+        { command: "npm run deploy", basis: "candidate" },
+      ],
+    }),
+  );
+  const { assembleContext } = await import("../src/context/assemble.ts");
+  const block = await assembleContext(root);
+  // Injected context reports orientation status only — never commands or their confidence.
+  assert.ok(!/npm test/.test(block), "no command text injected");
+  assert.ok(!/\bverified\b/i.test(block), "no verification language injected");
+  assert.match(block, /Orientation: ORI-1/);
 });

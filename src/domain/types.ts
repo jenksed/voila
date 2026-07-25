@@ -130,7 +130,10 @@ export interface IntakeRecord {
   sourceRef: string;
   sourceSha256: string;
   status: IntakeStatus;
+  /** The current (latest staged) draft revision; 0 before any draft is staged. */
   draftRevision: number;
+  /** The exact revision that was accepted and applied, when status is `accepted`. */
+  acceptedDraftRevision?: number;
   createdAt: string;
   updatedAt: string;
   acceptedAt?: string;

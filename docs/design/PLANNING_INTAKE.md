@@ -22,12 +22,17 @@ changes before you accept, and that applying twice does not duplicate.
 .newfang/
 ├── intakes/
 │   └── INT-1/
-│       ├── manifest.json      # title, source type/ref, sha256, line count, created
-│       ├── source.md          # the preserved source — written once, never rewritten
-│       ├── draft.json         # the current structured interpretation (revision N)
-│       └── UNDERSTANDING.md   # GENERATED review artifact
+│       ├── manifest.json          # source metadata + the CURRENT draft revision pointer
+│       ├── source.md              # the preserved source — written once, never rewritten
+│       ├── drafts/
+│       │   ├── 0001.json          # every interpretation is kept, numbered, never overwritten
+│       │   └── 0002.json
+│       ├── understandings/
+│       │   ├── 0001.md            # GENERATED review artifact per revision
+│       │   └── 0002.md
+│       └── reviews.jsonl          # APPEND-ONLY review decisions
 └── briefs/
-    └── PROJECT_BRIEF.md       # GENERATED, non-authoritative context projection
+    └── PROJECT_BRIEF.md           # GENERATED, non-authoritative context projection
 ```
 
 Canonical `project.json` holds only compact metadata (`IntakeRecord`): id, title, source type/ref,
@@ -43,6 +48,25 @@ output is stored in canonical state.**
   honestly; `sourceRef` is `text:…`, so nothing claims byte-identity with a file.
 - `source.md` is written once. A revised interpretation produces a **new `draftRevision`**, never an
   edit to the source.
+
+## Durable revision and review history
+
+Interpretation history is inspectable, not just the source:
+
+- Each staged revision writes **new numbered artifacts** (`drafts/NNNN.json`,
+  `understandings/NNNN.md`) atomically. Prior revisions and their Understanding Checks are **never
+  overwritten**; staging refuses to clobber an existing revision file.
+- `manifest.json` identifies the **current** revision; canonical `IntakeRecord.draftRevision` mirrors
+  it, and `acceptedDraftRevision` records the **exact revision that was applied**.
+- `reviews.jsonl` is **append-only**. Each record holds the intake ID, reviewed revision, action
+  (`revision_requested` / `accepted` / `rejected`), concise user-visible feedback when supplied, a
+  timestamp, and the resulting status — and nothing else. **No hidden reasoning and no chat
+  transcripts.**
+- Missing historical revisions are never silently reconstructed; doctor reports them instead.
+
+Doctor verifies: the current revision artifact exists and agrees with canonical metadata; revisions are
+monotonic `1..N` with no gaps; each revision has an understanding artifact; the manifest pointer agrees;
+an accepted intake has an accepted review record; and the applied revision matches that record.
 
 ## Classification model
 

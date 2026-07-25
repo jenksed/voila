@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 import { initState, loadState, updateState } from "../src/state/store.ts";
 import { createIntake, readSource, stageIntakeDraft } from "../src/state/intake-store.ts";
-import { intakePaths } from "../src/state/paths.ts";
+import { revisionPaths } from "../src/state/paths.ts";
 import { createWorkItem } from "../src/domain/operations.ts";
 import { ProjectOperationError } from "../src/domain/errors.ts";
 import {
@@ -312,7 +312,7 @@ test("staging increments draftRevision, writes artifacts, and changes no project
   const second = await stageIntakeDraft(root, intakeId, baseDraft(intakeId));
   assert.equal(second.draft.draftRevision, 2, "revision increments per staging");
 
-  const paths = intakePaths(root, intakeId);
+  const paths = revisionPaths(root, intakeId, 2);
   const stored = JSON.parse(await readFile(paths.draft, "utf8"));
   assert.equal(stored.draftRevision, 2);
   assert.match(await readFile(paths.understanding, "utf8"), /Understanding Check/);

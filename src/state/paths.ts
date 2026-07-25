@@ -25,8 +25,24 @@ export function intakePaths(root: string, intakeId: string) {
     dir,
     manifest: join(dir, "manifest.json"),
     source: join(dir, "source.md"),
-    draft: join(dir, "draft.json"),
-    understanding: join(dir, "UNDERSTANDING.md"),
+    draftsDir: join(dir, "drafts"),
+    understandingsDir: join(dir, "understandings"),
+    reviews: join(dir, "reviews.jsonl"),
+  };
+}
+
+/** Zero-padded revision file name, e.g. 1 -> "0001". */
+export function revisionSlug(revision: number): string {
+  return String(revision).padStart(4, "0");
+}
+
+/** Artifact paths for one draft revision — never overwritten once written. */
+export function revisionPaths(root: string, intakeId: string, revision: number) {
+  const base = intakePaths(root, intakeId);
+  const slug = revisionSlug(revision);
+  return {
+    draft: join(base.draftsDir, `${slug}.json`),
+    understanding: join(base.understandingsDir, `${slug}.md`),
   };
 }
 

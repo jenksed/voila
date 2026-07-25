@@ -32,9 +32,28 @@ Canonical `project.json` holds only an `OrientationRecord`: id, artifact ref, re
 (`current` / `stale`), timestamps.
 
 The snapshot records: purpose; branch, head, dirty flag and summary; instruction files (path +
-**sha256**, used for staleness); key documents; likely implementation areas; **verified commands** with
-the evidence for each; **candidate commands** not yet verified; relevant current work; risks; unknowns;
-observed timestamp; and provenance (what was actually read).
+**sha256**, used for staleness); key documents; likely implementation areas; **command findings** (see
+below); relevant current work; risks; unknowns; observed timestamp; and provenance (what was actually
+read).
+
+## Command evidence — honest by construction
+
+NewFang does **not** run or formally verify commands, so nothing here may be called "verified". Each
+command carries an explicit basis:
+
+| Basis | Meaning | `observedResult` allowed? |
+|-------|---------|---------------------------|
+| `declared_in_documentation` | A repository document or manifest presents the command. An `evidenceNote` naming that document is **required**. | No |
+| `observed_in_session` | The operator or agent actually executed it during this orientation session. | Yes — `passed` or `failed` |
+| `candidate` | It looks likely but has not been executed. | No |
+
+Validation rejects `observedResult` on any basis other than `observed_in_session`: a command that was
+not executed has no result. The generated view labels these as "declared in documentation", "observed
+in this session", or "candidate (not executed)" under a heading that states the limit explicitly.
+
+**An observation is not a verification receipt.** Formal verification begins only when Phase 4 claims
+and receipts exist. Injected model context reports orientation status only — never command text or
+command confidence.
 
 ## Safety rules (enforced by validation)
 
@@ -73,5 +92,6 @@ never fires.
 
 - Orientation content quality depends on the model; NewFang validates structure and safety, not
   accuracy.
-- `verifiedCommands` are trusted as recorded — NewFang does not execute them to confirm.
+- Command findings are trusted as recorded — NewFang does not execute them to confirm, which is
+  exactly why nothing is labeled "verified".
 - Staleness does not inspect non-instruction documents.

@@ -22,9 +22,15 @@ model-inference marking; an Understanding Check reviewed before anything is appl
 duplicate-safe apply; a generated project brief; bounded orientation with staleness detection; a real
 Project Steward Pi skill; and compact automatic context injection. 173/173 tests pass.
 
-**Two verification gaps remain, both requiring Joshua**: the interactive Steward Console check
-(Packet 2.5 Tier 3) and the authenticated Project Steward acceptance run (Packet 3 Tier 3). Daily-use
-readiness is not claimed until the latter passes.
+**Packet 3 closure corrections applied** (2026-07-25): command evidence is described honestly
+(`CommandFinding` with an explicit basis; nothing is called "verified"), and intake draft/review history
+is durable (numbered revisions that are never overwritten, plus an append-only `reviews.jsonl`).
+191/191 tests pass.
+
+**Three gates remain, all requiring Joshua**: (1) the interactive Steward Console check, (2) the
+authenticated Project Steward acceptance run, and (3) GitHub CI — `origin/main` is still at Packet 1
+and nothing has been pushed. Daily-use readiness is **not** claimed until all three pass and Packet 3
+is integrated over `main`.
 
 ### State-of-record note (dual state during transition)
 
@@ -54,6 +60,8 @@ decision reconciles the two. Neither silently overwrites the other.
 | D15 | Intake sources are preserved byte-for-byte with SHA-256 in `.newfang/intakes/<id>/source.md`, written once; a revised interpretation is a new draft revision, never a source edit. | [intake design](../design/PLANNING_INTAKE.md) |
 | D16 | Only explicit `proposedWorkItems` become work items; requirements do not auto-convert. Exact duplicates are skipped, likely duplicates are surfaced, never merged. | [intake design](../design/PLANNING_INTAKE.md) |
 | D17 | Orientation is a bounded, provenance-backed snapshot; staleness fires on HEAD movement, instruction-file change, or explicit refresh — never on a dirty worktree. | [orientation design](../design/REPOSITORY_ORIENTATION.md) |
+| D18 | Commands are recorded as findings with an explicit basis (`declared_in_documentation` / `observed_in_session` / `candidate`); `observedResult` requires actual execution, and nothing is labeled "verified" until Phase 4 receipts exist. | [orientation design](../design/REPOSITORY_ORIENTATION.md) |
+| D19 | Every intake draft revision and Understanding Check is retained (numbered, never overwritten), and review decisions live in an append-only `reviews.jsonl` holding only narrow user-visible fields. | [intake design](../design/PLANNING_INTAKE.md) |
 
 ## Assumptions (reversible unless noted)
 
@@ -129,6 +137,15 @@ decision reconciles the two. Neither silently overwrites the other.
   `/newfang init|status|doctor` + minimal home view; 31 unit/integration tests pass; smoke-verified
   through real Pi RPC (init/status/doctor + restart persistence); wrote `docs/DEVELOPMENT.md` and the
   verification record. Fixed a doctor Pi-version resolver that failed under Pi's jiti loader.
+- W8 (2026-07-25): Packet 3 closure — replaced `verifiedCommands`/`candidateCommands` with
+  `CommandFinding {command, basis, observedResult?, evidenceNote?}` across types, validation, tools,
+  generated orientation, skill, playbook, docs, and the dogfooded ORI-1 artifact; `observedResult` is
+  rejected unless the command was actually executed, documented commands require provenance, and no
+  surface calls a command "verified". Moved intake artifacts to `drafts/NNNN.json` +
+  `understandings/NNNN.md` + append-only `reviews.jsonl`, added `manifest.currentDraftRevision` and
+  canonical `acceptedDraftRevision`, and extended doctor with revision/review integrity checks.
+  Migrated INT-1 into the new layout with the one accepted review record that actually occurred (no
+  fabricated revision request). 191/191 tests pass.
 - W7 (2026-07-25): Packet 3 — added schema v3 (`intakes`, `orientations`, current pointers, INT/ORI
   sequences) with an explicit `2 → 3` migration (chaining `1 → 2 → 3` when needed); built source
   preservation with SHA-256 and path-safety (absolute/traversal/symlink-escape rejection); the intake
@@ -170,18 +187,18 @@ decision reconciles the two. Neither silently overwrites the other.
 
 ## Next justified action
 
-Packet 3 is complete (committed on `feat/intake-orientation`; not pushed). In order:
+Packet 3 closure is committed on `feat/intake-orientation` (not pushed). The remaining work is
+**integration and the two interactive acceptance runs**, in this order:
 
-1. **Joshua — authenticated Project Steward acceptance** (the only gate blocking a daily-use claim):
-   run `/login` personally, then follow the checklist in
-   [../verification/PACKET_3_INTAKE_ORIENTATION.md](../verification/PACKET_3_INTAKE_ORIENTATION.md)
-   (orient → ingest `docs/plans/PHASE_3_INTAKE_BRIEF.md` → let the Steward analyze → review → one
-   revision request → accept → restart → confirm persistence). Also close out the Packet 2.5
-   interactive console checklist.
-2. **Then Phase 4 — claims, verification receipts, and the protected completion transition** (dogfooded
-   item **NF-3**): a `newfang_complete_work_item` transition that is rejected unless a required receipt
-   passes. This is why NF-1 is still `in_progress` after three packets.
+1. **Joshua — interactive Steward Console check** on `feat/project-operations` (12-item checklist in
+   [../verification/PACKET_2_5_STEWARD_CONSOLE.md](../verification/PACKET_2_5_STEWARD_CONSOLE.md) and
+   the Packet 3 record). Report the observed result so it can be recorded honestly.
+2. **Push and integrate Packet 2/2.5**: `git push -u origin feat/project-operations`, open a PR to
+   `main`, wait for **GitHub CI** (its first ever run), then merge with a **merge commit** (not squash —
+   `feat/intake-orientation` is stacked on that history).
+3. **Rebase Packet 3** onto the updated `main` and re-run `mise exec -- npm run verify`.
+4. **Joshua — authenticated Project Steward acceptance** (`/login`, then the 14-step checklist). This
+   run produces the first real draft revision 2 and `revision_requested` review record.
+5. Only then may the bounded daily-use claim be made.
 
-Housekeeping, when you want it: `main` is still at Packet 1 (`6865ff6`) and nothing has been pushed, so
-GitHub Actions has never run. Merging the two feature branches and pushing would give the CI workflow
-its first external receipt.
+**Phase 4 (claims, verification receipts, protected completion — NF-3) does not start until then.**

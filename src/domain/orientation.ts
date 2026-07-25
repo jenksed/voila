@@ -7,12 +7,28 @@
 import { GENERATED_BANNER } from "./status.ts";
 import { ProjectOperationError } from "./errors.ts";
 
-export interface VerifiedCommand {
-  /** e.g. "test", "typecheck" */
-  purpose: string;
+export const COMMAND_BASES = [
+  "declared_in_documentation",
+  "observed_in_session",
+  "candidate",
+] as const;
+export type CommandBasis = (typeof COMMAND_BASES)[number];
+
+/**
+ * A command recorded during orientation, with an honest basis for believing it.
+ *
+ * NewFang does NOT run or formally verify these. `observed_in_session` means the operator or agent
+ * actually executed it during this orientation session — that is an observation, not a NewFang
+ * verification receipt. Formal verification begins only when Phase 4 receipts exist, so nothing here
+ * (or in any generated view) may describe a command as "verified".
+ */
+export interface CommandFinding {
   command: string;
-  /** How it was confirmed, e.g. "declared in package.json scripts" or "run successfully". */
-  evidence: string;
+  basis: CommandBasis;
+  /** Only permitted with `observed_in_session`. */
+  observedResult?: "passed" | "failed";
+  /** Provenance: which document/manifest declared it, or how it was observed. */
+  evidenceNote?: string;
 }
 
 export interface InstructionFile {
@@ -33,8 +49,8 @@ export interface OrientationArtifact {
   instructionFiles: InstructionFile[];
   keyDocuments: string[];
   implementationAreas: string[];
-  verifiedCommands: VerifiedCommand[];
-  candidateCommands: string[];
+  /** Commands with an explicit basis. Never described as "verified". */
+  commands: CommandFinding[];
   relevantWork: string[];
   risks: string[];
   unknowns: string[];
@@ -120,24 +136,54 @@ export function validateOrientationArtifact(raw: unknown): OrientationArtifact {
     return out;
   });
 
-  const cmdRaw = o.verifiedCommands;
+  const cmdRaw = o.commands;
   if (cmdRaw !== undefined && !Array.isArray(cmdRaw)) {
-    throw new ProjectOperationError("verifiedCommands must be an array.");
+    throw new ProjectOperationError("commands must be an array.");
   }
-  const verifiedCommands: VerifiedCommand[] = ((cmdRaw ?? []) as unknown[]).map((rawC, i) => {
+  const commands: CommandFinding[] = ((cmdRaw ?? []) as unknown[]).map((rawC, i) => {
     if (typeof rawC !== "object" || rawC === null) {
-      throw new ProjectOperationError(`verifiedCommands[${i}] must be an object.`);
+      throw new ProjectOperationError(`commands[${i}] must be an object.`);
     }
     const c = rawC as Record<string, unknown>;
-    const command = requireNonEmpty(c.command, `verifiedCommands[${i}].command`);
+    const command = requireNonEmpty(c.command, `commands[${i}].command`);
     if (SECRETISH.test(command)) {
-      throw new ProjectOperationError(`verifiedCommands[${i}].command looks sensitive; refusing.`);
+      throw new ProjectOperationError(`commands[${i}].command looks sensitive; refusing.`);
     }
-    return {
-      purpose: requireNonEmpty(c.purpose, `verifiedCommands[${i}].purpose`),
-      command,
-      evidence: requireNonEmpty(c.evidence, `verifiedCommands[${i}].evidence`),
-    };
+    if (typeof c.basis !== "string" || !(COMMAND_BASES as readonly string[]).includes(c.basis)) {
+      throw new ProjectOperationError(
+        `commands[${i}].basis must be one of: ${COMMAND_BASES.join(", ")}.`,
+      );
+    }
+    const basis = c.basis as CommandBasis;
+    const finding: CommandFinding = { command, basis };
+
+    if (c.observedResult !== undefined) {
+      if (basis !== "observed_in_session") {
+        throw new ProjectOperationError(
+          `commands[${i}].observedResult is only permitted with basis "observed_in_session"; got "${basis}". A command that was not executed has no result.`,
+        );
+      }
+      if (c.observedResult !== "passed" && c.observedResult !== "failed") {
+        throw new ProjectOperationError(
+          `commands[${i}].observedResult must be "passed" or "failed".`,
+        );
+      }
+      finding.observedResult = c.observedResult;
+    }
+
+    if (c.evidenceNote !== undefined) {
+      const note = requireNonEmpty(c.evidenceNote, `commands[${i}].evidenceNote`);
+      if (SECRETISH.test(note)) {
+        throw new ProjectOperationError(`commands[${i}].evidenceNote looks sensitive; refusing.`);
+      }
+      finding.evidenceNote = note;
+    } else if (basis === "declared_in_documentation") {
+      // Provenance is mandatory for documented commands: name the document or manifest.
+      throw new ProjectOperationError(
+        `commands[${i}].evidenceNote is required for basis "declared_in_documentation" (name the document or manifest).`,
+      );
+    }
+    return finding;
   });
 
   const artifact: OrientationArtifact = {
@@ -149,8 +195,7 @@ export function validateOrientationArtifact(raw: unknown): OrientationArtifact {
       o.implementationAreas ?? [],
       "implementationAreas",
     ),
-    verifiedCommands,
-    candidateCommands: requireSafeStrings(o.candidateCommands ?? [], "candidateCommands"),
+    commands,
     relevantWork: requireSafeStrings(o.relevantWork ?? [], "relevantWork"),
     risks: requireSafeStrings(o.risks ?? [], "risks"),
     unknowns: requireSafeStrings(o.unknowns ?? [], "unknowns"),
@@ -207,6 +252,19 @@ export function evaluateStaleness(
   return { stale: reasons.length > 0, reasons };
 }
 
+const BASIS_LABEL: Record<CommandBasis, string> = {
+  declared_in_documentation: "declared in documentation",
+  observed_in_session: "observed in this session",
+  candidate: "candidate (not executed)",
+};
+
+function commandLine(c: CommandFinding): string {
+  const parts = [`\`${c.command}\` — ${BASIS_LABEL[c.basis]}`];
+  if (c.observedResult) parts.push(`result: ${c.observedResult}`);
+  if (c.evidenceNote) parts.push(c.evidenceNote);
+  return `- ${parts.join("; ")}`;
+}
+
 export function renderOrientationView(id: string, a: OrientationArtifact): string {
   const list = (items: string[]) => (items.length ? items.map((i) => `- ${i}`) : ["_(none)_"]);
   return [
@@ -246,15 +304,12 @@ export function renderOrientationView(id: string, a: OrientationArtifact): strin
     "",
     ...list(a.implementationAreas.map((d) => `\`${d}\``)),
     "",
-    "## Verified commands",
+    "## Commands (recorded, not verified by NewFang)",
     "",
-    ...(a.verifiedCommands.length
-      ? a.verifiedCommands.map((c) => `- **${c.purpose}**: \`${c.command}\` — ${c.evidence}`)
-      : ["_(none)_"]),
+    "_Basis is how the command is known. NewFang does not run or formally verify commands; an",
+    "observation is not a verification receipt._",
     "",
-    "## Candidate commands (not yet verified)",
-    "",
-    ...list(a.candidateCommands.map((c) => `\`${c}\``)),
+    ...(a.commands.length ? a.commands.map(commandLine) : ["_(none)_"]),
     "",
     "## Relevant current work",
     "",

@@ -7,9 +7,9 @@
 //   - canonical state changes only at defined lifecycle points; staging changes no project truth.
 
 import { existsSync } from "node:fs";
-import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
-import { intakePaths, statePaths } from "./paths.ts";
+import { intakePaths, revisionPaths, revisionSlug, statePaths } from "./paths.ts";
 import { loadState, updateState, writeStatusView } from "./store.ts";
 import { NewfangStateError } from "./errors.ts";
 import { resolveRepoRelativeSource, sha256, sha256Bytes } from "./source.ts";
@@ -48,6 +48,53 @@ export interface IntakeManifest {
   sourceSha256: string;
   sourceLineCount: number;
   createdAt: string;
+  /** The current (latest) draft revision; 0 before any draft is staged. */
+  currentDraftRevision: number;
+}
+
+export const REVIEW_ACTIONS = ["revision_requested", "accepted", "rejected"] as const;
+export type ReviewAction = (typeof REVIEW_ACTIONS)[number];
+
+/**
+ * One append-only review record. Deliberately narrow: concise user-visible feedback only — never
+ * hidden reasoning and never a chat transcript.
+ */
+export interface ReviewRecord {
+  intakeId: string;
+  reviewedRevision: number;
+  action: ReviewAction;
+  feedback?: string;
+  timestamp: string;
+  resultingStatus: string;
+}
+
+/** Append one review record. The log is append-only and never rewritten. */
+export async function appendReview(root: string, record: ReviewRecord): Promise<void> {
+  const paths = intakePaths(root, record.intakeId);
+  await mkdir(paths.dir, { recursive: true });
+  await appendFile(paths.reviews, `${JSON.stringify(record)}\n`, "utf8");
+}
+
+/** Read the append-only review log (empty when absent). */
+export async function readReviews(root: string, intakeId: string): Promise<ReviewRecord[]> {
+  const paths = intakePaths(root, intakeId);
+  if (!existsSync(paths.reviews)) return [];
+  const text = await readFile(paths.reviews, "utf8");
+  return text
+    .split("\n")
+    .filter((l) => l.trim().length > 0)
+    .map((l) => JSON.parse(l) as ReviewRecord);
+}
+
+/** Revision numbers with a stored draft artifact, ascending. */
+export async function listDraftRevisions(root: string, intakeId: string): Promise<number[]> {
+  const paths = intakePaths(root, intakeId);
+  if (!existsSync(paths.draftsDir)) return [];
+  const entries = await readdir(paths.draftsDir);
+  return entries
+    .filter((e) => /^\d+\.json$/.test(e))
+    .map((e) => Number(e.replace(/\.json$/, "")))
+    .sort((a, b) => a - b);
 }
 
 export async function readManifest(root: string, intakeId: string): Promise<IntakeManifest> {
@@ -62,10 +109,47 @@ export async function readSource(root: string, intakeId: string): Promise<string
   return readFile(paths.source, "utf8");
 }
 
-export async function readDraft(root: string, intakeId: string): Promise<IntakeDraft | null> {
-  const paths = intakePaths(root, intakeId);
+/**
+ * Read a stored draft revision. Defaults to the manifest's current revision.
+ * Prior revisions remain readable forever; nothing is reconstructed if an artifact is missing.
+ */
+export async function readDraft(
+  root: string,
+  intakeId: string,
+  revision?: number,
+): Promise<IntakeDraft | null> {
+  let target = revision;
+  if (target === undefined) {
+    try {
+      target = (await readManifest(root, intakeId)).currentDraftRevision;
+    } catch {
+      return null;
+    }
+  }
+  if (!target || target < 1) return null;
+  const paths = revisionPaths(root, intakeId, target);
   if (!existsSync(paths.draft)) return null;
   return JSON.parse(await readFile(paths.draft, "utf8")) as IntakeDraft;
+}
+
+/** Read a generated Understanding Check for a revision (default: current). */
+export async function readUnderstanding(
+  root: string,
+  intakeId: string,
+  revision?: number,
+): Promise<string | null> {
+  let target = revision;
+  if (target === undefined) {
+    try {
+      target = (await readManifest(root, intakeId)).currentDraftRevision;
+    } catch {
+      return null;
+    }
+  }
+  if (!target || target < 1) return null;
+  const paths = revisionPaths(root, intakeId, target);
+  if (!existsSync(paths.understanding)) return null;
+  return readFile(paths.understanding, "utf8");
 }
 
 export function findIntake(state: ProjectState, intakeId: string): IntakeRecord {
@@ -149,6 +233,7 @@ export async function createIntake(
     sourceSha256: hash,
     sourceLineCount: lineCount,
     createdAt: now,
+    currentDraftRevision: 0,
   };
   await atomicWrite(paths.manifest, `${JSON.stringify(manifest, null, 2)}\n`);
 
@@ -231,8 +316,15 @@ export async function stageIntakeDraft(
   }
 
   const paths = intakePaths(root, intakeId);
-  await mkdir(paths.dir, { recursive: true });
-  await atomicWrite(paths.draft, `${JSON.stringify(stored, null, 2)}\n`);
+  const revPaths = revisionPaths(root, intakeId, nextRevision);
+  if (existsSync(revPaths.draft)) {
+    throw new ProjectOperationError(
+      `Draft revision ${nextRevision} already exists for ${intakeId}; prior revisions are never overwritten.`,
+    );
+  }
+  await mkdir(paths.draftsDir, { recursive: true });
+  await mkdir(paths.understandingsDir, { recursive: true });
+  await atomicWrite(revPaths.draft, `${JSON.stringify(stored, null, 2)}\n`);
 
   const nextState = await updateState(
     root,
@@ -254,7 +346,12 @@ export async function stageIntakeDraft(
   );
 
   const updated = findIntake(nextState, intakeId);
-  await atomicWrite(paths.understanding, renderUnderstanding(updated, stored, summary));
+  await atomicWrite(revPaths.understanding, renderUnderstanding(updated, stored, summary));
+  // Point the manifest at the new current revision (prior artifacts stay in place).
+  await atomicWrite(
+    paths.manifest,
+    `${JSON.stringify({ ...manifest, currentDraftRevision: nextRevision }, null, 2)}\n`,
+  );
 
   return { intake: updated, draft: stored, summary, blocked };
 }
@@ -286,7 +383,7 @@ export async function applyIntake(
   const record = findIntake(state, intakeId);
 
   if (record.status === "accepted") {
-    if (record.draftRevision === opts.reviewedDraftRevision) {
+    if ((record.acceptedDraftRevision ?? record.draftRevision) === opts.reviewedDraftRevision) {
       const draft = await readDraft(root, intakeId);
       return {
         intake: record,
@@ -335,7 +432,13 @@ export async function applyIntake(
         ...applied,
         intakes: applied.intakes.map((i) =>
           i.id === intakeId
-            ? { ...i, status: "accepted" as const, acceptedAt: now, updatedAt: now }
+            ? {
+                ...i,
+                status: "accepted" as const,
+                acceptedDraftRevision: draft.draftRevision,
+                acceptedAt: now,
+                updatedAt: now,
+              }
             : i,
         ),
         currentIntakeId: intakeId,
@@ -350,6 +453,14 @@ export async function applyIntake(
     },
   );
 
+  // Append-only review history: record the exact revision that was accepted.
+  await appendReview(root, {
+    intakeId,
+    reviewedRevision: draft.draftRevision,
+    action: "accepted",
+    timestamp: now,
+    resultingStatus: "accepted",
+  });
   await writeProjectBrief(root, nextState);
   await writeStatusView(root, nextState);
 
@@ -384,5 +495,13 @@ export async function rejectIntake(
     }),
     { type: "intake_rejected", id: intakeId, ...(reason ? { reason } : {}) },
   );
+  await appendReview(root, {
+    intakeId,
+    reviewedRevision: record.draftRevision,
+    action: "rejected",
+    ...(reason ? { feedback: reason } : {}),
+    timestamp: now,
+    resultingStatus: "rejected",
+  });
   return findIntake(nextState, intakeId);
 }

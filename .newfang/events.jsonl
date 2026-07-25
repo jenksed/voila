@@ -26,3 +26,4 @@
 {"type":"intake_draft_staged","id":"INT-1","draftRevision":1,"blocked":false,"revision":26,"ts":"2026-07-25T04:51:01.988Z"}
 {"type":"intake_applied","id":"INT-1","draftRevision":1,"created":{"decisions":3,"assumptions":1,"risks":1,"workItems":1},"skippedDuplicates":0,"revision":27,"ts":"2026-07-25T04:51:01.993Z"}
 {"type":"orientation_recorded","id":"ORI-1","head":"89ec6387adedb6fcad0d92f10494dc06b7de11ce","revision":28,"ts":"2026-07-25T04:51:02.047Z"}
+{"type":"intake_accepted_revision_recorded","id":"INT-1","revision":29,"ts":"2026-07-25T05:27:05.608Z"}

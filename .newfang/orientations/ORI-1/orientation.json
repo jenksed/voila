@@ -29,30 +29,31 @@
     "src/ui/steward-console",
     "test"
   ],
-  "verifiedCommands": [
+  "commands": [
     {
-      "purpose": "verify gate",
       "command": "mise exec -- npm run verify",
-      "evidence": "declared in package.json scripts"
+      "basis": "declared_in_documentation",
+      "evidenceNote": "declared in package.json scripts"
     },
     {
-      "purpose": "tests",
       "command": "mise exec -- npm test",
-      "evidence": "declared in package.json scripts"
+      "basis": "declared_in_documentation",
+      "evidenceNote": "declared in package.json scripts"
     },
     {
-      "purpose": "typecheck",
       "command": "mise exec -- npm run typecheck",
-      "evidence": "declared in package.json scripts"
+      "basis": "declared_in_documentation",
+      "evidenceNote": "declared in package.json scripts"
     },
     {
-      "purpose": "run Pi",
       "command": "mise exec -- npm run pi",
-      "evidence": "declared in package.json scripts"
+      "basis": "declared_in_documentation",
+      "evidenceNote": "declared in package.json scripts"
+    },
+    {
+      "command": "mise exec -- npm run format",
+      "basis": "candidate"
     }
-  ],
-  "candidateCommands": [
-    "mise exec -- npm run format"
   ],
   "relevantWork": [
     "NF-2 (focus): planning-document intake and repository orientation",

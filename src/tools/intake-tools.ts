@@ -95,8 +95,23 @@ const InstructionFileSchema = Type.Object(
   { additionalProperties: false },
 );
 
-const VerifiedCommandSchema = Type.Object(
-  { purpose: Type.String(), command: Type.String(), evidence: Type.String() },
+const CommandFindingSchema = Type.Object(
+  {
+    command: Type.String(),
+    basis: StringEnum(
+      ["declared_in_documentation", "observed_in_session", "candidate"] as const,
+      "declared_in_documentation = a repo document/manifest presents it; observed_in_session = you actually ran it this session; candidate = likely but not executed",
+    ),
+    observedResult: Type.Optional(
+      StringEnum(["passed", "failed"] as const, "only permitted with basis observed_in_session"),
+    ),
+    evidenceNote: Type.Optional(
+      Type.String({
+        description:
+          "Provenance: which document/manifest declared it, or how it was observed. Required for declared_in_documentation.",
+      }),
+    ),
+  },
   { additionalProperties: false },
 );
 
@@ -258,10 +273,10 @@ export function intakeTools(): NewfangTool[] {
       name: "newfang_record_orientation",
       label: "Record Orientation",
       description:
-        "Store a bounded repository-orientation snapshot and make it current. Paths must be repository-relative; secrets, env values, and absolute paths are rejected. Include provenance for what you actually inspected.",
+        "Store a bounded repository-orientation snapshot and make it current. Paths must be repository-relative; secrets, env values, and absolute paths are rejected. Include provenance for what you actually inspected. Commands carry an explicit basis (declared_in_documentation | observed_in_session | candidate); observedResult is only allowed for commands you actually ran. NewFang does not verify commands — do not describe them as verified.",
       promptSnippet: "Record a bounded NewFang repository-orientation snapshot",
       promptGuidelines: [
-        "Use newfang_record_orientation after a narrow inspection; cite the files you read in provenance and do not include secrets or absolute paths.",
+        "Use newfang_record_orientation after a narrow inspection; cite the files you read in provenance, give each command an honest basis, and do not include secrets or absolute paths.",
       ],
       parameters: Type.Object(
         {
@@ -275,8 +290,7 @@ export function intakeTools(): NewfangTool[] {
           instructionFiles: Type.Array(InstructionFileSchema),
           keyDocuments: Type.Optional(Type.Array(Type.String())),
           implementationAreas: Type.Optional(Type.Array(Type.String())),
-          verifiedCommands: Type.Optional(Type.Array(VerifiedCommandSchema)),
-          candidateCommands: Type.Optional(Type.Array(Type.String())),
+          commands: Type.Optional(Type.Array(CommandFindingSchema)),
           relevantWork: Type.Optional(Type.Array(Type.String())),
           risks: Type.Optional(Type.Array(Type.String())),
           unknowns: Type.Optional(Type.Array(Type.String())),
@@ -287,7 +301,7 @@ export function intakeTools(): NewfangTool[] {
       async execute(_id, params, _signal, _onUpdate, ctx) {
         const result = await recordOrientation(ctx.cwd, params);
         return text(
-          `Recorded orientation ${result.record.id} (current). ${result.artifact.verifiedCommands.length} verified command(s), ${result.artifact.instructionFiles.length} instruction file(s).`,
+          `Recorded orientation ${result.record.id} (current). ${result.artifact.commands.length} command finding(s) (not verified by NewFang), ${result.artifact.instructionFiles.length} instruction file(s).`,
           { orientation: result.record },
         );
       },

@@ -6,11 +6,13 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { loadState } from "../state/store.ts";
-import { intakePaths, statePaths } from "../state/paths.ts";
+import { statePaths } from "../state/paths.ts";
 import {
+  appendReview,
   applyIntake,
   createIntake,
   readDraft,
+  readUnderstanding,
   rejectIntake,
   writeProjectBrief,
 } from "../state/intake-store.ts";
@@ -114,10 +116,9 @@ export async function loadIntakeReview(
       ],
     };
   }
-  const paths = intakePaths(root, id);
-  const understanding = existsSync(paths.understanding)
-    ? await readFile(paths.understanding, "utf8")
-    : "(understanding view missing; re-stage the draft)";
+  const understanding =
+    (await readUnderstanding(root, id, draft.draftRevision)) ??
+    "(understanding view missing for this revision; re-stage the draft)";
   return {
     intakeId: id,
     draftRevision: draft.draftRevision,
@@ -275,7 +276,7 @@ export async function runOrient(root: string): Promise<CommandResult> {
     lines.push(
       "",
       `Purpose: ${status.artifact.purpose}`,
-      `Verified commands: ${status.artifact.verifiedCommands.length} · Unknowns: ${status.artifact.unknowns.length}`,
+      `Command findings: ${status.artifact.commands.length} (recorded, not verified) · Unknowns: ${status.artifact.unknowns.length}`,
     );
   }
   return { level: status.staleness.stale ? "warning" : "info", lines, state };

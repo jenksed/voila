@@ -36,16 +36,16 @@ NewFang is a personal development operating system built as a Pi extension: it m
 - `src/ui/steward-console`
 - `test`
 
-## Verified commands
+## Commands (recorded, not verified by NewFang)
 
-- **verify gate**: `mise exec -- npm run verify` — declared in package.json scripts
-- **tests**: `mise exec -- npm test` — declared in package.json scripts
-- **typecheck**: `mise exec -- npm run typecheck` — declared in package.json scripts
-- **run Pi**: `mise exec -- npm run pi` — declared in package.json scripts
+_Basis is how the command is known. NewFang does not run or formally verify commands; an
+observation is not a verification receipt._
 
-## Candidate commands (not yet verified)
-
-- `mise exec -- npm run format`
+- `mise exec -- npm run verify` — declared in documentation; declared in package.json scripts
+- `mise exec -- npm test` — declared in documentation; declared in package.json scripts
+- `mise exec -- npm run typecheck` — declared in documentation; declared in package.json scripts
+- `mise exec -- npm run pi` — declared in documentation; declared in package.json scripts
+- `mise exec -- npm run format` — candidate (not executed)
 
 ## Relevant current work
 

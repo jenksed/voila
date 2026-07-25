@@ -104,8 +104,12 @@ Record it with `newfang_record_orientation`, including:
 
 - repository-relative paths only (absolute/home paths are rejected),
 - a sha256 for each instruction file (used for staleness detection),
-- `verifiedCommands` with the evidence for each (e.g. "declared in package.json scripts"),
-- `candidateCommands` for anything you have not confirmed,
+- `commands` with an honest **basis** for each:
+  - `declared_in_documentation` — a repository document or manifest presents it (an `evidenceNote`
+    naming that document is **required**),
+  - `observed_in_session` — you actually executed it during this orientation session (you may add
+    `observedResult: "passed" | "failed"`),
+  - `candidate` — it looks likely but you have not executed it (**no result allowed**),
 - `provenance` naming the files you actually read,
 - honest `unknowns`.
 
