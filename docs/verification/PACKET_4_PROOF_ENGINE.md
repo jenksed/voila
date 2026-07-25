@@ -29,10 +29,12 @@ suite is never mistaken for an interactive or authenticated check.
 | 7. Protected-completion fixture | **PASS** | rejection preserves canonical bytes; success is fully gated |
 | 8. Interactive Proof view (TUI) | **PENDING** | requires a terminal; the agent had no TTY |
 | 9. Authenticated model use | **PENDING** | requires `/login`; the agent must not authenticate |
-| 10. GitHub CI | **PENDING** | not claimed until the PR run succeeds |
+| 10. GitHub CI | **PASS** | run 30177880494 on PR #4 — `verify` job green |
+| 11. Doctor | **PASS** | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed |
 
-Tiers 8, 9, and 10 are **not claimed**. Tiers 8 and 9 are the same two human gates already
-outstanding from Packets 2.5 and 3.
+Tiers 8 and 9 are **not claimed** — the same two human gates already outstanding from Packets 2.5
+and 3. **Packet 4R is therefore not fully accepted**: acceptance requires the interactive Proof view
+to pass, and only Joshua can perform it.
 
 ## Tier 0 — Rebase and reconciliation
 
@@ -389,10 +391,19 @@ Checklist for Joshua, after authenticating:
    completion in prose.
 4. Confirm it does not invent narrow claims solely to satisfy the gate.
 
-## Tier 10 — GitHub CI — **PENDING**
+## Tier 10 — GitHub CI — **PASS**
 
-Not claimed. The branch is pushed and a draft PR is open, but this row stays PENDING until the
-GitHub Actions run on the PR succeeds. Local evidence is not a substitute.
+Claimed only after the run succeeded on the PR, not on local evidence:
+
+```text
+PR:  https://github.com/jenksed/newfang/pull/4  (draft, base main)
+run: https://github.com/jenksed/newfang/actions/runs/30177880494
+job: verify — pass (29s)
+```
+
+The run carries a non-blocking annotation that `actions/checkout@v4` and `actions/setup-node@v4`
+target the deprecated Node.js 20 and were forced onto Node.js 24. It did not affect the result and is
+recorded here rather than silently ignored.
 
 ## Tier 11 — Doctor
 
