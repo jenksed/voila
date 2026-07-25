@@ -173,6 +173,119 @@ test("the v3 validator rejects non-v3 input and accepts the fixture", () => {
   assert.equal(ok.schemaVersion, 3);
 });
 
+// The fixture below is the REAL integrated Packet 3 canonical state (the schema-v3
+// .newfang/project.json at the main merge commit 3169878), not a synthetic envelope. It is the
+// state this migration actually has to survive, including the full intake and review history.
+const INTEGRATED_V3 = JSON.parse(
+  await readFile(new URL("./fixtures/integrated-v3-project.json", import.meta.url), "utf8"),
+) as Record<string, unknown> & {
+  intakes: Array<Record<string, unknown>>;
+  workItems: Array<Record<string, unknown>>;
+  decisions: Array<Record<string, unknown>>;
+  revision: number;
+};
+
+test("the integrated Packet 3 state is genuinely v3 and carries the real history", () => {
+  assert.equal(INTEGRATED_V3.schemaVersion, 3, "fixture is a real v3 state, not a v4 snapshot");
+  assert.equal(INTEGRATED_V3.intakes.length, 8);
+  assert.equal(INTEGRATED_V3.workItems.length, 8);
+  assert.equal(INTEGRATED_V3.decisions.length, 10);
+  assert.equal(INTEGRATED_V3.focusWorkItemId, "NF-2");
+  assert.equal(INTEGRATED_V3.currentIntakeId, "INT-8");
+});
+
+test("the integrated v3 state migrates to v4 and keeps every intake and review record", async () => {
+  const root = await seed(INTEGRATED_V3);
+  const report = await runMigration(root, { apply: true });
+  assert.equal(report.status, "migrated");
+  assert.deepEqual(report.steps, [{ from: 3, to: 4 }]);
+
+  const v4 = await loadState(root);
+  assert.equal(v4.schemaVersion, 4);
+  assert.equal(v4.revision, INTEGRATED_V3.revision + 1);
+
+  // Nothing from Packet 3 is dropped or rewritten.
+  assert.equal(v4.intakes.length, 8);
+  assert.equal(v4.workItems.length, 8);
+  assert.equal(v4.decisions.length, 10);
+  assert.equal(v4.decisions.filter((d) => d.id === "DEC-10").length, 1, "DEC-10 exactly once");
+  assert.equal(v4.focusWorkItemId, "NF-2", "focus still NF-2");
+  assert.equal(v4.currentIntakeId, "INT-8");
+  assert.equal(v4.currentOrientationId, "ORI-2");
+  assert.equal(v4.sequences.intake, 9);
+  assert.equal(v4.sequences.orientation, 3);
+
+  for (const before of INTEGRATED_V3.intakes) {
+    const after = v4.intakes.find((i) => i.id === before.id);
+    assert.deepEqual(after, before, `${before.id} metadata is carried through untouched`);
+  }
+});
+
+test("accepted INT-8 revision 3 survives the migration as accepted", async () => {
+  const root = await seed(INTEGRATED_V3);
+  await runMigration(root, { apply: true });
+  const v4 = await loadState(root);
+  const int8 = v4.intakes.find((i) => i.id === "INT-8");
+  assert.ok(int8, "INT-8 is present after migration");
+  assert.equal(int8?.status, "accepted");
+  assert.equal(int8?.acceptedDraftRevision, 3, "revision 3 is the accepted draft");
+  assert.equal(int8?.draftRevision, 3);
+});
+
+test("migrating the integrated state completes no work item and invents no proof", async () => {
+  const root = await seed(INTEGRATED_V3);
+  await runMigration(root, { apply: true });
+  const v4 = await loadState(root);
+  assert.deepEqual(v4.claims, []);
+  assert.deepEqual(v4.receipts, []);
+  assert.deepEqual(
+    v4.workItems.filter((w) => w.status === "completed"),
+    [],
+    "migration completes nothing retroactively",
+  );
+  for (const item of v4.workItems) {
+    assert.deepEqual(item.requiredClaimIds, [], `${item.id} gains no invented requirement`);
+  }
+});
+
+test("migrating the integrated state appends exactly one event and refreshes the view", async () => {
+  const root = await seed(INTEGRATED_V3);
+  await runMigration(root, { apply: true });
+  const state = await loadState(root);
+  const events = (await readFile(statePaths(root).eventsJsonl, "utf8"))
+    .trim()
+    .split("\n")
+    .map((l) => JSON.parse(l));
+  assert.equal(events.length, 1, "exactly one event for the migration");
+  assert.equal(events[0].type, "schema_migrated");
+  assert.equal(events[0].from, 3);
+  assert.equal(events[0].to, 4);
+  assert.equal(await readFile(statePaths(root).statusView, "utf8"), renderStatusView(state));
+});
+
+test("inspecting the integrated v3 state is read-only", async () => {
+  const root = await seed(INTEGRATED_V3);
+  const before = await readFile(statePaths(root).projectJson, "utf8");
+  const report = await runMigration(root, { apply: false });
+  assert.equal(report.status, "inspectable");
+  assert.equal(await readFile(statePaths(root).projectJson, "utf8"), before);
+  assert.equal(existsSync(statePaths(root).eventsJsonl), false, "inspection appends no event");
+  // The reported backup path is a plan, not a write: nothing lands on disk.
+  assert.match(report.backupLocation as string, /<timestamp>$/);
+  const wroteBackup =
+    existsSync(statePaths(root).backupsDir) &&
+    (await readdir(statePaths(root).backupsDir)).length > 0;
+  assert.equal(wroteBackup, false, "inspection creates no backup file");
+});
+
+test("migrating the integrated v3 state backs up the original bytes", async () => {
+  const root = await seed(INTEGRATED_V3);
+  const before = await readFile(statePaths(root).projectJson, "utf8");
+  const report = await runMigration(root, { apply: true });
+  assert.ok(report.backupLocation && existsSync(report.backupLocation));
+  assert.equal(await readFile(report.backupLocation as string, "utf8"), before);
+});
+
 test("migrateV3ToV4 keeps an already-present requiredClaimIds array", () => {
   const source = validateProjectStateV3({
     ...V3_FIXTURE,
