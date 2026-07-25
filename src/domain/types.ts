@@ -118,8 +118,13 @@ export interface ProjectState {
   phase: Phase;
   health: Health;
   nextAction: string;
-  /** ID of the work item the Steward has selected as active, if any. */
-  activeWorkItemId: string | null;
+  /** Optional Steward-authored explanation of why the next action is justified. */
+  nextActionRationale?: string;
+  /**
+   * ID of the work item currently receiving attention (the focus pointer). Distinct from lifecycle
+   * status: an item may be focused while still `ready`; an `in_progress` item need not be focused.
+   */
+  focusWorkItemId: string | null;
   sequences: Sequences;
   workItems: WorkItem[];
   decisions: Decision[];

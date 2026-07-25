@@ -12,7 +12,7 @@ import {
   recordAssumption,
   recordDecision,
   recordRisk,
-  setActiveWorkItem,
+  setFocusWorkItem,
   updateAssumption,
   updateDecision,
   updateRisk,
@@ -125,16 +125,16 @@ test("blocked reason is kept while blocked and cleared otherwise", () => {
   assert.equal(s.workItems[0]?.blockedReason, undefined);
 });
 
-test("setActiveWorkItem rejects completed/cancelled and missing items", () => {
+test("setFocusWorkItem rejects completed/cancelled and missing items", () => {
   let s = base();
   s = createWorkItem(s, { kind: "task", title: "A" }, T); // NF-1
-  s = setActiveWorkItem(s, "NF-1");
-  assert.equal(s.activeWorkItemId, "NF-1");
-  assert.throws(() => setActiveWorkItem(s, "NF-9"), ProjectOperationError);
+  s = setFocusWorkItem(s, "NF-1");
+  assert.equal(s.focusWorkItemId, "NF-1");
+  assert.throws(() => setFocusWorkItem(s, "NF-9"), ProjectOperationError);
   s = updateWorkItem(s, { id: "NF-1", status: "cancelled" }, T);
-  assert.throws(() => setActiveWorkItem(s, "NF-1"), ProjectOperationError);
-  s = setActiveWorkItem(s, null);
-  assert.equal(s.activeWorkItemId, null);
+  assert.throws(() => setFocusWorkItem(s, "NF-1"), ProjectOperationError);
+  s = setFocusWorkItem(s, null);
+  assert.equal(s.focusWorkItemId, null);
 });
 
 test("decision lifecycle: record then supersede", () => {
@@ -142,13 +142,82 @@ test("decision lifecycle: record then supersede", () => {
   s = recordDecision(s, { title: "d1", decision: "x", rationale: "y" }, T);
   assert.equal(s.decisions[0]?.status, "proposed");
   s = recordDecision(s, { title: "d2", decision: "x2", rationale: "y2", status: "accepted" }, T);
-  s = updateDecision(s, { id: "DEC-1", status: "superseded", supersededBy: "DEC-2" }, T);
+  s = updateDecision(s, { id: "DEC-1", status: "superseded", supersededById: "DEC-2" }, T);
   assert.equal(s.decisions[0]?.status, "superseded");
   assert.equal(s.decisions[0]?.supersededBy, "DEC-2");
+});
+
+test("decision transitions: allowed paths, terminal state, and supersede rules", () => {
+  let s = base();
+  s = recordDecision(s, { title: "d1", decision: "x", rationale: "y" }, T); // DEC-1 proposed
+  s = recordDecision(s, { title: "d2", decision: "x", rationale: "y" }, T); // DEC-2 proposed
+
+  // proposed -> accepted
+  s = updateDecision(s, { id: "DEC-1", status: "accepted" }, T);
+  assert.equal(s.decisions[0]?.status, "accepted");
+
+  // superseding requires an existing replacement, not self, and no cycle
   assert.throws(
-    () => updateDecision(s, { id: "DEC-1", supersededBy: "DEC-9" }, T),
+    () => updateDecision(s, { id: "DEC-1", status: "superseded" }, T),
     ProjectOperationError,
   );
+  assert.throws(
+    () => updateDecision(s, { id: "DEC-1", status: "superseded", supersededById: "DEC-1" }, T),
+    ProjectOperationError,
+  );
+  assert.throws(
+    () => updateDecision(s, { id: "DEC-1", status: "superseded", supersededById: "DEC-9" }, T),
+    ProjectOperationError,
+  );
+
+  // accepted -> superseded by DEC-2
+  s = updateDecision(s, { id: "DEC-1", status: "superseded", supersededById: "DEC-2" }, T);
+  // cycle: DEC-2 cannot be superseded by DEC-1 (DEC-1 already points at DEC-2)
+  assert.throws(
+    () => updateDecision(s, { id: "DEC-2", status: "superseded", supersededById: "DEC-1" }, T),
+    ProjectOperationError,
+  );
+  // terminal: superseded cannot be reopened
+  assert.throws(
+    () => updateDecision(s, { id: "DEC-1", status: "accepted" }, T),
+    ProjectOperationError,
+  );
+  // supersededById only applies when superseding
+  assert.throws(
+    () => updateDecision(s, { id: "DEC-2", supersededById: "DEC-1" }, T),
+    ProjectOperationError,
+  );
+});
+
+test("assumption transitions: terminal states are not reopened", () => {
+  let s = base();
+  s = recordAssumption(s, { statement: "a", confidence: "low" }, T);
+  s = updateAssumption(s, { id: "ASM-1", status: "invalidated" }, T);
+  assert.throws(
+    () => updateAssumption(s, { id: "ASM-1", status: "open" }, T),
+    ProjectOperationError,
+  );
+  // note updates on a terminal assumption are still allowed
+  s = updateAssumption(s, { id: "ASM-1", note: "explained" }, T);
+  assert.equal(s.assumptions[0]?.note, "explained");
+});
+
+test("risk transitions: closing needs a resolution; terminal states are not reopened", () => {
+  let s = base();
+  s = recordRisk(s, { statement: "r", likelihood: "low", impact: "low" }, T);
+  // open -> closed without mitigation is rejected
+  assert.throws(() => updateRisk(s, { id: "RSK-1", status: "closed" }, T), ProjectOperationError);
+  // open -> closed with a resolution is allowed
+  const closed = updateRisk(s, { id: "RSK-1", status: "closed", mitigation: "resolved" }, T);
+  assert.equal(closed.risks[0]?.status, "closed");
+  assert.throws(
+    () => updateRisk(closed, { id: "RSK-1", status: "open" }, T),
+    ProjectOperationError,
+  );
+  // open -> mitigated -> closed
+  s = updateRisk(s, { id: "RSK-1", status: "mitigated", mitigation: "pinned" }, T);
+  s = updateRisk(s, { id: "RSK-1", status: "closed" }, T);
+  assert.equal(s.risks[0]?.status, "closed");
 });
 
 test("assumption lifecycle: record then validate", () => {

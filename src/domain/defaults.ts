@@ -33,7 +33,7 @@ export function createInitialState(input: CreateInitialStateInput): ProjectState
     phase: "research",
     health: "unknown",
     nextAction: "Define the first work boundary, then run /newfang status.",
-    activeWorkItemId: null,
+    focusWorkItemId: null,
     sequences: { workItem: 1, decision: 1, assumption: 1, risk: 1 },
     workItems: [],
     decisions: [],

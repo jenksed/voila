@@ -1,9 +1,10 @@
 # NewFang Development
 
-Local setup, pinned versions, commands, tools, schema/migration, and the smoke procedure. Through
-Packet 2 NewFang has a project-operations layer (backlog, decisions, assumptions, risks) on canonical
-`.newfang/` state. This is not the full MVP: there is no planning intake, claims, verification
-receipts, completion gate, delegation, or approvals.
+Local setup, pinned versions, commands, tools, schema/migration, the Steward Console, and the smoke
+procedure. Through Packet 2.5 NewFang has a project-operations layer (backlog, decisions, assumptions,
+risks) on canonical `.newfang/` state plus a Pi-native Steward Console. This is not the full MVP:
+there is no planning intake, claims, verification receipts, completion gate, delegation, or
+approvals.
 
 ## Pinned runtime and dependencies
 
@@ -72,22 +73,25 @@ The file `.pi/extensions/newfang.ts` is a thin adapter (ADR-0007); all logic liv
 | Command | Behavior |
 |---------|----------|
 | `/newfang init` | Creates canonical `.newfang/` state. Derives the display name from the repo directory. Refuses to overwrite (no force option). |
-| `/newfang status` | Identity, phase, health, revision, update time, a compact operations summary, active item, and next action. Warns if uninitialized or migration-required; errors on malformed state. |
-| `/newfang backlog [ID]` | Concise backlog: counts by status, active item, in-progress, blocked (with reasons), highest-priority ready items, and next action. With an `ID`, shows that item's detail. |
+| `/newfang home` | Opens the **Steward Console** (interactive TUI). Falls back to `/newfang status` outside a terminal. |
+| `/newfang status` | Identity, phase, health, revision, update time, a compact operations summary, focus, next action, and the rationale when present. Warns if uninitialized or migration-required; errors on malformed state. |
+| `/newfang focus [ID\|clear]` | Shows, sets, or clears the focus pointer. Rejects unknown, completed, or cancelled items. |
+| `/newfang backlog [ID]` | Concise backlog: counts by status, focus item, in-progress, blocked (with reasons), highest-priority ready items, and next action. With an `ID`, shows that item's detail. |
 | `/newfang decisions` | Compact list of decisions (id, status, title, decision). |
 | `/newfang assumptions` | Compact list of assumptions (id, status, confidence, statement). |
 | `/newfang risks` | Compact list of risks (id, status, likelihood/impact, mitigation, links). |
 | `/newfang migrate [--apply]` | Inspects the schema migration (current/target version, additions, backup location, safety). `--apply` performs the migration with a timestamped backup. |
 | `/newfang doctor` | Read-only diagnostics (see below). Makes no repairs or migrations. |
 
-A quiet persistent home-view widget shows `NewFang · phase · health`, plus the active work-item ID
-(when set) and a blocked count (when nonzero), and an abbreviated next action — or a single init hint
-when uninitialized, or a migration hint when the state is v1.
+A quiet persistent ambient widget shows at most two lines — e.g.
+`NewFang · BUILD · GREEN · Focus NF-2` and `Next: … · 3 risks · 1 blocked` — omitting empty counts and
+degrading at narrow widths. It shows a single init hint when uninitialized, or a migration hint when
+the state is v1.
 
 `/newfang doctor` checks (PASS / WARN / FAIL): pinned Pi version, Node version, git repo, Pi trust
 visibility, writable state dir, state presence, **schema migration requirement**, canonical state
 validity, **ID counter consistency**, **missing work-item references**, **dependency cycles**,
-**active work-item reference**, and generated-view consistency.
+**focus work-item reference**, and generated-view consistency.
 
 ## Pi tools (LLM-callable)
 
@@ -104,12 +108,44 @@ reporting success, and return concise results with structured details.
 | `newfang_record_assumption` | Record an assumption with a confidence level. |
 | `newfang_record_risk` | Record a risk with likelihood and impact. |
 | `newfang_list_project_operations` | Summarize decisions, assumptions, and risks. |
+| `newfang_set_focus` | Set or clear the focus pointer (rejects completed/cancelled items). |
+| `newfang_update_decision` | Accept or supersede a decision (`supersededById` required when superseding). |
+| `newfang_update_assumption` | Validate or invalidate an assumption; update notes. |
+| `newfang_update_risk` | Mitigate, accept, or close a risk (closing requires a resolution). |
+
+## Steward Console (`/newfang home`)
+
+A Pi-native, keyboard-first console that answers: what am I responsible for now, what is the next
+justified action, why is it next, what needs attention, and which decisions and risks matter now.
+Design and alternatives considered: [design/STEWARD_CONSOLE.md](design/STEWARD_CONSOLE.md).
+
+- **Views**: **Focus** (next action + rationale + focus item + attention), **Work** (items grouped by
+  operational relevance), **Project Truth** (decisions, open assumptions, risks).
+- **Detail view**: opens for a selected work item, decision, assumption, or risk — curated fields
+  only, never raw JSON.
+- **Keys**: `Tab`/`Shift-Tab` or `h`/`l` switch view · `j`/`k` move selection · `Enter` detail ·
+  `Esc` back/close · `r` reload canonical state · `?` help · `q` close. Shortcuts are scoped to the
+  custom component, so Pi-global keys are untouched.
+- **Responsive**: wide (≥120) two-column panels; standard (80–119) stacked; compact (<80) one-column,
+  focus-first with condensed counts.
+- **Theme**: Pi theme tokens only (no hardcoded ANSI); no custom NewFang theme required.
+- **Runtime context**: the header may show git branch, dirty/clean, Pi and Node versions. This is
+  read-only display data — it is **never** written to canonical state and degrades gracefully.
+- The console is **read-mostly** in this packet; mutations go through tools and commands.
+
+### Focus vs. status
+
+`focusWorkItemId` is a *focus pointer* — the item currently receiving attention — and is **not** a
+lifecycle status. An item may be focused while still `ready`; an `in_progress` item need not be
+focused; an outcome may be focused while child tasks carry implementation. Completed or cancelled
+items cannot be focused. `nextActionRationale` is an optional Steward-authored explanation of why the
+next action is justified; it is never generated automatically.
 
 ## Schema versioning and migration
 
 Canonical state is explicitly versioned (`schemaVersion`). Packet 1 wrote **v1**; Packet 2 introduces
-**v2** (adds `activeWorkItemId`, `sequences`, `workItems`, `decisions`, `assumptions`, `risks`). v1 is
-never redefined in place and never migrated silently:
+**v2** (adds `focusWorkItemId`, optional `nextActionRationale`, `sequences`, `workItems`, `decisions`,
+`assumptions`, `risks`). v1 is never redefined in place and never migrated silently:
 
 - Loading a v1 state reports **migration required** (it is not usable as current state).
 - `/newfang migrate` inspects; `/newfang migrate --apply` migrates 1→2. It validates the source and
@@ -185,14 +221,20 @@ Recorded runs and results:
 [verification/PACKET_1_FOUNDATION.md](verification/PACKET_1_FOUNDATION.md) and
 [verification/PACKET_2_PROJECT_OPERATIONS.md](verification/PACKET_2_PROJECT_OPERATIONS.md).
 
-## Current limitations (through Packet 2)
+## Current limitations (through Packet 2.5)
 
 - No planning-document intake, repository orientation, claims, evidence links, runtime verification
   receipts, completion gate, approval bundles, delegation, background processes, sandboxing, remote
   execution, model routing, cost tracking, packaging, or release/PR automation.
-- Generic tools cannot mark work `completed` (reserved for a future completion tool).
-- Decision/assumption/risk **update** exists in the domain (tested) but only `record_*` is exposed as
-  a Pi tool so far.
+- Generic tools cannot mark work `completed` (reserved for a future completion tool). The dogfooded
+  state reflects this honestly: nothing is marked complete.
+- The Steward Console is **read-mostly** — no editing forms; selection resets when switching views.
+- Console interactive rendering (resize, theme appearance) is verified by tests at the string level;
+  see the Packet 2.5 record for what was and was not observed interactively.
 - Single-writer assumption for `.newfang/` (atomic writes, but no lock).
 - `doctor` reports only; it never repairs or migrates.
-- Exercised via RPC + direct handlers; the interactive TUI path is documented but not automated.
+
+Recorded runs and results:
+[verification/PACKET_1_FOUNDATION.md](verification/PACKET_1_FOUNDATION.md),
+[verification/PACKET_2_PROJECT_OPERATIONS.md](verification/PACKET_2_PROJECT_OPERATIONS.md),
+[verification/PACKET_2_5_STEWARD_CONSOLE.md](verification/PACKET_2_5_STEWARD_CONSOLE.md).

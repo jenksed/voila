@@ -112,24 +112,24 @@ function stateIntegrityChecks(state: ProjectState): DoctorCheck[] {
   );
 
   // Active work-item reference.
-  if (state.activeWorkItemId === null) {
-    checks.push({ name: "active work item", level: "pass", detail: "none selected" });
+  if (state.focusWorkItemId === null) {
+    checks.push({ name: "focus work item", level: "pass", detail: "none selected" });
   } else {
-    const active = state.workItems.find((w) => w.id === state.activeWorkItemId);
+    const active = state.workItems.find((w) => w.id === state.focusWorkItemId);
     if (!active) {
       checks.push({
-        name: "active work item",
+        name: "focus work item",
         level: "fail",
-        detail: `activeWorkItemId ${state.activeWorkItemId} does not exist`,
+        detail: `focusWorkItemId ${state.focusWorkItemId} does not exist`,
       });
     } else if (active.status === "completed" || active.status === "cancelled") {
       checks.push({
-        name: "active work item",
+        name: "focus work item",
         level: "warn",
-        detail: `active ${active.id} is ${active.status}`,
+        detail: `focus ${active.id} is ${active.status}`,
       });
     } else {
-      checks.push({ name: "active work item", level: "pass", detail: active.id });
+      checks.push({ name: "focus work item", level: "pass", detail: active.id });
     }
   }
 

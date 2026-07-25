@@ -7,20 +7,26 @@ import { runStatus } from "../commands/status.ts";
 import { runBacklog } from "../commands/backlog.ts";
 import { runAssumptions, runDecisions, runRisks } from "../commands/lists.ts";
 import { runMigrate } from "../commands/migrate.ts";
+import { runFocus } from "../commands/focus.ts";
 import { formatDoctor, runDoctor, worstLevel } from "../commands/doctor.ts";
 import type { CommandResult } from "../commands/types.ts";
 import { loadState } from "../state/store.ts";
 import { MigrationRequiredError, StateNotFoundError } from "../state/errors.ts";
 import { homeViewLines } from "../ui/homeview.ts";
 import { newfangTools, type NewfangTool } from "../tools/index.ts";
+import { openStewardConsole, type ConsoleUiSurface } from "../ui/steward-console/open.ts";
 
 export interface NewfangUi {
   notify(message: string, level?: "info" | "warning" | "error"): void;
   setWidget(key: string, lines: string[] | undefined): void;
+  /** Present only in TUI mode (Pi `ctx.ui.custom`). */
+  custom?: ConsoleUiSurface["custom"];
 }
 
 export interface NewfangCtx {
   cwd: string;
+  /** Pi run mode; `"tui"` guards terminal-only UI such as the Steward Console. */
+  mode?: string;
   ui: NewfangUi;
 }
 
@@ -51,8 +57,10 @@ export interface RegisterOptions {
 
 export const HOME_WIDGET_KEY = "newfang-home";
 export const SUBCOMMANDS = [
+  "home",
   "init",
   "status",
+  "focus",
   "backlog",
   "decisions",
   "assumptions",
@@ -77,10 +85,14 @@ export function registerNewfang(host: NewfangHost, options: RegisterOptions): vo
       const tokens = (args ?? "").trim().split(/\s+/).filter(Boolean);
       const sub = tokens[0] ?? "status";
       switch (sub) {
+        case "home":
+          return openConsole(ctx, options.piVersion);
         case "status":
           return renderResult(ctx, await runStatus(ctx.cwd));
         case "init":
           return renderResult(ctx, await runInit(ctx.cwd));
+        case "focus":
+          return renderResult(ctx, await runFocus(ctx.cwd, tokens[1]));
         case "backlog":
           return renderResult(ctx, await runBacklog(ctx.cwd, tokens[1]));
         case "decisions":
@@ -110,6 +122,30 @@ export function registerNewfang(host: NewfangHost, options: RegisterOptions): vo
 
 async function renderResult(ctx: NewfangCtx, result: CommandResult): Promise<void> {
   ctx.ui.notify(result.lines.join("\n"), result.level);
+  await restoreHomeView(ctx);
+}
+
+/**
+ * Open the Steward Console. `custom()` is TUI-only in Pi, so non-TUI modes fall back to the compact
+ * `/newfang status` output instead of failing.
+ */
+async function openConsole(ctx: NewfangCtx, piVersion: string): Promise<void> {
+  const custom = ctx.ui.custom;
+  if (!custom || (ctx.mode !== undefined && ctx.mode !== "tui")) {
+    ctx.ui.notify(
+      "The Steward Console needs an interactive terminal; showing status instead.",
+      "info",
+    );
+    return renderResult(ctx, await runStatus(ctx.cwd));
+  }
+  await openStewardConsole(
+    {
+      cwd: ctx.cwd,
+      mode: ctx.mode,
+      ui: { custom: custom.bind(ctx.ui), notify: ctx.ui.notify.bind(ctx.ui) },
+    },
+    piVersion,
+  );
   await restoreHomeView(ctx);
 }
 

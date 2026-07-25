@@ -34,6 +34,10 @@ test("expected tool surface is registered with schemas", () => {
     "newfang_record_assumption",
     "newfang_record_decision",
     "newfang_record_risk",
+    "newfang_set_focus",
+    "newfang_update_assumption",
+    "newfang_update_decision",
+    "newfang_update_risk",
     "newfang_update_work_item",
   ]);
   for (const t of newfangTools()) {

@@ -45,7 +45,7 @@ export async function runBacklog(root: string, id?: string): Promise<CommandResu
     .join(" · ");
   const lines = [
     `Backlog — ${s.total} items${counts ? ` (${counts})` : ""}`,
-    `Active: ${s.active ? workItemLabel(s.active) : "none"}`,
+    `Focus: ${s.focus ? workItemLabel(s.focus) : "none"}`,
   ];
   if (s.inProgress.length) {
     lines.push("In progress:");

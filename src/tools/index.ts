@@ -23,6 +23,9 @@ import type {
   RecordAssumptionInput,
   RecordDecisionInput,
   RecordRiskInput,
+  UpdateAssumptionInput,
+  UpdateDecisionInput,
+  UpdateRiskInput,
   UpdateWorkItemInput,
   WorkItemFilter,
 } from "../domain/operations.ts";
@@ -32,6 +35,10 @@ import {
   recordAssumption,
   recordDecision,
   recordRisk,
+  setFocusWorkItem,
+  updateAssumption,
+  updateDecision,
+  updateRisk,
   updateWorkItem,
 } from "../domain/operations.ts";
 import { workItemLabel } from "../domain/status.ts";
@@ -278,6 +285,122 @@ export function newfangTools(): NewfangTool[] {
           assumptions: state.assumptions,
           risks: state.risks,
         });
+      },
+    },
+
+    {
+      name: "newfang_set_focus",
+      label: "Set Focus",
+      description:
+        "Set or clear the focus pointer (the work item currently receiving attention). Focus is not lifecycle status; completed/cancelled items cannot be focused.",
+      promptSnippet: "Set or clear the NewFang focus work item",
+      parameters: Type.Object(
+        {
+          workItemId: Type.Optional(
+            Type.String({ description: "Work-item ID to focus, e.g. NF-2" }),
+          ),
+          clear: Type.Optional(Type.Boolean({ description: "Clear the focus pointer" })),
+        },
+        { additionalProperties: false },
+      ),
+      async execute(_id, params, _signal, _onUpdate, ctx) {
+        const p = params as { workItemId?: string; clear?: boolean };
+        if (!p.clear && !p.workItemId) {
+          throw new Error("Provide workItemId to focus, or clear: true to clear focus.");
+        }
+        const targetId = p.clear ? null : (p.workItemId as string);
+        await updateState(ctx.cwd, (cur) => setFocusWorkItem(cur, targetId), {
+          type: targetId === null ? "focus_cleared" : "focus_set",
+          id: targetId ?? undefined,
+        });
+        return text(targetId === null ? "Focus cleared." : `Focus set to ${targetId}.`, {
+          focusWorkItemId: targetId,
+        });
+      },
+    },
+
+    {
+      name: "newfang_update_decision",
+      label: "Update Decision",
+      description:
+        "Update a decision along supported transitions: proposed->accepted, proposed->superseded, accepted->superseded (supersededById required).",
+      promptSnippet: "Update a NewFang decision (accept or supersede)",
+      parameters: Type.Object(
+        {
+          id: Type.String(),
+          title: Type.Optional(Type.String()),
+          decision: Type.Optional(Type.String()),
+          rationale: Type.Optional(Type.String()),
+          status: Type.Optional(StringEnum(DECISION_STATUSES)),
+          supersededById: Type.Optional(Type.String({ description: "Replacement decision ID" })),
+        },
+        { additionalProperties: false },
+      ),
+      async execute(_id, params, _signal, _onUpdate, ctx) {
+        const input = params as unknown as UpdateDecisionInput;
+        const state = await updateState(ctx.cwd, (cur) => updateDecision(cur, input, now()), {
+          type: "decision_updated",
+          id: input.id,
+        });
+        return text(`Updated ${input.id}`, {
+          decision: state.decisions.find((d) => d.id === input.id),
+        });
+      },
+    },
+
+    {
+      name: "newfang_update_assumption",
+      label: "Update Assumption",
+      description:
+        "Update an assumption along supported transitions: open->validated, open->invalidated. Terminal states are not reopened. Notes may be updated.",
+      promptSnippet: "Update a NewFang assumption (validate/invalidate)",
+      parameters: Type.Object(
+        {
+          id: Type.String(),
+          statement: Type.Optional(Type.String()),
+          confidence: Type.Optional(StringEnum(CONFIDENCES)),
+          status: Type.Optional(StringEnum(ASSUMPTION_STATUSES)),
+          note: Type.Optional(Type.String()),
+        },
+        { additionalProperties: false },
+      ),
+      async execute(_id, params, _signal, _onUpdate, ctx) {
+        const input = params as unknown as UpdateAssumptionInput;
+        const state = await updateState(ctx.cwd, (cur) => updateAssumption(cur, input, now()), {
+          type: "assumption_updated",
+          id: input.id,
+        });
+        return text(`Updated ${input.id}`, {
+          assumption: state.assumptions.find((a) => a.id === input.id),
+        });
+      },
+    },
+
+    {
+      name: "newfang_update_risk",
+      label: "Update Risk",
+      description:
+        "Update a risk along supported transitions: open->mitigated/accepted/closed, mitigated->closed, accepted->closed. Closing requires a mitigation/resolution. Terminal states are not reopened.",
+      promptSnippet: "Update a NewFang risk (mitigate/accept/close)",
+      parameters: Type.Object(
+        {
+          id: Type.String(),
+          statement: Type.Optional(Type.String()),
+          likelihood: Type.Optional(StringEnum(LIKELIHOODS)),
+          impact: Type.Optional(StringEnum(IMPACTS)),
+          status: Type.Optional(StringEnum(RISK_STATUSES)),
+          mitigation: Type.Optional(Type.String()),
+          linkedWorkItems: Type.Optional(Type.Array(Type.String())),
+        },
+        { additionalProperties: false },
+      ),
+      async execute(_id, params, _signal, _onUpdate, ctx) {
+        const input = params as unknown as UpdateRiskInput;
+        const state = await updateState(ctx.cwd, (cur) => updateRisk(cur, input, now()), {
+          type: "risk_updated",
+          id: input.id,
+        });
+        return text(`Updated ${input.id}`, { risk: state.risks.find((r) => r.id === input.id) });
       },
     },
   ];

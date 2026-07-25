@@ -15,12 +15,12 @@ ownership from intent through implementation, verification, and delivery. Canoni
 
 ## Current phase
 
-Phase 0 complete; Packet 1 complete. **Packet 2 (project operations + early dogfooding) — complete**
-as of 2026-07-24: schema v2 with explicit 1→2 migration; immutable update contract; work items,
-decisions, assumptions, risks with human-readable IDs; 7 Pi tools + new `/newfang` commands; minimal
-GitHub CI; and the NewFang repository now dogfoods its own `.newfang/` state. 59/59 tests pass;
-smoke-verified through real Pi. Next: **Phase 3 — planning-document intake and repository
-orientation** (dogfooded backlog item NF-2).
+Phase 0 complete; Packets 1 and 2 complete. **Packet 2.5 (operational polish + Steward Console) —
+complete** as of 2026-07-24: focus semantics replace the ambiguous "active item", next-action
+rationale is canonical, lifecycle update tools exist for decisions/assumptions/risks, and
+`/newfang home` opens a keyboard-first Pi-native Steward Console. 95/95 tests pass. Interactive TUI
+verification is **pending Joshua's checklist run** (Claude has no TTY). Next: **Phase 3 —
+planning-document intake and repository orientation** (dogfooded backlog item NF-2).
 
 ### State-of-record note (dual state during transition)
 
@@ -44,6 +44,8 @@ decision reconciles the two. Neither silently overwrites the other.
 | D9 | Pinned foundation: `@earendil-works/pi-coding-agent@0.82.0` (engines node >=22.19.0), Node `22.23.1`. | [0001 (amended)](../decisions/0001-adopt-pi-as-harness-foundation.md) |
 | D10 | Completion gate = rejecting the explicit `newfang_complete_work_item` state transition unless a required receipt passes; NewFang guarantees `project.json`, not model prose. | Packet 1 A3 |
 | D11 | Approval bundles use a proactive execution contract (declare phase + operation classes up front; enforce by interception; expire at boundary). Delegation is NOT required for the first self-hosting transition. | [self-hosting plan](../plans/SELF_HOSTING_ACCEPTANCE_PROJECT.md), Packet 1 A4/A5 |
+| D12 | Focus is a pointer, not a status: `focusWorkItemId` names the item receiving attention and is independent of `in_progress`. Schema v2 was amended in place (not v3) because v2 was unmerged. | Packet 2.5 A1 |
+| D13 | Steward Console = focus-first Delivery Desk hybrid (Focus Board primacy, Delivery Desk organization, Radar ideas folded into Attention/Work). Proof/Delivery rail is a reserved, unimplemented insertion point. | [design](../design/STEWARD_CONSOLE.md) |
 
 ## Assumptions (reversible unless noted)
 
@@ -116,6 +118,15 @@ decision reconciles the two. Neither silently overwrites the other.
   `/newfang init|status|doctor` + minimal home view; 31 unit/integration tests pass; smoke-verified
   through real Pi RPC (init/status/doctor + restart persistence); wrote `docs/DEVELOPMENT.md` and the
   verification record. Fixed a doctor Pi-version resolver that failed under Pi's jiti loader.
+- W6 (2026-07-24): Packet 2.5 — renamed `activeWorkItemId` -> `focusWorkItemId` with focus/status
+  separation; added canonical `nextActionRationale`; added `newfang_set_focus` + `/newfang focus`;
+  added typed lifecycle update tools (`newfang_update_decision|assumption|risk`) with transition
+  matrices, supersession-cycle rejection, and close-requires-resolution; designed and built the
+  Steward Console (`/newfang home`) with pure model/layout/render/navigation layers, three views,
+  detail views, help, reload, and wide/standard/compact layouts using Pi theme tokens; reshaped the
+  ambient widget; reseeded dogfooded state honestly (NF-1 stays `in_progress`; nothing completed).
+  95/95 tests pass; two real rendering defects were caught by tests and fixed. Interactive TUI check
+  is pending ([record](../verification/PACKET_2_5_STEWARD_CONSOLE.md)).
 - W5 (2026-07-24): Packet 2 — refactored `updateState` to an immutable reducer contract; added schema
   v2 + explicit 1→2 migration (backup, atomic replace, `/newfang migrate [--apply]`); added the
   compact project-operations model (work items, decisions, assumptions, risks) with `NF/DEC/ASM/RSK`
@@ -136,10 +147,14 @@ decision reconciles the two. Neither silently overwrites the other.
 
 ## Next justified action
 
-Packet 2 is complete (project operations committed on `feat/project-operations`; not pushed). Begin
-**Phase 3 — planning-document intake and repository orientation** (dogfooded backlog item **NF-2**):
-preserve a source planning document, classify its contents (decisions, constraints, requirements,
-questions, risks), produce an understanding check, and surface the next action. Do not yet add
-claims, verification receipts, completion gates, delegation, or approval bundles. Separately (not
-blocking): Joshua can run `/login` in `npm run pi` to configure a provider for later model-dependent
-paths.
+Packet 2.5 is complete (committed on `feat/project-operations`; not pushed). Two follow-ups, in
+order:
+
+1. **Joshua**: run the interactive TUI checklist in
+   [../verification/PACKET_2_5_STEWARD_CONSOLE.md](../verification/PACKET_2_5_STEWARD_CONSOLE.md)
+   (`mise exec -- npm run pi`, then `/newfang home`) and record the result. This is the only
+   outstanding verification for this packet.
+2. Begin **Phase 3 — planning-document intake and repository orientation** (dogfooded item **NF-2**):
+   preserve a source planning document, classify its contents, produce an understanding check, and
+   surface the next action. Do not yet add claims, verification receipts, completion gates,
+   delegation, or approvals.

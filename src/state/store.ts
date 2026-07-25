@@ -214,8 +214,11 @@ export function validateProjectState(raw: unknown): ProjectState {
   if (typeof o.revision !== "number" || !Number.isInteger(o.revision) || o.revision < 1) {
     problems.push("revision");
   }
-  if (o.activeWorkItemId !== null && typeof o.activeWorkItemId !== "string") {
-    problems.push("activeWorkItemId");
+  if (o.focusWorkItemId !== null && typeof o.focusWorkItemId !== "string") {
+    problems.push("focusWorkItemId");
+  }
+  if (o.nextActionRationale !== undefined && !isNonEmptyString(o.nextActionRationale)) {
+    problems.push("nextActionRationale");
   }
   validateSequences(o.sequences, problems);
 
@@ -255,7 +258,10 @@ export function validateProjectState(raw: unknown): ProjectState {
     phase: state.phase,
     health: state.health,
     nextAction: state.nextAction,
-    activeWorkItemId: state.activeWorkItemId,
+    ...(state.nextActionRationale !== undefined
+      ? { nextActionRationale: state.nextActionRationale }
+      : {}),
+    focusWorkItemId: state.focusWorkItemId,
     sequences: state.sequences as Sequences,
     workItems: state.workItems as WorkItem[],
     decisions: state.decisions as Decision[],

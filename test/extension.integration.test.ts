@@ -80,7 +80,7 @@ test("extension registers the newfang command, tools, and session_start", async 
 
   assert.ok(h.commands.has("newfang"));
   assert.ok(h.events.has("session_start"));
-  assert.equal(h.tools.size, 7);
+  assert.equal(h.tools.size, 11);
   assert.ok(h.tools.has("newfang_create_work_item"));
 });
 

@@ -37,7 +37,7 @@ test("initState creates v2 canonical state with empty collections", async () => 
   assert.equal(state.revision, 1);
   assert.deepEqual(state.workItems, []);
   assert.deepEqual(state.sequences, { workItem: 1, decision: 1, assumption: 1, risk: 1 });
-  assert.equal(state.activeWorkItemId, null);
+  assert.equal(state.focusWorkItemId, null);
   const paths = statePaths(root);
   assert.ok(
     existsSync(paths.projectJson) && existsSync(paths.eventsJsonl) && existsSync(paths.statusView),

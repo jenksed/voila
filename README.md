@@ -7,19 +7,21 @@ not merely generating code.
 
 ## Status
 
-**Phase 0 + Packets 1–2 complete — runnable foundation with project operations.** The repository
-contains the product direction, an evidence-backed capability audit, an architecture recommendation
-with locked ADRs, and a **runnable NewFang Pi extension**: a thin adapter (`.pi/extensions/newfang.ts`),
-a canonical `.newfang/` state store with **explicit schema versioning/migration**, a compact
-**project-operations layer** (work items, decisions, assumptions, risks), 7 LLM-callable Pi tools,
-and `/newfang init | status | backlog | decisions | assumptions | risks | migrate | doctor`. Pinned
-to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (59 tests), and
-smoke-verified against real Pi. The repo **dogfoods its own** `.newfang/` state.
+**Phase 0 + Packets 1–2.5 complete — runnable foundation, project operations, and the Steward
+Console.** The repository contains the product direction, an evidence-backed capability audit, an
+architecture recommendation with locked ADRs, and a **runnable NewFang Pi extension**: a thin adapter
+(`.pi/extensions/newfang.ts`), a canonical `.newfang/` state store with **explicit schema
+versioning/migration**, a compact **project-operations layer** (work items, decisions, assumptions,
+risks), 11 LLM-callable Pi tools, and a keyboard-first **Steward Console** (`/newfang home`). Pinned
+to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (95 tests). The repo
+**dogfoods its own** `.newfang/` state.
 
 This is **not** the full MVP. There is no planning-document intake, repository orientation, claims,
 verification receipts, completion gate, approval bundles, delegation, background processes,
-sandboxing, remote execution, model routing, or release automation. See
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
+sandboxing, remote execution, model routing, or release automation. Notably, NewFang **cannot yet
+mark work complete** — that transition is reserved for a future verification-gated tool. See
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it,
+[docs/design/STEWARD_CONSOLE.md](docs/design/STEWARD_CONSOLE.md) for the interface design, and
 [docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) for what comes next
 (Phase 3: planning-document intake and repository orientation).
 
@@ -53,6 +55,8 @@ The authoritative product statement is [docs/product/PRODUCT_DIRECTION.md](docs/
 | Setup | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, pinned versions, commands, smoke test |
 | Verification | [docs/verification/PACKET_1_FOUNDATION.md](docs/verification/PACKET_1_FOUNDATION.md) | Packet 1 foundation verification record |
 | Verification | [docs/verification/PACKET_2_PROJECT_OPERATIONS.md](docs/verification/PACKET_2_PROJECT_OPERATIONS.md) | Packet 2 project-operations verification record |
+| Design | [docs/design/STEWARD_CONSOLE.md](docs/design/STEWARD_CONSOLE.md) | Steward Console design and alternatives |
+| Verification | [docs/verification/PACKET_2_5_STEWARD_CONSOLE.md](docs/verification/PACKET_2_5_STEWARD_CONSOLE.md) | Packet 2.5 console verification record |
 
 ## Operating instructions
 

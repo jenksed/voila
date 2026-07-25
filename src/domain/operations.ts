@@ -222,14 +222,19 @@ export function updateWorkItem(
   return { ...state, workItems: nextItems };
 }
 
-export function setActiveWorkItem(state: Readonly<ProjectState>, id: string | null): ProjectState {
-  if (id === null) return { ...state, activeWorkItemId: null };
+/**
+ * Set or clear the focus pointer (the work item currently receiving attention). Focus is distinct
+ * from lifecycle status: an item may be focused while still `ready`, and an `in_progress` item need
+ * not be focused. Completed/cancelled items cannot be focused.
+ */
+export function setFocusWorkItem(state: Readonly<ProjectState>, id: string | null): ProjectState {
+  if (id === null) return { ...state, focusWorkItemId: null };
   const item = state.workItems.find((w) => w.id === id);
   if (!item) throw new ProjectOperationError(`Work item not found: ${id}.`);
   if (item.status === "completed" || item.status === "cancelled") {
-    throw new ProjectOperationError(`Cannot select a ${item.status} work item as active.`);
+    throw new ProjectOperationError(`Cannot focus a ${item.status} work item.`);
   }
-  return { ...state, activeWorkItemId: id };
+  return { ...state, focusWorkItemId: id };
 }
 
 // --- Steward-owned scalar setters ---
@@ -238,12 +243,70 @@ export function setNextAction(state: Readonly<ProjectState>, nextAction: string)
   return { ...state, nextAction: requireNonEmpty(nextAction, "nextAction") };
 }
 
+/** Set or clear the Steward's rationale for the current next action. */
+export function setNextActionRationale(
+  state: Readonly<ProjectState>,
+  rationale: string | null,
+): ProjectState {
+  if (rationale === null) {
+    const next = { ...state };
+    delete next.nextActionRationale;
+    return next;
+  }
+  return { ...state, nextActionRationale: requireNonEmpty(rationale, "nextActionRationale") };
+}
+
 export function setPhase(state: Readonly<ProjectState>, phase: Phase): ProjectState {
   return { ...state, phase: requireEnum<Phase>(phase, PHASES, "phase") };
 }
 
 export function setHealth(state: Readonly<ProjectState>, health: Health): ProjectState {
   return { ...state, health: requireEnum<Health>(health, HEALTHS, "health") };
+}
+
+// --- Lifecycle transitions (same-status allowed for field-only updates) ---
+
+const DECISION_TRANSITIONS: Record<DecisionStatus, DecisionStatus[]> = {
+  proposed: ["proposed", "accepted", "superseded"],
+  accepted: ["accepted", "superseded"],
+  superseded: ["superseded"],
+};
+const ASSUMPTION_TRANSITIONS: Record<AssumptionStatus, AssumptionStatus[]> = {
+  open: ["open", "validated", "invalidated"],
+  validated: ["validated"],
+  invalidated: ["invalidated"],
+};
+const RISK_TRANSITIONS: Record<RiskStatus, RiskStatus[]> = {
+  open: ["open", "mitigated", "accepted", "closed"],
+  mitigated: ["mitigated", "closed"],
+  accepted: ["accepted", "closed"],
+  closed: ["closed"],
+};
+
+function assertTransition<T extends string>(
+  allowed: Record<string, readonly T[]>,
+  from: T,
+  to: T,
+  entity: string,
+): void {
+  if (from === to) return;
+  if (!allowed[from]?.includes(to)) {
+    throw new ProjectOperationError(`Unsupported ${entity} transition: ${from} -> ${to}.`);
+  }
+}
+
+/** True if following supersededBy from `target` reaches `id` (a supersession cycle). */
+function supersessionCycle(decisions: readonly Decision[], id: string, target: string): boolean {
+  const byId = new Map(decisions.map((d) => [d.id, d]));
+  const seen = new Set<string>();
+  let cur: string | undefined = target;
+  while (cur) {
+    if (cur === id) return true;
+    if (seen.has(cur)) break;
+    seen.add(cur);
+    cur = byId.get(cur)?.supersededBy;
+  }
+  return false;
 }
 
 // --- Decisions ---
@@ -282,7 +345,7 @@ export interface UpdateDecisionInput {
   decision?: string;
   rationale?: string;
   status?: DecisionStatus;
-  supersededBy?: string;
+  supersededById?: string;
 }
 
 export function updateDecision(
@@ -292,21 +355,34 @@ export function updateDecision(
 ): ProjectState {
   const index = state.decisions.findIndex((d) => d.id === input.id);
   if (index < 0) throw new ProjectOperationError(`Decision not found: ${input.id}.`);
-  const next: Decision = { ...(state.decisions[index] as Decision), updatedAt: now };
+  const current = state.decisions[index] as Decision;
+  const next: Decision = { ...current, updatedAt: now };
   if (input.title !== undefined) next.title = requireNonEmpty(input.title, "title");
   if (input.decision !== undefined) next.decision = requireNonEmpty(input.decision, "decision");
   if (input.rationale !== undefined) next.rationale = requireNonEmpty(input.rationale, "rationale");
-  if (input.status !== undefined) {
-    next.status = requireEnum<DecisionStatus>(input.status, DECISION_STATUSES, "status");
-  }
-  if (input.supersededBy !== undefined) {
-    if (!state.decisions.some((d) => d.id === input.supersededBy)) {
-      throw new ProjectOperationError(
-        `supersededBy references unknown decision: ${input.supersededBy}.`,
-      );
+
+  const target =
+    input.status !== undefined
+      ? requireEnum<DecisionStatus>(input.status, DECISION_STATUSES, "status")
+      : current.status;
+  assertTransition(DECISION_TRANSITIONS, current.status, target, "decision");
+  next.status = target;
+
+  if (target === "superseded") {
+    const ref = input.supersededById ?? current.supersededBy;
+    if (!ref) throw new ProjectOperationError("Superseding a decision requires supersededById.");
+    if (ref === current.id) throw new ProjectOperationError("A decision cannot supersede itself.");
+    if (!state.decisions.some((d) => d.id === ref)) {
+      throw new ProjectOperationError(`supersededById references unknown decision: ${ref}.`);
     }
-    next.supersededBy = input.supersededBy;
+    if (supersessionCycle(state.decisions, current.id, ref)) {
+      throw new ProjectOperationError(`Supersession cycle rejected: ${current.id} <-> ${ref}.`);
+    }
+    next.supersededBy = ref;
+  } else if (input.supersededById !== undefined) {
+    throw new ProjectOperationError("supersededById only applies when status is superseded.");
   }
+
   const nextDecisions = [...state.decisions];
   nextDecisions[index] = next;
   return { ...state, decisions: nextDecisions };
@@ -357,13 +433,16 @@ export function updateAssumption(
 ): ProjectState {
   const index = state.assumptions.findIndex((a) => a.id === input.id);
   if (index < 0) throw new ProjectOperationError(`Assumption not found: ${input.id}.`);
-  const next: Assumption = { ...(state.assumptions[index] as Assumption), updatedAt: now };
+  const current = state.assumptions[index] as Assumption;
+  const next: Assumption = { ...current, updatedAt: now };
   if (input.statement !== undefined) next.statement = requireNonEmpty(input.statement, "statement");
   if (input.confidence !== undefined) {
     next.confidence = requireEnum<Confidence>(input.confidence, CONFIDENCES, "confidence");
   }
   if (input.status !== undefined) {
-    next.status = requireEnum<AssumptionStatus>(input.status, ASSUMPTION_STATUSES, "status");
+    const target = requireEnum<AssumptionStatus>(input.status, ASSUMPTION_STATUSES, "status");
+    assertTransition(ASSUMPTION_TRANSITIONS, current.status, target, "assumption");
+    next.status = target;
   }
   if (input.note !== undefined) next.note = input.note;
   const nextAssumptions = [...state.assumptions];
@@ -422,20 +501,33 @@ export function updateRisk(
 ): ProjectState {
   const index = state.risks.findIndex((r) => r.id === input.id);
   if (index < 0) throw new ProjectOperationError(`Risk not found: ${input.id}.`);
-  const next: Risk = { ...(state.risks[index] as Risk), updatedAt: now };
+  const current = state.risks[index] as Risk;
+  const next: Risk = { ...current, updatedAt: now };
   if (input.statement !== undefined) next.statement = requireNonEmpty(input.statement, "statement");
   if (input.likelihood !== undefined) {
     next.likelihood = requireEnum<Likelihood>(input.likelihood, LIKELIHOODS, "likelihood");
   }
   if (input.impact !== undefined)
     next.impact = requireEnum<Impact>(input.impact, IMPACTS, "impact");
-  if (input.status !== undefined)
-    next.status = requireEnum<RiskStatus>(input.status, RISK_STATUSES, "status");
   if (input.mitigation !== undefined) next.mitigation = input.mitigation;
   if (input.linkedWorkItems !== undefined) {
     requireExistingWorkItems(input.linkedWorkItems, workItemIds(state));
     next.linkedWorkItems = [...new Set(input.linkedWorkItems)];
   }
+
+  const target =
+    input.status !== undefined
+      ? requireEnum<RiskStatus>(input.status, RISK_STATUSES, "status")
+      : current.status;
+  assertTransition(RISK_TRANSITIONS, current.status, target, "risk");
+  if (target === "closed") {
+    const resolution = next.mitigation ?? current.mitigation;
+    if (!resolution || resolution.trim().length === 0) {
+      throw new ProjectOperationError("Closing a risk requires a mitigation or resolution.");
+    }
+  }
+  next.status = target;
+
   const nextRisks = [...state.risks];
   nextRisks[index] = next;
   return { ...state, risks: nextRisks };
@@ -472,7 +564,7 @@ export interface BacklogSummary {
   inProgress: WorkItem[];
   blocked: WorkItem[];
   readyByPriority: WorkItem[];
-  active: WorkItem | null;
+  focus: WorkItem | null;
   openRiskCount: number;
   acceptedDecisionCount: number;
   nextAction: string;
@@ -494,7 +586,7 @@ export function backlogSummary(state: Readonly<ProjectState>): BacklogSummary {
     inProgress: state.workItems.filter((w) => w.status === "in_progress"),
     blocked: state.workItems.filter((w) => w.status === "blocked"),
     readyByPriority: sortByPriority(state.workItems.filter((w) => w.status === "ready")),
-    active: state.workItems.find((w) => w.id === state.activeWorkItemId) ?? null,
+    focus: state.workItems.find((w) => w.id === state.focusWorkItemId) ?? null,
     openRiskCount: state.risks.filter((r) => r.status === "open").length,
     acceptedDecisionCount: state.decisions.filter((d) => d.status === "accepted").length,
     nextAction: state.nextAction,

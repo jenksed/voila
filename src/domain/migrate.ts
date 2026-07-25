@@ -12,7 +12,14 @@ export interface MigrationAddition {
 /** Human-readable description of what v2 adds over v1. */
 export function migrationAdditions(): MigrationAddition[] {
   return [
-    { name: "activeWorkItemId", detail: "selected active work item (initially none)" },
+    {
+      name: "focusWorkItemId",
+      detail: "focus pointer: the work item receiving attention (initially none)",
+    },
+    {
+      name: "nextActionRationale",
+      detail: "optional Steward explanation of why the next action is justified",
+    },
     { name: "sequences", detail: "monotonic ID counters (workItem, decision, assumption, risk)" },
     { name: "workItems", detail: "backlog of outcomes, tasks, and defects (initially empty)" },
     { name: "decisions", detail: "operational decision records (initially empty)" },
@@ -33,7 +40,7 @@ export function migrateV1ToV2(v1: ProjectStateV1): ProjectState {
     phase: v1.phase as ProjectState["phase"],
     health: v1.health as ProjectState["health"],
     nextAction: v1.nextAction,
-    activeWorkItemId: null,
+    focusWorkItemId: null,
     sequences: { workItem: 1, decision: 1, assumption: 1, risk: 1 },
     workItems: [],
     decisions: [],

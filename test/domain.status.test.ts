@@ -9,7 +9,7 @@ import {
   workItemLabel,
 } from "../src/domain/status.ts";
 import { homeViewLines } from "../src/ui/homeview.ts";
-import { createWorkItem, setActiveWorkItem } from "../src/domain/operations.ts";
+import { createWorkItem, setFocusWorkItem } from "../src/domain/operations.ts";
 
 const T = "2026-07-24T00:00:00.000Z";
 
@@ -21,7 +21,7 @@ function seeded() {
     T,
   );
   s = createWorkItem(s, { kind: "task", title: "Blocked one", status: "blocked" }, T);
-  s = setActiveWorkItem(s, "NF-1");
+  s = setFocusWorkItem(s, "NF-1");
   return s;
 }
 
@@ -36,12 +36,12 @@ test("createInitialState is deterministic and empty", () => {
   assert.deepEqual(a.workItems, []);
 });
 
-test("statusReportLines includes operations and active summary", () => {
+test("statusReportLines includes operations, focus, and rationale", () => {
   const lines = statusReportLines(seeded()).join("\n");
   assert.match(lines, /operations:\s+2 open/);
   assert.match(lines, /in-progress NF-1/);
   assert.match(lines, /blocked 1/);
-  assert.match(lines, /active:\s+NF-1/);
+  assert.match(lines, /focus:\s+NF-1/);
 });
 
 test("renderStatusView includes the Operations section", () => {
@@ -52,16 +52,25 @@ test("renderStatusView includes the Operations section", () => {
   assert.match(view, /\*\*Blocked\*\*: 1/);
 });
 
-test("homeViewLines stays restrained: adds active ID and blocked count", () => {
+test("homeViewLines stays restrained: focus, phase/health, and non-empty counts", () => {
   const empty = homeViewLines(null);
   assert.equal(empty.length, 1);
   assert.match(empty[0] as string, /run \/newfang init/);
 
-  const lines = homeViewLines(seeded());
+  const lines = homeViewLines(seeded(), 80);
+  assert.equal(lines.length, 2, "at most two lines");
+  assert.match(lines[0] as string, /NewFang · RESEARCH · UNKNOWN/);
+  assert.match(lines[0] as string, /Focus NF-1/);
+  assert.match(lines[1] as string, /^Next: /);
+  assert.match(lines[1] as string, /1 blocked/);
+  assert.ok(!(lines[1] as string).includes("risk"), "empty counts are omitted");
+  for (const l of lines) assert.ok(Array.from(l).length <= 80, "fits the width");
+});
+
+test("homeViewLines degrades safely at narrow widths", () => {
+  const lines = homeViewLines(seeded(), 40);
   assert.equal(lines.length, 2);
-  assert.match(lines[0] as string, /phase: research/);
-  assert.match(lines[0] as string, /active NF-1/);
-  assert.match(lines[0] as string, /blocked 1/);
+  for (const l of lines) assert.ok(Array.from(l).length <= 40, `line too wide: ${l}`);
 });
 
 test("workItemLabel is compact", () => {

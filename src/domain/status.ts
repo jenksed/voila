@@ -30,8 +30,9 @@ export function statusReportLines(state: ProjectState): string[] {
     `  revision:  ${state.revision}`,
     `  updated:   ${state.updatedAt}`,
     `  operations: ${s.openCount} open · in-progress ${inProgress} · blocked ${s.blocked.length} · open-risks ${s.openRiskCount} · accepted-decisions ${s.acceptedDecisionCount}`,
-    `  active:    ${state.activeWorkItemId ?? "none"}`,
+    `  focus:     ${state.focusWorkItemId ?? "none"}`,
     `  next:      ${state.nextAction}`,
+    ...(state.nextActionRationale ? [`  why:       ${state.nextActionRationale}`] : []),
   ];
 }
 
@@ -39,7 +40,7 @@ export function statusReportLines(state: ProjectState): string[] {
 export function renderStatusView(state: ProjectState): string {
   const s = backlogSummary(state);
   const inProgress = s.inProgress.length > 0 ? s.inProgress.map((w) => w.id).join(", ") : "none";
-  const active = s.active ? `${s.active.id} — ${s.active.title}` : "none";
+  const focus = s.focus ? `${s.focus.id} — ${s.focus.title}` : "none";
   return [
     GENERATED_BANNER,
     "",
@@ -61,11 +62,12 @@ export function renderStatusView(state: ProjectState): string {
     `- **Blocked**: ${s.blocked.length}`,
     `- **Open risks**: ${s.openRiskCount}`,
     `- **Accepted decisions**: ${s.acceptedDecisionCount}`,
-    `- **Active item**: ${active}`,
+    `- **Focus**: ${focus}`,
     "",
     "## Next justified action",
     "",
     state.nextAction,
+    ...(state.nextActionRationale ? ["", `**Why now:** ${state.nextActionRationale}`] : []),
     "",
   ].join("\n");
 }
