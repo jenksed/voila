@@ -16,26 +16,27 @@ suite is never mistaken for an interactive or authenticated check.
 
 ## Summary of tiers
 
-| Tier                                          | Status      | Evidence                                                                               |
-| --------------------------------------------- | ----------- | -------------------------------------------------------------------------------------- |
-| 0. Rebase and reconciliation                  | **PASS**    | `866e0d6` → `d397dfc` onto `3169878`; 6 conflicts resolved field-by-field              |
-| 1. Automated tests                            | **PASS**    | 383/383 via `mise exec -- npm run verify` (main baseline 206)                          |
-| 1b. Migration against the integrated v3 state | **PASS**    | 7 tests over the real schema-v3 `project.json` from `3169878`                          |
-| 2. Pi registration (non-model)                | **PASS**    | 28 tools registered; asserted by tests and observed over RPC                           |
-| 3. Structured execution                       | **PASS**    | `/newfang verify CLM-2 -- mise exec -- npm run verify`, no shell, explicit argv        |
-| 4. Passing receipt                            | **PASS**    | RCP-3 and RCP-4, manifest agreement and output hashes revalidated                      |
-| 5. Failing receipt                            | **PASS**    | honest `failed` receipt (exit 3) in a bounded fixture repository                       |
-| 6. Stale-evidence demonstration               | **PASS**    | performed on this repository; fingerprint returns exactly                              |
-| 7. Protected-completion fixture               | **PASS**    | rejection preserves canonical bytes; success is fully gated                            |
-| 8. Interactive Proof view (TUI)               | **PARTIAL** | human-attested: rendering PASS, stale display PASS, skill loading FAIL → fixed, see D5 |
-| 9. Authenticated model use                    | **PENDING** | requires `/login`; the agent must not authenticate                                     |
-| 10. GitHub CI                                 | **PASS**    | run 30177880494 on PR #4 — `verify` job green                                          |
-| 11. Doctor                                    | **PASS**    | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed                       |
+| Tier                                          | Status      | Evidence                                                                                          |
+| --------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------- |
+| 0. Rebase and reconciliation                  | **PASS**    | `866e0d6` → `d397dfc` onto `3169878`; 6 conflicts resolved field-by-field                         |
+| 1. Automated tests                            | **PASS**    | 383/383 via `mise exec -- npm run verify` (main baseline 206)                                     |
+| 1b. Migration against the integrated v3 state | **PASS**    | 7 tests over the real schema-v3 `project.json` from `3169878`                                     |
+| 2. Pi registration (non-model)                | **PASS**    | 28 tools registered; asserted by tests and observed over RPC                                      |
+| 3. Structured execution                       | **PASS**    | `/newfang verify CLM-2 -- mise exec -- npm run verify`, no shell, explicit argv                   |
+| 4. Passing receipt                            | **PASS**    | RCP-3 and RCP-4, manifest agreement and output hashes revalidated                                 |
+| 5. Failing receipt                            | **PASS**    | honest `failed` receipt (exit 3) in a bounded fixture repository                                  |
+| 6. Stale-evidence demonstration               | **PASS**    | performed on this repository; fingerprint returns exactly                                         |
+| 7. Protected-completion fixture               | **PASS**    | rejection preserves canonical bytes; success is fully gated                                       |
+| 8. Interactive Proof view (TUI)               | **PARTIAL** | human-attested over two passes: 11 items PASS (D5 found, fixed, re-attested); 8 items still unrun |
+| 9. Authenticated model use                    | **PENDING** | requires `/login`; the agent must not authenticate                                                |
+| 10. GitHub CI                                 | **PASS**    | run 30177880494 on PR #4 — `verify` job green                                                     |
+| 11. Doctor                                    | **PASS**    | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed                                  |
 
-Tier 8 is **PARTIAL**: Joshua ran it and attested three items. Two passed; the third found a real
-defect (**D5**), which is fixed and now covered by a regression test — but the fix has **not** been
-re-attested in a terminal, and the rest of the checklist is still unrun. Tier 9 remains **not
-claimed**.
+Tier 8 is **PARTIAL**: Joshua ran it over two passes. The first found a real defect (**D5** — the
+Project Steward skill never loaded), now fixed, regression-tested, and re-attested. The second
+attested eight further render and navigation items, each cross-checked against the domain rather
+than accepted on appearance. Eight checklist items remain unrun, and terminal width and Pi version
+are still unrecorded. Tier 9 remains **not claimed**.
 
 **Packet 4R is therefore not fully accepted.** Acceptance requires the interactive Proof view to
 pass in full, and only Joshua can perform it.
@@ -362,14 +363,20 @@ Run by Joshua in a real terminal. Claude did not observe the TUI (`process.stdin
 `/newfang home` correctly refuses with "needs an interactive terminal"), so this tier rests entirely
 on his direct observation.
 
+First pass:
+
 | Item                          | Result                                |
 | ----------------------------- | ------------------------------------- |
 | Proof UI rendering            | **PASS**                              |
 | Stale-evidence display        | **PASS**                              |
 | Project Steward skill loading | **FAIL** → defect **D5**, fixed below |
 
-Not separately recorded: terminal width, Pi version, and per-item results for the remaining
-checklist entries. Those are **not claimed**.
+Second pass, after the D5 fix: skill loading **PASS**, plus eight further render and navigation
+items attested and cross-checked against the domain (see below).
+
+Not recorded in either pass: terminal width, Pi version, and the eight remaining checklist entries
+(detail open/close, sub-80-column layout, intake review keys, help, reload, exit). Those are
+**not claimed**.
 
 ### D5 — the Project Steward skill never loaded (pre-existing, now fixed)
 
@@ -411,22 +418,66 @@ Steward context" was only proof-aware in the injected context and tool descripti
 file itself was never loaded by Pi**. Tier 9 (authenticated model use) has therefore never exercised
 the skill, and remains unclaimed.
 
+### D5 fix re-attested
+
+Joshua confirmed in a real terminal that the skill now loads. Session start showed no skill warning.
+
+### Second interactive observation (human-attested)
+
+Captured from Joshua's terminal on the reconciled branch at `HEAD = 5069494`:
+
+| Item                                                                        | Result   |
+| --------------------------------------------------------------------------- | -------- |
+| Project Steward skill loads                                                 | **PASS** |
+| Focus view renders (Work / Attention / Proof / Project Truth panels)        | **PASS** |
+| View switching `Focus → Proof` via the tab bar                              | **PASS** |
+| Claim status readable; `stale` emphasis distinguishable                     | **PASS** |
+| Required-claim marker (`*`) distinguishes required from non-required claims | **PASS** |
+| Receipt list bounded — no stdout dump in the principal view                 | **PASS** |
+| Completion-gate row present with a route to the full list                   | **PASS** |
+| Footer key hints present                                                    | **PASS** |
+
+**The rendering was cross-checked against the domain, not just eyeballed.** Every number and label on
+screen was reproduced from `proofSummary()` and `assessCompletion()`:
+
+```text
+on screen: Claims 2 · supported 0 · unsupported 0 · stale 2 · pending 0
+domain:    {"total":2,"supported":0,"unsupported":0,"stale":2,"pending":0}   MATCH
+
+on screen: NF-2 is not completable: 3 gate(s) failing — required claims attached
+domain:    NF-2 failing=3
+             required_claims_present | required claims attached
+             criteria_covered        | every acceptance criterion covered by a required claim
+             claims_supported        | every required claim supported by current passing evidence   MATCH
+
+on screen: Required claim CLM-1 evidence is stale: the repository changed since RCP-2 was
+           recorded; re-run verification
+domain:    CLM-1 stale (the repository changed since RCP-2 was recorded; re-run verification)  MATCH
+
+on screen: RCP-1..RCP-4 all marked stale
+domain:    HEAD moved to 5069494; every receipt predates it                                   MATCH
+```
+
+The truncated Focus-view line `— required claims attached` is the **first failing gate's label**, not
+a rendering fault.
+
+All four receipts and both claims read `stale` because the branch has since been committed. This is
+the documented by-design consequence of `HEAD` participating in the fingerprint, not a defect.
+
 ### Remaining checklist for Joshua
 
 Still unverified, in a real terminal (`mise exec -- npm run pi`, then `/newfang home`).
-Record terminal width, Pi version, and pass/fail per item:
+**Terminal width and Pi version are still unrecorded and remain unclaimed.**
 
 1. `j`/`k` move the selection across claims, then receipts, then the completion-gate row.
 2. `Enter` opens claim detail (coverage + limitations) and closes with `Esc`.
-3. Receipt detail is bounded: metadata and an artifact pointer, **no complete stdout dump**.
-4. Completion-gate failures are readable in the gate detail.
+3. `Enter` on a receipt shows metadata and an artifact pointer only.
+4. `Enter` on the completion-gate row lists every failing gate readably.
 5. Resize below 80 columns; confirm nothing overflows or is clipped mid-word.
 6. The Packet 3 intake review UI still works: `u` opens the Understanding Check, and `a` / `v` / `x`
    are offered (accept+apply / request revision / reject).
 7. `?` help lists the four-view order and the `a / v / x` keys; `r` reloads.
 8. `q` exits cleanly.
-9. Re-confirm the Project Steward skill now loads: it should be offered/usable in session, with no
-   skill warning at startup.
 
 ## Tier 9 — Authenticated model use — **PENDING**
 
