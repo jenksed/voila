@@ -1,0 +1,474 @@
+# Instincts generated from https://github.com/jenksed/newfang
+# Generated: 2026-07-25T22:36:29.204Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: newfang-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, fix, docs
+
+## Evidence
+
+- 3 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: add claims, verification receipts, and protected completion, fix: reconcile the proof engine with Packet 3 closure
+
+---
+id: newfang-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Commit Length
+
+## Action
+
+Write moderate-length commit messages (~56 characters)
+
+## Evidence
+
+- Average commit message length: 56 chars
+- Based on 3 commits
+
+---
+id: newfang-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: newfang-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: newfang-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: newfang-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: newfang-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: newfang-test-types
+trigger: "when planning tests for a feature"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Test Types
+
+## Action
+
+Write unit, integration tests to match project standards
+
+## Evidence
+
+- Test types detected: unit, integration
+- Coverage config: no
+
+---
+id: newfang-workflow-schema-migration-and-state-upgrade
+trigger: "when doing schema migration and state upgrade"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Workflow Schema Migration And State Upgrade
+
+## Action
+
+Follow the schema-migration-and-state-upgrade workflow:
+1. Update schema definitions and migration logic (e.g., src/domain/schema-vX.ts, src/domain/migrate.ts).
+2. Update or create migration tests and fixtures (e.g., test/migrate-vX.test.ts, test/fixtures/integrated-vX-project.json).
+3. Update canonical state files to reflect the new schema (e.g., .newfang/project.json, .newfang/events.jsonl).
+4. Ensure all related test suites pass and cover the migration (e.g., test/migrate-chain.test.ts, test/migrate.test.ts).
+5. Document the migration and its rationale (e.g., docs/verification/PACKET_X_PROOF_ENGINE.md).
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/domain/schema-v3.ts, src/domain/migrate.ts, .newfang/project.json
+
+---
+id: newfang-workflow-recording-and-verifying-proof-artifacts
+trigger: "when doing recording and verifying proof artifacts"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/jenksed/newfang
+---
+
+# Newfang Workflow Recording And Verifying Proof Artifacts
+
+## Action
+
+Follow the recording-and-verifying-proof-artifacts workflow:
+1. Generate new claim and/or receipt files under .newfang/receipts/ (e.g., manifest.json, stdout.txt, stderr.txt).
+2. Update .newfang/project.json and .newfang/events.jsonl to register the new claims/receipts and log the event.
+3. Update related documentation and status views (e.g., .newfang/views/PROJECT_STATUS.md, docs/verification/PACKET_X_PROOF_ENGINE.md).
+4. Dogfood or demonstrate the new artifacts by running verification commands and ensuring state transitions are correct.
+5. Ensure all changes are reflected in the canonical state and are byte-identical where required.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: .newfang/receipts/RCP-*/manifest.json, .newfang/receipts/RCP-*/stdout.txt, .newfang/receipts/RCP-*/stderr.txt
+
+---
+id: newfang-instinct-file-naming
+trigger: "When creating a new file in the codebase"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct File Naming
+
+## Action
+
+Name the file using camelCase (e.g., myNewFile.ts)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.files
+- Consistent camelCase in src/
+
+---
+id: newfang-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Function Naming
+
+## Action
+
+Use camelCase for function names (e.g., processInput)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions
+
+---
+id: newfang-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Class Naming
+
+## Action
+
+Use PascalCase for class names (e.g., ProofEngine)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes
+
+---
+id: newfang-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names (e.g., MAX_ATTEMPTS)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants
+
+---
+id: newfang-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Import Style
+
+## Action
+
+Use relative import paths (e.g., import { foo } from '../tools/foo')
+
+## Evidence
+
+- Pattern in codeStyle.importStyle
+
+---
+id: newfang-instinct-export-style
+trigger: "When exporting from a module"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Export Style
+
+## Action
+
+Use named exports (e.g., export { myFunction })
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle
+
+---
+id: newfang-instinct-test-location
+trigger: "When adding new tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Test Location
+
+## Action
+
+Place test files in the separate test/ directory, not alongside source files
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation
+- Presence of test/ directory
+
+---
+id: newfang-instinct-test-naming
+trigger: "When naming a test file"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Test Naming
+
+## Action
+
+Use the *.test.ts pattern for test files
+
+## Evidence
+
+- Pattern in testing.filePattern
+- Examples: test/migrate-v4.test.ts
+
+---
+id: newfang-instinct-test-types
+trigger: "When writing tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Test Types
+
+## Action
+
+Include both unit and integration tests as appropriate
+
+## Evidence
+
+- Pattern in testing.testTypes
+- Presence of test/fixtures/ and test/migrate-v4.test.ts
+
+---
+id: newfang-instinct-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Commit Format
+
+## Action
+
+Use the Conventional Commits format with prefixes: feat, fix, or docs
+
+## Evidence
+
+- Pattern in commits.prefixes
+- Examples: 'feat: add claims...', 'fix: reconcile...', 'docs: record...'
+
+---
+id: newfang-instinct-commit-length
+trigger: "When composing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Commit Length
+
+## Action
+
+Aim for concise, descriptive messages around 56 characters
+
+## Evidence
+
+- Pattern in commits.averageLength
+- Examples in commits.examples
+
+---
+id: newfang-instinct-schema-migration
+trigger: "When introducing a new schema version or migrating project state"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Schema Migration
+
+## Action
+
+Update schema and migration logic, tests, canonical state, and documentation in a coordinated sequence
+
+## Evidence
+
+- Workflow: schema-migration-and-state-upgrade
+- Commit sequences and files: src/domain/schema-vX.ts, src/domain/migrate.ts, test/migrate-vX.test.ts, .newfang/project.json, docs/verification/PACKET_X_PROOF_ENGINE.md
+
+---
+id: newfang-instinct-record-proof
+trigger: "When recording new proof artifacts (claims/receipts) for work items"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: jenksed/newfang
+---
+
+# Newfang Instinct Record Proof
+
+## Action
+
+Generate new claim/receipt files under .newfang/receipts/, update project state and documentation, and ensure byte-identical canonical state
+
+## Evidence
+
+- Workflow: recording-and-verifying-proof-artifacts
+- Commit sequences and files: .newfang/receipts/RCP-*/manifest.json, .newfang/project.json, .newfang/views/PROJECT_STATUS.md
+
