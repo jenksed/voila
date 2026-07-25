@@ -1,0 +1,189 @@
+{
+  "intakeId": "INT-1",
+  "draftRevision": 1,
+  "objective": "Deliver NewFang's first daily-use workflow: source request or planning document -> repository orientation -> structured intake draft -> understanding check -> accepted project truth -> next justified action -> durable resume.",
+  "findings": [
+    {
+      "id": "F1",
+      "category": "objective",
+      "statement": "A source request or planning document must flow through orientation, structured intake, understanding check, acceptance, next action, and durable resume.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 7,
+          "endLine": 7
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "category": "locked_decision",
+      "statement": "The language model performs interpretation; NewFang owns preservation, schemas, lifecycle, review, application, persistence, provenance, and resumability.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 31,
+          "endLine": 31
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "category": "locked_decision",
+      "statement": "Model-generated interpretations are never applied to canonical project truth silently; the user reviews an understanding check first.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 33,
+          "endLine": 33
+        }
+      ]
+    },
+    {
+      "id": "F4",
+      "category": "locked_decision",
+      "statement": "Schema version 3 is introduced with an explicit 2 -> 3 migration (inspect, --apply, backup, atomic replace).",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 13,
+          "endLine": 13
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "category": "constraint",
+      "statement": "Locked decisions, proposals, examples, assumptions, and open questions must remain distinguishable, and source terminology is preserved rather than silently corrected.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 34,
+          "endLine": 34
+        }
+      ]
+    },
+    {
+      "id": "F6",
+      "category": "constraint",
+      "statement": "Repository orientation uses repository-local information only unless the user explicitly requests research, and orientation artifacts exclude secrets and absolute private paths.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 37,
+          "endLine": 37
+        }
+      ]
+    },
+    {
+      "id": "F7",
+      "category": "requirement",
+      "statement": "Intake sources are preserved byte-for-byte with a verified SHA-256, rejecting absolute paths, traversal, and symlink escapes.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 43,
+          "endLine": 43
+        }
+      ]
+    },
+    {
+      "id": "F8",
+      "category": "acceptance_criterion",
+      "statement": "Applying the same reviewed revision twice creates nothing new, and exact duplicates of existing decisions, risks, and work items are not recreated.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 47,
+          "endLine": 47
+        }
+      ]
+    },
+    {
+      "id": "F9",
+      "category": "acceptance_criterion",
+      "statement": "Restart restores intake, brief, orientation, focus, and next action.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 51,
+          "endLine": 51
+        }
+      ]
+    },
+    {
+      "id": "F10",
+      "category": "non_goal",
+      "statement": "Claims, runtime verification receipts, protected completion, delegation, approval bundles, background processes, sandboxing, remote execution, model-routing policy, cost tracking, and release automation are out of scope for this phase.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 27,
+          "endLine": 27
+        }
+      ]
+    },
+    {
+      "id": "F11",
+      "category": "risk",
+      "statement": "Interpretation of planning documents is nondeterministic, so the understanding check and human acceptance are the only guarantees that canonical truth is correct.",
+      "origin": "model_inference",
+      "sourceRefs": [],
+      "confidence": "high",
+      "note": "Inferred from the interpretation-vs-enforcement split; the source does not state this as a risk."
+    },
+    {
+      "id": "F12",
+      "category": "open_question",
+      "statement": "How should a revision request from the user be captured — as a new draft revision only, or also as a durable record of what was corrected?",
+      "origin": "model_inference",
+      "sourceRefs": [],
+      "confidence": "medium"
+    },
+    {
+      "id": "F13",
+      "category": "assumption",
+      "statement": "Repository-local orientation is sufficient for this phase; no external research is required.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-1",
+          "startLine": 37,
+          "endLine": 37
+        }
+      ],
+      "confidence": "high"
+    }
+  ],
+  "conflicts": [],
+  "proposedWorkItems": [
+    {
+      "id": "W1",
+      "kind": "task",
+      "title": "Capture intake revision requests as durable review records",
+      "sourceFindingIds": [
+        "F12"
+      ],
+      "description": "Today a revision request produces a new draft revision but no durable record of what the user asked to change. Decide whether to record review feedback alongside the draft.",
+      "priority": "low",
+      "acceptanceCriteria": [
+        "a revision request is recorded or explicitly documented as out of scope"
+      ],
+      "relatesToWorkItemId": "NF-2"
+    }
+  ],
+  "createdAt": "2026-07-25T04:51:01.985Z",
+  "proposedNextAction": "Build claims, verification receipts, and the protected completion transition (NF-3).",
+  "proposedNextActionRationale": "Intake, orientation, and the Steward context loop now work end to end, so the next unproven promise is evidence-before-completion: NF-1 has been implemented and tested for two packets but still cannot be marked complete because no protected completion transition exists. NF-3 closes that gap and unblocks NF-4 and the self-hosting gate.",
+  "reviewNotes": "Existing accepted decisions (DEC-1..DEC-6), risks (RSK-1..RSK-4), and roadmap items (NF-1..NF-7) were deliberately not re-proposed; only genuinely new Phase 3 findings are included."
+}

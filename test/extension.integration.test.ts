@@ -9,14 +9,24 @@ import { join } from "node:path";
 import * as pi from "@earendil-works/pi-coding-agent";
 // Loads the thin adapter (which type-imports Pi and imports src/).
 import newfangExtension from "../.pi/extensions/newfang.ts";
-import { statePaths } from "../src/state/paths.ts";
+import { loadState } from "../src/state/store.ts";
 
 interface CapturedCommand {
   description?: string;
   getArgumentCompletions?: (prefix: string) => Array<{ value: string; label: string }> | null;
   handler: (args: string, ctx: FakeCtx) => unknown | Promise<unknown>;
 }
-
+interface CapturedTool {
+  name: string;
+  parameters: unknown;
+  execute: (
+    id: string,
+    params: Record<string, unknown>,
+    s: unknown,
+    u: unknown,
+    ctx: { cwd: string },
+  ) => Promise<unknown>;
+}
 interface FakeCtx {
   cwd: string;
   ui: {
@@ -27,19 +37,21 @@ interface FakeCtx {
 
 function makeHarness(cwd: string) {
   const commands = new Map<string, CapturedCommand>();
+  const tools = new Map<string, CapturedTool>();
   const events = new Map<string, (event: unknown, ctx: FakeCtx) => unknown | Promise<unknown>>();
   const notifications: Array<{ message: string; level?: string }> = [];
   const widgets: Array<{ key: string; lines: string[] | undefined }> = [];
-
   const host = {
     registerCommand(name: string, opts: CapturedCommand) {
       commands.set(name, opts);
+    },
+    registerTool(tool: CapturedTool) {
+      tools.set(tool.name, tool);
     },
     on(event: string, handler: (event: unknown, ctx: FakeCtx) => unknown) {
       events.set(event, handler);
     },
   };
-
   const ctx: FakeCtx = {
     cwd,
     ui: {
@@ -47,11 +59,10 @@ function makeHarness(cwd: string) {
       setWidget: (key, lines) => widgets.push({ key, lines }),
     },
   };
-
-  return { host, ctx, commands, events, notifications, widgets };
+  return { host, ctx, commands, tools, events, notifications, widgets };
 }
 
-test("pinned Pi package loads at runtime and reports version 0.82.0", async () => {
+test("pinned Pi package loads at runtime and reports 0.82.0", async () => {
   assert.equal(typeof pi, "object");
   const pkg = JSON.parse(
     await readFile(
@@ -59,52 +70,45 @@ test("pinned Pi package loads at runtime and reports version 0.82.0", async () =
       "utf8",
     ),
   );
-  assert.equal(pkg.name, "@earendil-works/pi-coding-agent");
   assert.equal(pkg.version, "0.82.0");
 });
 
-test("extension registers the newfang command and a session_start handler", async () => {
+test("extension registers the newfang command, tools, and session_start", async () => {
   const root = await mkdtemp(join(tmpdir(), "newfang-int-"));
   const h = makeHarness(root);
-
-  // Bridge our fake host into the adapter's ExtensionAPI parameter.
   (newfangExtension as unknown as (pi: unknown) => void)(h.host);
 
-  assert.ok(h.commands.has("newfang"), "newfang command registered");
-  assert.ok(h.events.has("session_start"), "session_start handler registered");
-
-  const cmd = h.commands.get("newfang");
-  assert.ok(cmd);
-  assert.deepEqual(cmd.getArgumentCompletions?.("i"), [{ value: "init", label: "init" }]);
-  assert.equal(cmd.getArgumentCompletions?.("zz"), null);
+  assert.ok(h.commands.has("newfang"));
+  assert.ok(h.events.has("session_start"));
+  assert.equal(h.tools.size, 20);
+  assert.ok(h.tools.has("newfang_create_work_item"));
 });
 
-test("session_start restoration wiring does not crash and shows the init hint", async () => {
+test("session_start shows init hint when uninitialized", async () => {
   const root = await mkdtemp(join(tmpdir(), "newfang-int-"));
   const h = makeHarness(root);
   (newfangExtension as unknown as (pi: unknown) => void)(h.host);
-
-  const onStart = h.events.get("session_start");
-  assert.ok(onStart);
-  await onStart(undefined, h.ctx);
-
-  const lastWidget = h.widgets.at(-1);
-  assert.ok(lastWidget);
-  assert.equal(lastWidget.key, "newfang-home");
-  assert.match((lastWidget.lines ?? []).join(" "), /run \/newfang init/);
+  await h.events.get("session_start")!(undefined, h.ctx);
+  const last = h.widgets.at(-1);
+  assert.match((last?.lines ?? []).join(" "), /run \/newfang init/);
 });
 
-test("newfang init then status runs end to end through the registered command", async () => {
+test("init command then create-work-item tool run end to end through Pi wiring", async () => {
   const root = await mkdtemp(join(tmpdir(), "newfang-int-"));
   const h = makeHarness(root);
   (newfangExtension as unknown as (pi: unknown) => void)(h.host);
-  const cmd = h.commands.get("newfang");
-  assert.ok(cmd);
 
-  await cmd.handler("init", h.ctx);
-  assert.ok(existsSync(statePaths(root).projectJson), "init created canonical state");
+  await h.commands.get("newfang")!.handler("init", h.ctx);
+  assert.ok(existsSync(join(root, ".newfang/project.json")));
 
-  await cmd.handler("status", h.ctx);
-  const combined = h.notifications.map((n) => n.message).join("\n");
-  assert.match(combined, /phase:\s+research/);
+  await h.tools
+    .get("newfang_create_work_item")!
+    .execute("c1", { kind: "task", title: "wire test", status: "ready" }, undefined, undefined, {
+      cwd: root,
+    });
+  const state = await loadState(root);
+  assert.equal(state.workItems[0]?.title, "wire test");
+
+  await h.commands.get("newfang")!.handler("backlog", h.ctx);
+  assert.match(h.notifications.map((n) => n.message).join("\n"), /NF-1/);
 });

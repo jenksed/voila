@@ -7,17 +7,28 @@ not merely generating code.
 
 ## Status
 
-**Phase 0 complete; Packet 1 complete — runnable foundation.** The repository contains the product
-direction, an evidence-backed capability audit, an architecture recommendation with locked ADRs, and
-a **runnable NewFang extension foundation**: a thin Pi adapter (`.pi/extensions/newfang.ts`), a
-canonical `.newfang/` state store, and the `/newfang init | status | doctor` commands with a minimal
-home view — pinned to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1`, tested (31 tests),
-and smoke-verified against real Pi.
+**Phase 0 + Packets 1–3 complete — the first daily-use workflow.** NewFang is a runnable Pi extension:
+a thin adapter (`.pi/extensions/newfang.ts`), canonical `.newfang/` state with **explicit schema
+versioning/migration** (now v3), a compact **project-operations layer** (work items, decisions,
+assumptions, risks), a keyboard-first **Steward Console** (`/newfang home`), and **planning intake +
+repository orientation**: a source document is preserved byte-for-byte, interpreted into a structured
+draft with line-level provenance, reviewed by you in an Understanding Check, and only then applied to
+canonical project truth. 19 LLM-callable tools, a real **Project Steward** Pi skill, and compact
+automatic context injection. Pinned to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via
+mise), tested (**173 tests**). The repo **dogfoods its own** `.newfang/` state.
 
-This is a **foundation only**, not the MVP. There is no planning intake, backlog, claims,
-verification gates, delegation, approval bundles, background terminals, sandboxing, remote execution,
-or theming yet. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
-[docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) for what comes next.
+**The boundary is explicit**: the model interprets (fallibly), NewFang enforces (preservation,
+schemas, provenance, gating, persistence, idempotency), and *you* accept. Nothing enters canonical
+truth without your confirmation.
+
+This is **not** the full MVP. There are no claims, runtime verification receipts, completion gate,
+approval bundles, delegation, background processes, sandboxing, remote execution, model routing, or
+release automation. NewFang **cannot yet mark work complete** — that transition is reserved for a
+future verification-gated tool, which is why NF-1 is still `in_progress`. The authenticated
+Project-Steward acceptance run is **pending**, so daily-use readiness is not yet claimed. See
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
+[docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) for what comes next
+(claims, receipts, and protected completion).
 
 ## What NewFang is (and is not)
 
@@ -48,6 +59,12 @@ The authoritative product statement is [docs/product/PRODUCT_DIRECTION.md](docs/
 | Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records (0001–0007) |
 | Setup | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, pinned versions, commands, smoke test |
 | Verification | [docs/verification/PACKET_1_FOUNDATION.md](docs/verification/PACKET_1_FOUNDATION.md) | Packet 1 foundation verification record |
+| Verification | [docs/verification/PACKET_2_PROJECT_OPERATIONS.md](docs/verification/PACKET_2_PROJECT_OPERATIONS.md) | Packet 2 project-operations verification record |
+| Design | [docs/design/STEWARD_CONSOLE.md](docs/design/STEWARD_CONSOLE.md) | Steward Console design and alternatives |
+| Design | [docs/design/PLANNING_INTAKE.md](docs/design/PLANNING_INTAKE.md) | Intake lifecycle, provenance, and apply semantics |
+| Design | [docs/design/REPOSITORY_ORIENTATION.md](docs/design/REPOSITORY_ORIENTATION.md) | Bounded orientation and staleness |
+| Verification | [docs/verification/PACKET_2_5_STEWARD_CONSOLE.md](docs/verification/PACKET_2_5_STEWARD_CONSOLE.md) | Packet 2.5 console verification record |
+| Verification | [docs/verification/PACKET_3_INTAKE_ORIENTATION.md](docs/verification/PACKET_3_INTAKE_ORIENTATION.md) | Packet 3 intake/orientation verification record |
 
 ## Operating instructions
 

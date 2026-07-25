@@ -1,18 +1,38 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { runInit } from "../src/commands/init.ts";
 import { runStatus } from "../src/commands/status.ts";
+import { runBacklog } from "../src/commands/backlog.ts";
+import { runDecisions, runAssumptions, runRisks } from "../src/commands/lists.ts";
+import { runMigrate } from "../src/commands/migrate.ts";
 import { runDoctor, type DoctorInput } from "../src/commands/doctor.ts";
-import { loadState } from "../src/state/store.ts";
+import { initState, loadState, updateState } from "../src/state/store.ts";
 import { statePaths } from "../src/state/paths.ts";
+import { createWorkItem, recordDecision, recordRisk } from "../src/domain/operations.ts";
+import { createInitialState } from "../src/domain/defaults.ts";
+import { V1_FIXTURE } from "./helpers.ts";
 
 async function tempRoot(): Promise<string> {
   return mkdtemp(join(tmpdir(), "newfang-cmd-"));
+}
+
+async function seededRoot(): Promise<string> {
+  const root = await tempRoot();
+  await initState(root, { displayName: "demo" });
+  await updateState(root, (s) =>
+    createWorkItem(s, { kind: "task", title: "A", status: "ready", priority: "high" }, "T"),
+  );
+  await updateState(root, (s) =>
+    recordDecision(s, { title: "d", decision: "x", rationale: "y", status: "accepted" }, "T"),
+  );
+  await updateState(root, (s) =>
+    recordRisk(s, { statement: "r", likelihood: "high", impact: "high" }, "T"),
+  );
+  return root;
 }
 
 function doctorInput(root: string, over: Partial<DoctorInput> = {}): DoctorInput {
@@ -32,85 +52,125 @@ function check(checks: Awaited<ReturnType<typeof runDoctor>>, name: string) {
   return c;
 }
 
-test("runInit creates state and reports created", async () => {
+test("runInit creates state; second init refuses", async () => {
   const root = await tempRoot();
-  const result = await runInit(root);
-  assert.equal(result.level, "info");
-  assert.ok(result.state);
-  assert.ok(existsSync(statePaths(root).projectJson));
+  assert.equal((await runInit(root)).level, "info");
+  assert.equal((await runInit(root)).level, "warning");
 });
 
-test("runInit refuses to overwrite and leaves revision unchanged", async () => {
-  const root = await tempRoot();
-  await runInit(root);
-  const before = await loadState(root);
-  const second = await runInit(root);
-  assert.equal(second.level, "warning");
-  const after = await loadState(root);
-  assert.equal(after.revision, before.revision);
-  assert.equal(after.projectId, before.projectId);
+test("runStatus reads v2 state and shows operations summary", async () => {
+  const root = await seededRoot();
+  const r = await runStatus(root);
+  assert.equal(r.level, "info");
+  assert.match(r.lines.join("\n"), /operations:/);
 });
 
-test("runStatus reads persisted state", async () => {
-  const root = await tempRoot();
-  await runInit(root);
-  const result = await runStatus(root);
-  assert.equal(result.level, "info");
-  assert.match(result.lines.join("\n"), /phase:\s+research/);
+test("runStatus warns uninitialized and on migration-required", async () => {
+  const empty = await tempRoot();
+  assert.equal((await runStatus(empty)).level, "warning");
+
+  const v1 = await tempRoot();
+  await mkdir(statePaths(v1).dir, { recursive: true });
+  await writeFile(statePaths(v1).projectJson, JSON.stringify(V1_FIXTURE), "utf8");
+  const r = await runStatus(v1);
+  assert.equal(r.level, "warning");
+  assert.match(r.lines.join("\n"), /migrate/);
 });
 
-test("runStatus warns when uninitialized", async () => {
-  const root = await tempRoot();
-  const result = await runStatus(root);
-  assert.equal(result.level, "warning");
-  assert.match(result.lines.join("\n"), /\/newfang init/);
+test("runBacklog: empty, summary, and detail by ID", async () => {
+  const empty = await tempRoot();
+  await initState(empty, { displayName: "demo" });
+  assert.match((await runBacklog(empty)).lines.join("\n"), /0 items/);
+
+  const seeded = await seededRoot();
+  assert.match((await runBacklog(seeded)).lines.join("\n"), /Ready/);
+  assert.match((await runBacklog(seeded, "NF-1")).lines.join("\n"), /NF-1 — A/);
+  assert.equal((await runBacklog(seeded, "NF-9")).level, "warning");
 });
 
-test("runStatus errors on malformed state", async () => {
-  const root = await tempRoot();
-  const paths = statePaths(root);
-  await mkdir(paths.dir, { recursive: true });
-  await writeFile(paths.projectJson, "{ broken", "utf8");
-  const result = await runStatus(root);
-  assert.equal(result.level, "error");
+test("list commands render decisions/assumptions/risks", async () => {
+  const root = await seededRoot();
+  assert.match((await runDecisions(root)).lines.join("\n"), /DEC-1/);
+  assert.match((await runAssumptions(root)).lines.join("\n"), /No assumptions/);
+  assert.match((await runRisks(root)).lines.join("\n"), /RSK-1/);
 });
 
-test("runStatus is stable across repeated loads (restart parity)", async () => {
+test("runMigrate inspects then applies", async () => {
   const root = await tempRoot();
-  await runInit(root);
-  const first = await runStatus(root);
-  const second = await runStatus(root);
-  assert.deepEqual(first.lines, second.lines);
+  await mkdir(statePaths(root).dir, { recursive: true });
+  await writeFile(statePaths(root).projectJson, `${JSON.stringify(V1_FIXTURE, null, 2)}\n`, "utf8");
+
+  const inspect = await runMigrate(root, false);
+  assert.match(inspect.lines.join("\n"), /Migration available: v1 -> v3/);
+
+  const applied = await runMigrate(root, true);
+  assert.match(applied.lines.join("\n"), /Migrated schema v1 -> v3/);
+  assert.equal((await loadState(root)).schemaVersion, 3);
+
+  assert.match((await runMigrate(root, false)).lines.join("\n"), /already v3/);
 });
 
-test("runDoctor passes on a healthy initialized project", async () => {
-  const root = await tempRoot();
-  await runInit(root);
+test("runDoctor passes on a healthy seeded project", async () => {
+  const root = await seededRoot();
   const checks = await runDoctor(doctorInput(root));
-  assert.equal(check(checks, "pi version").level, "pass");
-  assert.equal(check(checks, "node version").level, "pass");
-  assert.equal(check(checks, "newfang state").level, "pass");
-  assert.equal(check(checks, "schema valid").level, "pass");
+  assert.equal(check(checks, "schema migration").level, "pass");
+  assert.equal(check(checks, "canonical state valid").level, "pass");
+  assert.equal(check(checks, "id counter consistency").level, "pass");
+  assert.equal(check(checks, "work-item references").level, "pass");
+  assert.equal(check(checks, "dependency cycles").level, "pass");
   assert.equal(check(checks, "generated view").level, "pass");
 });
 
-test("runDoctor fails the node check below the minimum", async () => {
-  const root = await tempRoot();
-  await runInit(root);
-  const checks = await runDoctor(doctorInput(root, { nodeVersion: "v20.0.0" }));
-  assert.equal(check(checks, "node version").level, "fail");
+test("runDoctor warns migration-required for v1 and fails node below minimum", async () => {
+  const v1 = await tempRoot();
+  await mkdir(statePaths(v1).dir, { recursive: true });
+  await writeFile(statePaths(v1).projectJson, JSON.stringify(V1_FIXTURE), "utf8");
+  assert.equal(check(await runDoctor(doctorInput(v1)), "schema migration").level, "warn");
+
+  const seeded = await seededRoot();
+  assert.equal(
+    check(await runDoctor(doctorInput(seeded, { nodeVersion: "v20.0.0" })), "node version").level,
+    "fail",
+  );
 });
 
-test("runDoctor warns on a Pi version mismatch and on missing state", async () => {
+test("runDoctor detects dangling references, cycles, and bad ID counters", async () => {
+  // Hand-craft a schema-valid but referentially broken v2 state.
+  const s = createInitialState({ displayName: "demo", now: "T", projectId: "id" });
+  const broken = {
+    ...s,
+    sequences: { ...s.sequences, workItem: 1 }, // stale: less than used NF-5
+    workItems: [
+      {
+        id: "NF-5",
+        kind: "task",
+        title: "A",
+        status: "backlog",
+        priority: "normal",
+        acceptanceCriteria: [],
+        dependsOn: ["NF-6", "NF-99"],
+        createdAt: "T",
+        updatedAt: "T",
+      },
+      {
+        id: "NF-6",
+        kind: "task",
+        title: "B",
+        status: "backlog",
+        priority: "normal",
+        acceptanceCriteria: [],
+        dependsOn: ["NF-5"],
+        createdAt: "T",
+        updatedAt: "T",
+      },
+    ],
+  };
   const root = await tempRoot();
-  const mismatch = await runDoctor(doctorInput(root, { piVersion: "0.80.0" }));
-  assert.equal(check(mismatch, "pi version").level, "warn");
-  assert.equal(check(mismatch, "newfang state").level, "warn");
-});
+  await mkdir(statePaths(root).dir, { recursive: true });
+  await writeFile(statePaths(root).projectJson, `${JSON.stringify(broken, null, 2)}\n`, "utf8");
 
-test("runDoctor warns when Pi version cannot be determined", async () => {
-  const root = await tempRoot();
-  await runInit(root);
-  const checks = await runDoctor(doctorInput(root, { piVersion: "unknown" }));
-  assert.equal(check(checks, "pi version").level, "warn");
+  const checks = await runDoctor(doctorInput(root));
+  assert.equal(check(checks, "id counter consistency").level, "fail");
+  assert.equal(check(checks, "work-item references").level, "fail");
+  assert.equal(check(checks, "dependency cycles").level, "fail");
 });

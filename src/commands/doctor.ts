@@ -1,13 +1,27 @@
-// `/newfang doctor` logic. Read-only diagnostics; makes no repairs in this packet.
+// `/newfang doctor` logic. Read-only diagnostics; makes no repairs or migrations.
 
 import { existsSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
-import { statePaths } from "../state/paths.ts";
-import { loadState, stateExists } from "../state/store.ts";
+import { intakePaths, statePaths } from "../state/paths.ts";
+import {
+  listDraftRevisions,
+  readDraft,
+  readManifest,
+  readReviews,
+  readUnderstanding,
+} from "../state/intake-store.ts";
+import { currentOrientationStatus } from "../state/orientation-store.ts";
+import { sha256 } from "../state/source.ts";
+import { loadState, readRawState } from "../state/store.ts";
+import { StateNotFoundError, StateValidationError } from "../state/errors.ts";
 import { renderStatusView } from "../domain/status.ts";
+import { detectCycle } from "../domain/operations.ts";
+import { ID_PREFIXES } from "../domain/ids.ts";
+import { SCHEMA_VERSION } from "../domain/types.ts";
+import type { ProjectState, Sequences } from "../domain/types.ts";
 
 export type CheckLevel = "pass" | "warn" | "fail";
 
@@ -19,17 +33,12 @@ export interface DoctorCheck {
 
 export interface DoctorInput {
   root: string;
-  /** Version of the installed Pi package, or "unknown". */
   piVersion: string;
-  /** Version NewFang pins/expects. */
   expectedPiVersion: string;
-  /** e.g. process.version ("v22.23.1"). */
   nodeVersion: string;
-  /** Minimum required Node, e.g. "22.19.0". */
   minNode: string;
 }
 
-/** Parse "v22.23.1" / "22.19.0" into [major, minor, patch]. */
 function parseVersion(v: string): [number, number, number] {
   const m = v.trim().replace(/^v/, "").split(".");
   return [Number(m[0] ?? 0), Number(m[1] ?? 0), Number(m[2] ?? 0)];
@@ -56,7 +65,86 @@ async function isWritable(dir: string): Promise<boolean> {
   }
 }
 
-/** Run all diagnostics and return the checks (unformatted). No repairs are performed. */
+function idNumber(id: string): number {
+  return Number(id.split("-").pop());
+}
+
+function maxIdNumber(ids: string[]): number {
+  return ids.reduce((m, id) => Math.max(m, idNumber(id) || 0), 0);
+}
+
+/** Deeper checks over a validated v2 state. */
+function stateIntegrityChecks(state: ProjectState): DoctorCheck[] {
+  const checks: DoctorCheck[] = [];
+  const workIds = new Set(state.workItems.map((w) => w.id));
+
+  // ID counter consistency: each sequence must exceed the max used number in its collection.
+  const seqSpecs: Array<[keyof Sequences, string[]]> = [
+    ["workItem", state.workItems.map((w) => w.id)],
+    ["decision", state.decisions.map((d) => d.id)],
+    ["assumption", state.assumptions.map((a) => a.id)],
+    ["risk", state.risks.map((r) => r.id)],
+  ];
+  const seqProblems: string[] = [];
+  for (const [key, ids] of seqSpecs) {
+    const max = maxIdNumber(ids);
+    if (state.sequences[key] <= max) {
+      seqProblems.push(`${ID_PREFIXES[key]} next=${state.sequences[key]} <= max used ${max}`);
+    }
+  }
+  checks.push(
+    seqProblems.length === 0
+      ? { name: "id counter consistency", level: "pass", detail: "sequences ahead of all used IDs" }
+      : { name: "id counter consistency", level: "fail", detail: seqProblems.join("; ") },
+  );
+
+  // References to missing work items (dependencies + risk links).
+  const missing: string[] = [];
+  for (const w of state.workItems) {
+    for (const dep of w.dependsOn) if (!workIds.has(dep)) missing.push(`${w.id}->${dep}`);
+  }
+  for (const r of state.risks) {
+    for (const l of r.linkedWorkItems ?? []) if (!workIds.has(l)) missing.push(`${r.id}->${l}`);
+  }
+  checks.push(
+    missing.length === 0
+      ? { name: "work-item references", level: "pass", detail: "all references resolve" }
+      : { name: "work-item references", level: "fail", detail: `missing: ${missing.join(", ")}` },
+  );
+
+  // Dependency cycles.
+  const cycle = detectCycle(state.workItems);
+  checks.push(
+    cycle === null
+      ? { name: "dependency cycles", level: "pass", detail: "none" }
+      : { name: "dependency cycles", level: "fail", detail: cycle.join(" -> ") },
+  );
+
+  // Active work-item reference.
+  if (state.focusWorkItemId === null) {
+    checks.push({ name: "focus work item", level: "pass", detail: "none selected" });
+  } else {
+    const active = state.workItems.find((w) => w.id === state.focusWorkItemId);
+    if (!active) {
+      checks.push({
+        name: "focus work item",
+        level: "fail",
+        detail: `focusWorkItemId ${state.focusWorkItemId} does not exist`,
+      });
+    } else if (active.status === "completed" || active.status === "cancelled") {
+      checks.push({
+        name: "focus work item",
+        level: "warn",
+        detail: `focus ${active.id} is ${active.status}`,
+      });
+    } else {
+      checks.push({ name: "focus work item", level: "pass", detail: active.id });
+    }
+  }
+
+  return checks;
+}
+
 export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
   const paths = statePaths(input.root);
@@ -66,7 +154,7 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
     checks.push({
       name: "pi version",
       level: "warn",
-      detail: `could not determine installed Pi version (expected ${input.expectedPiVersion})`,
+      detail: `could not determine (expected ${input.expectedPiVersion})`,
     });
   } else if (input.piVersion === input.expectedPiVersion) {
     checks.push({ name: "pi version", level: "pass", detail: input.piVersion });
@@ -79,15 +167,15 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   }
 
   // Node version.
-  if (gte(parseVersion(input.nodeVersion), parseVersion(input.minNode))) {
-    checks.push({ name: "node version", level: "pass", detail: input.nodeVersion });
-  } else {
-    checks.push({
-      name: "node version",
-      level: "fail",
-      detail: `${input.nodeVersion} is below required ${input.minNode}`,
-    });
-  }
+  checks.push(
+    gte(parseVersion(input.nodeVersion), parseVersion(input.minNode))
+      ? { name: "node version", level: "pass", detail: input.nodeVersion }
+      : {
+          name: "node version",
+          level: "fail",
+          detail: `${input.nodeVersion} below required ${input.minNode}`,
+        },
+  );
 
   // Repository availability.
   checks.push(
@@ -96,7 +184,7 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
       : { name: "git repository", level: "warn", detail: "no .git in project root" },
   );
 
-  // Project trust visibility (best-effort; Pi owns the real trust store).
+  // Project trust visibility.
   try {
     const trustFile = join(homedir(), ".pi", "agent", "trust.json");
     checks.push(
@@ -108,7 +196,7 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
     checks.push({ name: "project trust", level: "warn", detail: "trust store not visible" });
   }
 
-  // Writable state directory (parent must be writable to create/update .newfang/).
+  // Writable state directory.
   const writeTarget = existsSync(paths.dir) ? paths.dir : input.root;
   checks.push(
     (await isWritable(writeTarget))
@@ -120,38 +208,88 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
         },
   );
 
-  // NewFang state presence + schema validity + view consistency.
-  if (!stateExists(input.root)) {
-    checks.push({
-      name: "newfang state",
-      level: "warn",
-      detail: "no .newfang/project.json — run /newfang init",
-    });
-    return checks;
+  // State presence + schema/migration + integrity.
+  let raw;
+  try {
+    raw = await readRawState(input.root);
+  } catch (error) {
+    if (error instanceof StateNotFoundError) {
+      checks.push({
+        name: "newfang state",
+        level: "warn",
+        detail: "no .newfang/project.json — run /newfang init",
+      });
+      return checks;
+    }
+    if (error instanceof StateValidationError) {
+      checks.push({
+        name: "canonical state valid",
+        level: "fail",
+        detail: (error as Error).message,
+      });
+      return checks;
+    }
+    throw error;
   }
 
   checks.push({ name: "newfang state", level: "pass", detail: "project.json present" });
 
-  try {
-    const state = await loadState(input.root);
+  if (raw.version === 1) {
     checks.push({
-      name: "schema valid",
-      level: "pass",
-      detail: `schemaVersion ${state.schemaVersion}`,
+      name: "schema migration",
+      level: "warn",
+      detail: "v1 state; run /newfang migrate --apply",
     });
+    return checks;
+  }
+  if (raw.version !== SCHEMA_VERSION) {
+    checks.push({
+      name: "schema migration",
+      level: "fail",
+      detail: `unknown schema version ${String(raw.version)}`,
+    });
+    return checks;
+  }
+  checks.push({ name: "schema migration", level: "pass", detail: `at v${SCHEMA_VERSION}` });
 
-    if (existsSync(paths.statusView)) {
-      const onDisk = await readFile(paths.statusView, "utf8");
-      checks.push(
-        onDisk === renderStatusView(state)
-          ? { name: "generated view", level: "pass", detail: "PROJECT_STATUS.md matches state" }
-          : { name: "generated view", level: "warn", detail: "PROJECT_STATUS.md is stale" },
-      );
-    } else {
-      checks.push({ name: "generated view", level: "warn", detail: "PROJECT_STATUS.md missing" });
-    }
+  let state: ProjectState;
+  try {
+    state = await loadState(input.root);
+    checks.push({
+      name: "canonical state valid",
+      level: "pass",
+      detail: `schema-valid v${SCHEMA_VERSION}`,
+    });
   } catch (error) {
-    checks.push({ name: "schema valid", level: "fail", detail: (error as Error).message });
+    checks.push({ name: "canonical state valid", level: "fail", detail: (error as Error).message });
+    return checks;
+  }
+
+  checks.push(...stateIntegrityChecks(state));
+  checks.push(...(await intakeChecks(input.root, state)));
+  checks.push(...(await orientationChecks(input.root, state)));
+
+  // Project brief presence.
+  checks.push(
+    existsSync(paths.projectBrief)
+      ? { name: "project brief", level: "pass", detail: "briefs/PROJECT_BRIEF.md present" }
+      : {
+          name: "project brief",
+          level: state.intakes.some((i) => i.status === "accepted") ? "warn" : "pass",
+          detail: existsSync(paths.projectBrief) ? "present" : "not generated yet",
+        },
+  );
+
+  // Generated-view consistency.
+  if (existsSync(paths.statusView)) {
+    const onDisk = await readFile(paths.statusView, "utf8");
+    checks.push(
+      onDisk === renderStatusView(state)
+        ? { name: "generated view", level: "pass", detail: "PROJECT_STATUS.md matches state" }
+        : { name: "generated view", level: "warn", detail: "PROJECT_STATUS.md is stale" },
+    );
+  } else {
+    checks.push({ name: "generated view", level: "warn", detail: "PROJECT_STATUS.md missing" });
   }
 
   return checks;
@@ -159,18 +297,214 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
 
 const LEVEL_MARK: Record<CheckLevel, string> = { pass: "PASS", warn: "WARN", fail: "FAIL" };
 
-/** Format checks into display lines. */
 export function formatDoctor(checks: DoctorCheck[]): string[] {
   const lines = ["NewFang doctor:"];
-  for (const c of checks) {
-    lines.push(`  [${LEVEL_MARK[c.level]}] ${c.name}: ${c.detail}`);
-  }
+  for (const c of checks) lines.push(`  [${LEVEL_MARK[c.level]}] ${c.name}: ${c.detail}`);
   return lines;
 }
 
-/** Map the worst check level to a UI notify level. */
 export function worstLevel(checks: DoctorCheck[]): "info" | "warning" | "error" {
   if (checks.some((c) => c.level === "fail")) return "error";
   if (checks.some((c) => c.level === "warn")) return "warning";
   return "info";
+}
+
+/** Intake metadata/artifact consistency: hashes, drafts, views, apply events, current pointer. */
+async function intakeChecks(root: string, state: ProjectState): Promise<DoctorCheck[]> {
+  const checks: DoctorCheck[] = [];
+  if (state.intakes.length === 0) {
+    if (state.currentIntakeId) {
+      checks.push({
+        name: "intake reference",
+        level: "fail",
+        detail: `currentIntakeId ${state.currentIntakeId} but no intakes exist`,
+      });
+    }
+    return checks;
+  }
+
+  if (state.currentIntakeId && !state.intakes.some((i) => i.id === state.currentIntakeId)) {
+    checks.push({
+      name: "intake reference",
+      level: "fail",
+      detail: `currentIntakeId ${state.currentIntakeId} does not exist`,
+    });
+  } else {
+    checks.push({
+      name: "intake reference",
+      level: "pass",
+      detail: state.currentIntakeId ?? "none",
+    });
+  }
+
+  const problems: string[] = [];
+  const warnings: string[] = [];
+  for (const record of state.intakes) {
+    const paths = intakePaths(root, record.id);
+    if (!existsSync(paths.source)) {
+      problems.push(`${record.id}: preserved source missing`);
+      continue;
+    }
+    // Source hash consistency: the preserved bytes must still match the recorded digest.
+    try {
+      const content = await readFile(paths.source, "utf8");
+      if (sha256(content) !== record.sourceSha256) {
+        problems.push(`${record.id}: source hash mismatch (artifact modified?)`);
+      }
+    } catch {
+      problems.push(`${record.id}: source unreadable`);
+    }
+    try {
+      const manifest = await readManifest(root, record.id);
+      if (manifest.sourceSha256 !== record.sourceSha256) {
+        problems.push(`${record.id}: manifest hash disagrees with canonical metadata`);
+      }
+    } catch {
+      warnings.push(`${record.id}: manifest missing`);
+    }
+    if (record.draftRevision > 0) {
+      // The current revision's draft artifact must exist and agree with canonical metadata.
+      const draft = await readDraft(root, record.id, record.draftRevision);
+      if (!draft) {
+        problems.push(
+          `${record.id}: draft artifact missing for current revision ${record.draftRevision}`,
+        );
+      } else if (draft.draftRevision !== record.draftRevision) {
+        problems.push(
+          `${record.id}: draft artifact says revision ${draft.draftRevision}, canonical says ${record.draftRevision}`,
+        );
+      }
+
+      // Revisions must be monotonic 1..N with no gaps; each needs an understanding artifact.
+      const revisions = await listDraftRevisions(root, record.id);
+      const expected = Array.from({ length: record.draftRevision }, (_, i) => i + 1);
+      if (revisions.join(",") !== expected.join(",")) {
+        problems.push(
+          `${record.id}: draft revisions are not monotonic 1..${record.draftRevision} (found ${revisions.join(",") || "none"})`,
+        );
+      }
+      for (const rev of revisions) {
+        if ((await readUnderstanding(root, record.id, rev)) === null) {
+          warnings.push(`${record.id}: understanding artifact missing for revision ${rev}`);
+        }
+      }
+
+      // The manifest pointer must agree with canonical metadata.
+      try {
+        const manifest = await readManifest(root, record.id);
+        if (manifest.currentDraftRevision !== record.draftRevision) {
+          problems.push(
+            `${record.id}: manifest currentDraftRevision ${manifest.currentDraftRevision} disagrees with canonical ${record.draftRevision}`,
+          );
+        }
+      } catch {
+        // manifest absence is already reported above
+      }
+    }
+
+    // Accepted intakes need an accepted review record and a matching applied revision.
+    if (record.status === "accepted") {
+      const reviews = await readReviews(root, record.id);
+      const accepted = reviews.filter((r) => r.action === "accepted");
+      if (accepted.length === 0) {
+        problems.push(`${record.id}: accepted but no accepted review record in reviews.jsonl`);
+      }
+      if (record.acceptedDraftRevision === undefined) {
+        problems.push(`${record.id}: accepted but acceptedDraftRevision is not recorded`);
+      } else if (
+        accepted.length > 0 &&
+        !accepted.some((r) => r.reviewedRevision === record.acceptedDraftRevision)
+      ) {
+        problems.push(
+          `${record.id}: applied revision ${record.acceptedDraftRevision} does not match any accepted review record`,
+        );
+      }
+    }
+  }
+
+  checks.push(
+    problems.length === 0
+      ? {
+          name: "intake artifacts",
+          level: "pass",
+          detail: `${state.intakes.length} intake(s) consistent`,
+        }
+      : { name: "intake artifacts", level: "fail", detail: problems.join("; ") },
+  );
+  if (warnings.length > 0) {
+    checks.push({ name: "intake artifact views", level: "warn", detail: warnings.join("; ") });
+  }
+
+  // Accepted intakes must have a corresponding apply event in history.
+  const accepted = state.intakes.filter((i) => i.status === "accepted");
+  if (accepted.length > 0) {
+    let events = "";
+    try {
+      events = await readFile(statePaths(root).eventsJsonl, "utf8");
+    } catch {
+      // history unreadable; reported below
+    }
+    const missing = accepted.filter(
+      (i) => !events.includes('"intake_applied"') || !events.includes(`"${i.id}"`),
+    );
+    checks.push(
+      missing.length === 0
+        ? {
+            name: "intake apply events",
+            level: "pass",
+            detail: `${accepted.length} accepted intake(s) recorded`,
+          }
+        : {
+            name: "intake apply events",
+            level: "warn",
+            detail: `accepted without an apply event: ${missing.map((i) => i.id).join(", ")}`,
+          },
+    );
+  }
+
+  return checks;
+}
+
+/** Orientation reference validity and staleness (read-only; never re-orients). */
+async function orientationChecks(root: string, state: ProjectState): Promise<DoctorCheck[]> {
+  const checks: DoctorCheck[] = [];
+  if (!state.currentOrientationId) {
+    checks.push({
+      name: "orientation",
+      level: state.orientations.length > 0 ? "warn" : "warn",
+      detail: "no current orientation recorded",
+    });
+    return checks;
+  }
+  if (!state.orientations.some((o) => o.id === state.currentOrientationId)) {
+    checks.push({
+      name: "orientation reference",
+      level: "fail",
+      detail: `currentOrientationId ${state.currentOrientationId} does not exist`,
+    });
+    return checks;
+  }
+  const status = await currentOrientationStatus(root, state);
+  if (!status.artifact) {
+    checks.push({
+      name: "orientation artifact",
+      level: "fail",
+      detail: "orientation artifact missing",
+    });
+    return checks;
+  }
+  checks.push(
+    status.staleness.stale
+      ? {
+          name: "orientation freshness",
+          level: "warn",
+          detail: `${state.currentOrientationId} is stale: ${status.staleness.reasons.join("; ")}`,
+        }
+      : {
+          name: "orientation freshness",
+          level: "pass",
+          detail: `${state.currentOrientationId} current`,
+        },
+  );
+  return checks;
 }

@@ -15,11 +15,29 @@ ownership from intent through implementation, verification, and delivery. Canoni
 
 ## Current phase
 
-Phase 0 (research and architecture discovery) — complete. **Packet 1 (architecture lock + runnable
-foundation) — complete** as of 2026-07-24: docs amended and committed; Node/Pi pinned; the runnable
-NewFang extension foundation (canonical `.newfang/` store + `/newfang init|status|doctor` + minimal
-home view) built, tested (31/31), and smoke-verified against real Pi. Next: Phase 2 (backlog entities
-on canonical state) per the implementation plan.
+Phase 0 and Packets 1, 2, 2.5 complete. **Packet 3 (planning intake, repository orientation, Steward
+context) — complete** as of 2026-07-25: schema v3 with an explicit `2 → 3` migration; exact source
+preservation with SHA-256 and path-safety; structured drafts with mandatory provenance and explicit
+model-inference marking; an Understanding Check reviewed before anything is applied; idempotent,
+duplicate-safe apply; a generated project brief; bounded orientation with staleness detection; a real
+Project Steward Pi skill; and compact automatic context injection. 173/173 tests pass.
+
+**Packet 3 closure corrections applied** (2026-07-25): command evidence is described honestly
+(`CommandFinding` with an explicit basis; nothing is called "verified"), and intake draft/review history
+is durable (numbered revisions that are never overwritten, plus an append-only `reviews.jsonl`).
+191/191 tests pass.
+
+**Three gates remain, all requiring Joshua**: (1) the interactive Steward Console check, (2) the
+authenticated Project Steward acceptance run, and (3) GitHub CI — `origin/main` is still at Packet 1
+and nothing has been pushed. Daily-use readiness is **not** claimed until all three pass and Packet 3
+is integrated over `main`.
+
+### State-of-record note (dual state during transition)
+
+`.newfang/` is now NewFang's **runtime operational state** (authoritative `project.json`: backlog,
+decisions, assumptions, risks). This hand-maintained Markdown ledger remains the **bootstrap and
+narrative record** — packet history, evidence, and durable rationale — until a later consolidation
+decision reconciles the two. Neither silently overwrites the other.
 
 ## Accepted decisions
 
@@ -36,6 +54,14 @@ on canonical state) per the implementation plan.
 | D9 | Pinned foundation: `@earendil-works/pi-coding-agent@0.82.0` (engines node >=22.19.0), Node `22.23.1`. | [0001 (amended)](../decisions/0001-adopt-pi-as-harness-foundation.md) |
 | D10 | Completion gate = rejecting the explicit `newfang_complete_work_item` state transition unless a required receipt passes; NewFang guarantees `project.json`, not model prose. | Packet 1 A3 |
 | D11 | Approval bundles use a proactive execution contract (declare phase + operation classes up front; enforce by interception; expire at boundary). Delegation is NOT required for the first self-hosting transition. | [self-hosting plan](../plans/SELF_HOSTING_ACCEPTANCE_PROJECT.md), Packet 1 A4/A5 |
+| D12 | Focus is a pointer, not a status: `focusWorkItemId` names the item receiving attention and is independent of `in_progress`. Schema v2 was amended in place (not v3) because v2 was unmerged. | Packet 2.5 A1 |
+| D13 | Steward Console = focus-first Delivery Desk hybrid (Focus Board primacy, Delivery Desk organization, Radar ideas folded into Attention/Work). Proof/Delivery rail is a reserved, unimplemented insertion point. | [design](../design/STEWARD_CONSOLE.md) |
+| D14 | The model interprets; NewFang enforces; the user accepts. Interpretation is never applied to canonical truth without explicit review and confirmation. | [intake design](../design/PLANNING_INTAKE.md), DEC-7/DEC-8 |
+| D15 | Intake sources are preserved byte-for-byte with SHA-256 in `.newfang/intakes/<id>/source.md`, written once; a revised interpretation is a new draft revision, never a source edit. | [intake design](../design/PLANNING_INTAKE.md) |
+| D16 | Only explicit `proposedWorkItems` become work items; requirements do not auto-convert. Exact duplicates are skipped, likely duplicates are surfaced, never merged. | [intake design](../design/PLANNING_INTAKE.md) |
+| D17 | Orientation is a bounded, provenance-backed snapshot; staleness fires on HEAD movement, instruction-file change, or explicit refresh — never on a dirty worktree. | [orientation design](../design/REPOSITORY_ORIENTATION.md) |
+| D18 | Commands are recorded as findings with an explicit basis (`declared_in_documentation` / `observed_in_session` / `candidate`); `observedResult` requires actual execution, and nothing is labeled "verified" until Phase 4 receipts exist. | [orientation design](../design/REPOSITORY_ORIENTATION.md) |
+| D19 | Every intake draft revision and Understanding Check is retained (numbered, never overwritten), and review decisions live in an append-only `reviews.jsonl` holding only narrow user-visible fields. | [intake design](../design/PLANNING_INTAKE.md) |
 
 ## Assumptions (reversible unless noted)
 
@@ -85,6 +111,9 @@ on canonical state) per the implementation plan.
 - E4: Environment inventory (Node/npm/pnpm/bun/deno/TS/git) — recorded in Packet 0 final report.
 - E5: Packet 1 foundation verification record (versions, 31/31 tests, headless smoke through real Pi
   0.82.0, restart persistence) — [../verification/PACKET_1_FOUNDATION.md](../verification/PACKET_1_FOUNDATION.md).
+- E6: Packet 3 record (173/173 tests, v3 migration cases, dogfooded INT-1/ORI-1 with no duplication,
+  non-model Pi integration; interactive + authenticated tiers pending) —
+  [../verification/PACKET_3_INTAKE_ORIENTATION.md](../verification/PACKET_3_INTAKE_ORIENTATION.md).
 
 ## Work completed
 
@@ -108,6 +137,44 @@ on canonical state) per the implementation plan.
   `/newfang init|status|doctor` + minimal home view; 31 unit/integration tests pass; smoke-verified
   through real Pi RPC (init/status/doctor + restart persistence); wrote `docs/DEVELOPMENT.md` and the
   verification record. Fixed a doctor Pi-version resolver that failed under Pi's jiti loader.
+- W8 (2026-07-25): Packet 3 closure — replaced `verifiedCommands`/`candidateCommands` with
+  `CommandFinding {command, basis, observedResult?, evidenceNote?}` across types, validation, tools,
+  generated orientation, skill, playbook, docs, and the dogfooded ORI-1 artifact; `observedResult` is
+  rejected unless the command was actually executed, documented commands require provenance, and no
+  surface calls a command "verified". Moved intake artifacts to `drafts/NNNN.json` +
+  `understandings/NNNN.md` + append-only `reviews.jsonl`, added `manifest.currentDraftRevision` and
+  canonical `acceptedDraftRevision`, and extended doctor with revision/review integrity checks.
+  Migrated INT-1 into the new layout with the one accepted review record that actually occurred (no
+  fabricated revision request). 191/191 tests pass.
+- W7 (2026-07-25): Packet 3 — added schema v3 (`intakes`, `orientations`, current pointers, INT/ORI
+  sequences) with an explicit `2 → 3` migration (chaining `1 → 2 → 3` when needed); built source
+  preservation with SHA-256 and path-safety (absolute/traversal/symlink-escape rejection); the intake
+  draft model (12 categories, mandatory provenance, explicit model inferences, conflicts, proposed
+  work); review-gated, idempotent, duplicate-safe apply; generated `UNDERSTANDING.md` and
+  `PROJECT_BRIEF.md`; bounded orientation with staleness; 8 new Pi tools (19 total); `/newfang intake
+  |orient|brief`; the Understanding Check in the Steward Console; a real Project Steward skill with an
+  orientation playbook; `before_agent_start` context injection; doctor v3 checks. Dogfooded INT-1 from
+  `docs/plans/PHASE_3_INTAKE_BRIEF.md` → DEC-7/8/9, ASM-3, RSK-5, NF-8 with **no duplication** of
+  existing truth, plus ORI-1. 173/173 tests pass; three real bugs were caught by tests (v2 load
+  reporting the wrong error, a context-clamp off-by-one, a doctor version label).
+  ([record](../verification/PACKET_3_INTAKE_ORIENTATION.md))
+- W6 (2026-07-24): Packet 2.5 — renamed `activeWorkItemId` -> `focusWorkItemId` with focus/status
+  separation; added canonical `nextActionRationale`; added `newfang_set_focus` + `/newfang focus`;
+  added typed lifecycle update tools (`newfang_update_decision|assumption|risk`) with transition
+  matrices, supersession-cycle rejection, and close-requires-resolution; designed and built the
+  Steward Console (`/newfang home`) with pure model/layout/render/navigation layers, three views,
+  detail views, help, reload, and wide/standard/compact layouts using Pi theme tokens; reshaped the
+  ambient widget; reseeded dogfooded state honestly (NF-1 stays `in_progress`; nothing completed).
+  95/95 tests pass; two real rendering defects were caught by tests and fixed. Interactive TUI check
+  is pending ([record](../verification/PACKET_2_5_STEWARD_CONSOLE.md)).
+- W5 (2026-07-24): Packet 2 — refactored `updateState` to an immutable reducer contract; added schema
+  v2 + explicit 1→2 migration (backup, atomic replace, `/newfang migrate [--apply]`); added the
+  compact project-operations model (work items, decisions, assumptions, risks) with `NF/DEC/ASM/RSK`
+  IDs, dependency/cycle validation, and completion protection; added 7 Pi tools and
+  `/newfang backlog|decisions|assumptions|risks|migrate`; extended doctor with integrity checks;
+  added minimal GitHub CI (`.github/workflows/ci.yml`); added `typebox@1.1.38`; dogfooded the repo's
+  own `.newfang/` state (7 items, 5 decisions, 4 risks, 2 assumptions). 59/59 tests pass; smoke +
+  verification record ([../verification/PACKET_2_PROJECT_OPERATIONS.md](../verification/PACKET_2_PROJECT_OPERATIONS.md)).
 
 ## Blockers / notes
 
@@ -120,10 +187,18 @@ on canonical state) per the implementation plan.
 
 ## Next justified action
 
-Packet 1 is complete (foundation committed). Begin **Phase 2** of
-[../plans/MVP_IMPLEMENTATION_PLAN.md](../plans/MVP_IMPLEMENTATION_PLAN.md): extend the canonical
-schema with backlog entities (built on the Packet 1 `project.json` store and atomic `updateState`),
-add backlog tools that write canonical state + append events, and add the resume load/validation test
-for the extended schema — do not yet add claims, verification gates, delegation, or approval bundles.
-Separately (not blocking): Joshua can run `/login` in `npm run pi` to configure a provider for
-model-dependent paths in later packets.
+Packet 3 closure is committed on `feat/intake-orientation` (not pushed). The remaining work is
+**integration and the two interactive acceptance runs**, in this order:
+
+1. **Joshua — interactive Steward Console check** on `feat/project-operations` (12-item checklist in
+   [../verification/PACKET_2_5_STEWARD_CONSOLE.md](../verification/PACKET_2_5_STEWARD_CONSOLE.md) and
+   the Packet 3 record). Report the observed result so it can be recorded honestly.
+2. **Push and integrate Packet 2/2.5**: `git push -u origin feat/project-operations`, open a PR to
+   `main`, wait for **GitHub CI** (its first ever run), then merge with a **merge commit** (not squash —
+   `feat/intake-orientation` is stacked on that history).
+3. **Rebase Packet 3** onto the updated `main` and re-run `mise exec -- npm run verify`.
+4. **Joshua — authenticated Project Steward acceptance** (`/login`, then the 14-step checklist). This
+   run produces the first real draft revision 2 and `revision_requested` review record.
+5. Only then may the bounded daily-use claim be made.
+
+**Phase 4 (claims, verification receipts, protected completion — NF-3) does not start until then.**
