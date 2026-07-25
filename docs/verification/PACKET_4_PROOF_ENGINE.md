@@ -4,37 +4,117 @@ What was verified, how, and — explicitly — what was **not**. Tiers are separ
 suite is never mistaken for an interactive or authenticated check.
 
 - **Date**: 2026-07-25
-- **Branch**: `feat/proof-engine`, based on `20effff` ("fix: preserve intake review history and
-  command evidence")
-- **Toolchain**: mise-managed Node `22.23.1`, `@earendil-works/pi-coding-agent@0.82.0`, TypeScript
+- **Original implementation commit**: `866e0d6` ("feat: add claims, verification receipts, and
+  protected completion"), authored on base `20effff`
+- **Rebased implementation commit**: `d397dfc` — the same change replayed onto integrated `main`
+- **Reconciliation commit**: `1e39b17` ("fix: reconcile the proof engine with Packet 3 closure")
+- **Integrated base**: `3169878` (merge of `feat/intake-orientation`; Packet 3 closure)
+- **Safety tag**: `packet-4-pre-rebase-866e0d6` (local only, not pushed)
+- **Branch**: `feat/proof-engine`
+- **Toolchain**: mise-managed Node `26.3.0`, `@earendil-works/pi-coding-agent@0.82.0`, TypeScript
   `7.0.2`, prettier `3.9.6`, typebox `1.1.38`. No dependencies were added.
 
 ## Summary of tiers
 
 | Tier | Status | Evidence |
 |------|--------|----------|
-| 1. Automated tests | **PASS** | 360/360 via `mise exec -- npm run verify` |
-| 2. Pi integration (non-model) | **PASS** | tool surface + registration asserted by tests through the real adapter |
-| 3. Command-execution smoke tests | **PASS** | real `spawn` against temp git repos; real `mise exec -- npm run verify` recorded as RCP-1/RCP-2 |
-| 4. Stale-evidence demonstration | **PASS** | performed on this repository; see below |
-| 5. Protected-completion demonstration | **PASS** | temporary acceptance fixture + real NF-3 rejection |
-| 6. Interactive Proof view (TUI) | **PENDING** | requires a terminal; the agent had no TTY |
-| 7. Authenticated model use | **PENDING** | requires `/login`; the agent must not authenticate |
+| 0. Rebase and reconciliation | **PASS** | `866e0d6` → `d397dfc` onto `3169878`; 6 conflicts resolved field-by-field |
+| 1. Automated tests | **PASS** | 382/382 via `mise exec -- npm run verify` (main baseline 206) |
+| 1b. Migration against the integrated v3 state | **PASS** | 7 tests over the real schema-v3 `project.json` from `3169878` |
+| 2. Pi registration (non-model) | **PASS** | 28 tools registered; asserted by tests and observed over RPC |
+| 3. Structured execution | **PASS** | `/newfang verify CLM-2 -- mise exec -- npm run verify`, no shell, explicit argv |
+| 4. Passing receipt | **PASS** | RCP-3 and RCP-4, manifest agreement and output hashes revalidated |
+| 5. Failing receipt | **PASS** | honest `failed` receipt (exit 3) in a bounded fixture repository |
+| 6. Stale-evidence demonstration | **PASS** | performed on this repository; fingerprint returns exactly |
+| 7. Protected-completion fixture | **PASS** | rejection preserves canonical bytes; success is fully gated |
+| 8. Interactive Proof view (TUI) | **PENDING** | requires a terminal; the agent had no TTY |
+| 9. Authenticated model use | **PENDING** | requires `/login`; the agent must not authenticate |
+| 10. GitHub CI | **PENDING** | not claimed until the PR run succeeds |
 
-Tiers 6 and 7 are **not claimed**. They are the same two human gates that were already outstanding
-from Packets 2.5 and 3.
+Tiers 8, 9, and 10 are **not claimed**. Tiers 8 and 9 are the same two human gates already
+outstanding from Packets 2.5 and 3.
+
+## Tier 0 — Rebase and reconciliation
+
+`feat/proof-engine` was created from `20effff`, which predates the Packet 3 closure commits
+(`a844ca5` supported revision path, `b41911a` authenticated acceptance) and the `main` merge
+`3169878`. The rebase therefore had to apply Packet 4's schema-v4 additions **onto** the newer
+canonical state rather than replace it.
+
+Six conflicts, each resolved at the field/operation level:
+
+| File | Conflict | Resolution |
+|------|----------|------------|
+| `src/ui/steward-console/render.ts` | help keys | kept Packet 3's `a / v / x` revision affordance **and** Packet 4's `Focus → Work → Proof → Project Truth` cycle |
+| `test/extension.integration.test.ts` | tool count 20 vs 27 | 28 = 11 core + 9 intake + 8 proof; added explicit assertions for `newfang_request_intake_revision` and `newfang_complete_work_item` |
+| `test/tools.test.ts` | sorted tool list | union of both sides; `newfang_request_intake_revision` retained alongside `newfang_require_claim` / `newfang_run_verification` |
+| `.newfang/project.json` | next action, sequences, tail | Packet 3 base (INT-8, ORI-2, `intake: 9`, `orientation: 3`, revision 48) **plus** schema-v4 additions and `claim`/`receipt` counters |
+| `.newfang/events.jsonl` | revisions 30–48 vs 30–36 | main's 48 events kept byte-identical; four Packet 4 transitions appended as 49–52 |
+| `.newfang/views/PROJECT_STATUS.md` | generated output | not spliced; regenerated through the supported operation afterwards |
+
+Three Packet 4 events were **dropped**: two superseded `verification_recorded` entries and the
+`receipts_reset_pre_commit` that discarded them. Their receipt artifacts were deleted before the
+original commit, so retaining the events would have shown immutable receipts changing result.
+`CLM-1`, `RCP-1`, and `RCP-2` were **retained** because `NF-3.requiredClaimIds` references `CLM-1`,
+and their receipts stay pinned to `gitHead 20effff` — which is exactly why `CLM-1` now reads `stale`
+rather than falsely current.
+
+### Packet 3 preservation, verified mechanically
+
+```text
+36/36 intake, orientation, and brief artifacts    byte-identical to origin/main
+INT-8 reviews.jsonl                               byte-identical (rev 1 requested, rev 2 requested, rev 3 accepted)
+10 Packet 3 source files                          unchanged by the rebase
+12 Packet 3 test files                            present with identical test counts
+docs/verification/PACKET_3_*.md, PACKET_2_5_*.md  byte-identical
+.github/workflows/ci.yml                          byte-identical
+decisions / assumptions / risks / intakes / orientations   nothing lost, nothing changed
+workItems                                         only additive: requiredClaimIds (NF-3 -> [CLM-1])
+DEC-10 count 1 · focus NF-2 · D1 and D4 still open · D2 and D3 still fixed
+```
+
+## Tier 1b — Migration against the real integrated v3 state
+
+The original packet tested `3 → 4` only against a synthetic v3 envelope. The integrated Packet 3
+`project.json` at `3169878` is itself schema **v3**, so it was captured verbatim as
+`test/fixtures/integrated-v3-project.json` and seven tests were added over it:
+
+```text
+the integrated Packet 3 state is genuinely v3 and carries the real history
+the integrated v3 state migrates to v4 and keeps every intake and review record
+accepted INT-8 revision 3 survives the migration as accepted
+migrating the integrated state completes no work item and invents no proof
+migrating the integrated state appends exactly one event and refreshes the view
+inspecting the integrated v3 state is read-only
+migrating the integrated v3 state backs up the original bytes
+```
+
+All eight intakes carry through with metadata deep-equal to their pre-migration records, `DEC-10`
+appears exactly once, focus stays `NF-2`, every work item gains `requiredClaimIds: []`, and no item
+becomes completed. Inspection writes nothing: the reported backup path is a `<timestamp>` plan, and
+the backups directory stays empty until `--apply`.
 
 ## Tier 1 — Automated tests
 
 ```text
-mise exec -- npm run verify
+mise exec -- npm run verify          (rebased branch)
   → tsc --noEmit          clean
   → prettier --check      clean
-  → node --test           tests 360 · pass 360 · fail 0
+  → node --test           tests 382 · pass 382 · fail 0
 ```
 
-Baseline before this packet was 191/191; Packet 4 adds 169 tests across seven new files plus updates
-to existing suites for the schema bump and the new console view.
+Counts across the reconciliation:
+
+| Point | Tests |
+|-------|-------|
+| integrated `main` (`3169878`) baseline | 206 |
+| `feat/proof-engine` before rebase (`866e0d6`, base `20effff`) | 360 |
+| after rebase (`d397dfc`) | 375 |
+| after reconciliation (`1e39b17`) | 382 |
+
+No Packet 3 regression test was removed to make the rebase pass. The 375 → 382 gain is the seven new
+migration tests over the real integrated v3 state; the 360 → 375 gain is main's intake-revision
+suite arriving through the rebase.
 
 New test files:
 
@@ -59,19 +139,38 @@ Two real defects were caught by these tests during development and fixed:
    normalizing machine-specific prefixes (`repository root → <repo>`, `home → ~`) before capping and
    hashing, recorded in the manifest as `pathsNormalized`.
 
-## Tier 2 — Pi integration (non-model)
+## Tier 2 — Pi registration (non-model)
 
 Exercised through the real `.pi/extensions/newfang.ts` adapter and a structural fake host:
 
-- 27 tools register (19 previously + 8 proof tools), each with a strict typebox schema and
-  `additionalProperties: false`.
-- `/newfang` gains `claims`, `proof`, `verify`, `complete` in `SUBCOMMANDS` and argument completion.
+- **28** tools register — 11 core + 9 intake (including `newfang_request_intake_revision`) + 8 proof —
+  each with a strict typebox schema and `additionalProperties: false`.
+- `/newfang` gains `claims`, `proof`, `verify`, `complete` in `SUBCOMMANDS` and argument completion,
+  while keeping Packet 3's `intake revise`.
 - No proof tool accepts a filesystem root, and none exposes a support flag or completion bypass.
-- `test/extension.integration.test.ts` asserts the tool count and command registration.
+- `test/extension.integration.test.ts` asserts the count and the presence of both the Packet 3
+  revision tool and the protected completion tool.
 
-Not exercised: a live Pi TUI session (tier 6) and any model-driven tool call (tier 7).
+Observed non-interactively through real Pi `0.82.0` in RPC mode
+(`pi --mode rpc --no-session -e <repo>/.pi/extensions/newfang.ts`):
 
-## Tier 3 — Command-execution smoke tests
+```text
+session_start  → widget ["NewFang · BUILD · GREEN · Focus NF-2",
+                         "Next: … · 4 risks · 1 stale"]
+/newfang proof → Proof — 1 claim(s): supported 0 · unsupported 0 · stale 1 · pending 0
+                 CLM-1 [STALE] the repository changed since RCP-2 was recorded; re-run verification
+                 NF-3 — 2 gate(s) failing
+/newfang verify CLM-2 -- mise exec -- npm run verify → Recorded RCP-3: passed (exit 0)
+/newfang doctor → 22 PASS, 2 WARN (both honest; see Tier 11)
+/newfang intake status, /newfang status → unchanged Packet 3 behavior
+```
+
+The widget reporting `1 stale` on the very first load is itself the evidence for Part 7: the rebase
+did not leave pre-rebase receipt metadata falsely marked current.
+
+Not exercised: a live Pi TUI session (tier 8) and any model-driven tool call (tier 9).
+
+## Tier 3 — Structured execution
 
 Real subprocesses, not mocks:
 
@@ -83,110 +182,200 @@ Real subprocesses, not mocks:
 - Working-directory safety: `..`, absolute paths, `~`, a symlink escaping the repository, and a
   regular file are each rejected; a legitimate `sub` directory is confirmed to be the process cwd.
 
-On this repository, the real project gate was executed through `newfang_run_verification` with a
-structured command — `executable: "mise"`, `args: ["exec", "--", "npm", "run", "verify"]` — producing
-two receipts:
-
-| Receipt | Result | Meaning |
-|---------|--------|---------|
-| `RCP-1` | `failed` (exit 1) | Recorded honestly. `test/dogfood.test.ts` asserts a receipt exists, and at the moment of that first run none did — a genuine bootstrap ordering failure, captured as evidence rather than hidden. |
-| `RCP-2` | `passed` (exit 0) | Recorded once `RCP-1` existed. This is what supports `CLM-1`. |
-
-Both share fingerprint `c09042efe7bc…`, which independently confirms the designed property that
-**creating a receipt does not invalidate its own fingerprint**.
-
-### Pre-commit artifact cleanup (disclosed)
-
-An earlier pair of receipts was recorded before path normalization existed; one embedded an absolute
-home path. Because they had never been committed — working-tree scratch, not history — they were
-deleted and re-recorded with the fixed code rather than shipped with a leak. This was a deliberate
-one-off by the author before the first commit; **NewFang itself never deletes a receipt at runtime**,
-and an event (`receipts_reset_pre_commit`) records that it happened.
-
-## Tier 4 — Stale-evidence demonstration
-
-Performed against this repository's real canonical state, editing a tracked file
-(`test/fixtures/console.ts`) and restoring it byte-for-byte:
+On the **rebased** repository, the real project gate was executed through NewFang using exactly the
+contract `{"executable": "mise", "args": ["exec", "--", "npm", "run", "verify"], "cwdRef": "."}`,
+once through the command surface and once through the tool surface. The command surface echoes the
+structured argv before running anything:
 
 ```text
-pristine tree:         fingerprint c09042efe7bc  CLM-1 supported   claims_supported pass
-tracked file edited:   fingerprint c8c9f51ade2e  CLM-1 stale       claims_supported FAIL
-fixture restored:      fingerprint c09042efe7bc  CLM-1 supported   claims_supported pass
+/newfang verify CLM-2 -- mise exec -- npm run verify
+
+Running verification (no shell, structured argv):
+  claim:      CLM-2
+  executable: mise
+  args:       "exec" "--" "npm" "run" "verify"
+  cwd:        . (repository root)
+  note:       the command may have side effects; this is not a sandbox
+
+Recorded RCP-3: passed (exit 0).
+  fingerprint: 95ff7ef7006d…
 ```
 
-The fingerprint returns to its exact prior value on restoration, and the completion gate follows the
-evidence in both directions. `git status` confirmed the fixture was left unmodified.
+## Tier 4 — Passing receipt
 
-## Tier 5 — Protected-completion demonstration
+`CLM-2` is a narrowly scoped claim on `NF-3`: that the complete automated gate passes at the recorded
+fingerprint. Two passing receipts support it.
 
-### On real state: NF-3 is correctly refused
+| Receipt | Result | Recorded via | Fingerprint |
+|---------|--------|--------------|-------------|
+| `RCP-3` | `passed` (exit 0, 14.7 s) | `/newfang verify` command | `95ff7ef7006d…` |
+| `RCP-4` | `passed` (exit 0) | `newfang_run_verification` tool | `95ff7ef7006d…` |
 
-`NF-3` ("Build claims, receipts, and completion gates") has genuinely satisfied every **proof** gate —
-its criterion is covered by `CLM-1`, which is supported by the passing `RCP-2`. It is nevertheless
-refused:
+Independently revalidated after recording:
 
 ```text
-/newfang complete NF-3 -> warning
-Cannot complete NF-3: 1 gate(s) fail.
-  - dependencies completed: not completed: NF-2
-
-NF-3 status unchanged: backlog | completed items: 0
+canonical receipt metadata vs manifest.json      ALL AGREE (id, claim, result, executable,
+                                                 args, cwdRef, exitCode, timestamps,
+                                                 fingerprint, gitHead, outputTruncated)
+stdout.txt sha256   4e4034af377d7636…  computed == manifest   (29536 bytes)
+stderr.txt sha256   e3b0c44298fc1c14…  computed == manifest   (0 bytes)
+machine-specific absolute paths in captured output: 0
+capturedEnvironment: "none"
 ```
 
-This is the honest outcome. `NF-2` cannot be completed because the authenticated Project Steward
-intake acceptance (tier 7) has never been performed. **No work item in this repository is marked
-completed.**
+**Receipt creation does not stale the receipt.** Immediately after `RCP-3` was written, `CLM-2`
+evaluated `supported`, and `RCP-4` — recorded later, after the artifact directory and canonical state
+had both been rewritten — carries the *same* fingerprint `95ff7ef7006d…`. Recording evidence does not
+invalidate it, because the fingerprint excludes `.newfang/`.
 
-### In a temporary acceptance fixture: the full path
+`RCP-1` and `RCP-2` (from the pre-rebase run at `gitHead 20effff`) are retained and now read
+**stale**, which is the correct and honest outcome of the rebase.
 
-A throwaway git repository was driven through every stage:
+### Pre-commit artifact cleanup (disclosed, historical)
+
+Before the original `866e0d6` commit, an earlier pair of receipts was recorded while path
+normalization did not yet exist; one embedded an absolute home path. Because they had never been
+committed — working-tree scratch, not history — they were deleted and re-recorded with the fixed
+code rather than shipped with a leak. This was a deliberate one-off by the author;
+**NewFang itself never deletes a receipt at runtime**. The `receipts_reset_pre_commit` event and its
+two superseded `verification_recorded` entries were dropped during reconciliation (see Tier 0),
+because the artifacts they referred to no longer exist and keeping them would have implied that
+immutable receipts changed result.
+
+## Tier 5 — Failing receipt
+
+Produced in a **bounded throwaway fixture repository**, not by breaking a production file:
 
 ```text
-1. criteria only:                  ready=false failing=required_claims_present,criteria_covered,claims_supported
-2. claim created (not required):   ready=false failing=required_claims_present,criteria_covered,claims_supported
-3. claim required (pending):       ready=false failing=claims_supported
-4. verification FAILED:            ready=false failing=claims_supported
-5. verification passed:            ready=true  failing=(none)
+newfang_run_verification { claimId: CLM-1, executable: "node",
+                           args: ["-e", "console.error('bounded fixture failure'); process.exit(3)"] }
+
+Recorded RCP-1 for CLM-1: failed (exit 3).
+The command did NOT pass. The receipt is valid evidence of that failure; the claim is not supported.
+```
+
+The tool returning success means *a receipt was recorded*, not that verification passed — the
+distinction is stated in the tool description and demonstrated here. `timed_out` and truncation are
+covered by `test/proof.receipts.test.ts` (a real 1-second timeout, per-stream caps recorded honestly
+in both the manifest and canonical metadata).
+
+## Tier 6 — Stale-evidence demonstration
+
+Performed against this repository's real canonical state on the **rebased** tree, editing a tracked
+file (`test/fixtures/console.ts`) and restoring it byte-for-byte:
+
+```text
+pristine tree:         fingerprint 95ff7ef7006d…  CLM-2 supported   (supported 1 · stale 1)
+tracked file edited:   fingerprint changed        CLM-2 stale       (supported 0 · stale 2)
+fixture restored:      fingerprint 95ff7ef7006d…  CLM-2 supported   (supported 1 · stale 1)
+```
+
+The fingerprint returns to its exact prior value on restoration, so reusing the existing evidence is
+correct rather than a false reuse — the digest genuinely matches, verified by recomputing
+`repositoryFingerprint()` and comparing it to the value stored on `RCP-3`. `git status` confirmed the
+fixture was left unmodified. Re-running verification afterwards produced `RCP-4`, a new current
+receipt.
+
+Throughout, `CLM-1` stayed `stale` and `CLM-2` tracked the tree — the two claims moved independently,
+which is what per-fingerprint evidence should do.
+
+## Tier 7 — Protected-completion fixture
+
+### On real state: nothing was completed retroactively
+
+`NF-3` remains `backlog`. `CLM-1` is stale after the rebase, and `NF-3` still depends on `NF-2`,
+which cannot complete until the authenticated Project Steward acceptance (tier 9) is performed.
+Packet 3 work was **not** completed retroactively — its acceptance criteria are not supported by
+current receipts, so the gate correctly refuses. **0 work items are marked completed in this
+repository.**
+
+### In a bounded fixture repository: the full path, both directions
+
+A throwaway git repository was driven through every stage using the real registered tools and the
+real `/newfang complete` command:
+
+```text
+1. work item + claim + required claim
+2. FAILING verification (exit 3)  → RCP-1 failed
+
+/newfang complete NF-1 -> warning
+Cannot complete NF-1: 1 gate(s) fail.
+  - every required claim supported by current passing evidence:
+    CLM-1 is unsupported (RCP-1 failed against the current repository state)
+
+canonical bytes preserved on rejection: true
+
+3. focus NF-1, then PASSING verification → RCP-2 passed
 
 /newfang complete NF-1 -> info
-Completed NF-1 — Acceptance fixture outcome.
+Completed NF-1 — Bounded protected-completion fixture.
+Every completion gate passed; the transition is recorded in canonical state and history.
 Focus was cleared. Choose the next focus deliberately with /newfang focus <ID>.
 
-fixture NF-1 status: completed
-fixture focus after completion: null
+events appended by completion: 1
+last event: {"type":"work_item_completed","id":"NF-1","revision":8,...}
+NF-1 status: completed
 ```
 
-Then a tracked file was changed to confirm post-completion behavior:
+A second fixture run confirmed the remaining post-conditions, with focus deliberately pointed at a
+**different** item and a bystander item present:
 
 ```text
-after a tracked change, revalidation gates failing: claims_supported
-but the recorded status is still: completed
+NF-1 status: completed
+NF-1 updatedAt advanced (completion metadata):        true
+NF-1 acceptanceCriteria preserved:                    true
+only the requested item completed (NF-2 byte-identical): true
+focus NOT cleared when it pointed elsewhere:          true
+no other item silently focused:                       true
+claim limitations preserved:                          ["Only proves the bounded fixture command exited zero."]
+receipts preserved (immutable):                       true
+generated view refreshed to match canonical state:    true
+generic update rejects 'completed':                   ProjectOperationError
 ```
 
-Completed work is **never** silently reverted; `/newfang doctor` reports this as a WARNING that
-current evidence no longer supports revalidation.
+Completion metadata is `status: "completed"` plus an advanced `updatedAt` and the appended
+`work_item_completed` event carrying timestamp and revision; there is no separate `completedAt`
+field.
 
-## Tier 6 — Interactive Proof view — **PENDING**
+### Every rejection reason is gated
 
-Not performed. The agent had no TTY, and Pi's `ctx.ui.custom()` is TUI-only. Rendering is verified at
-the string level (all four evaluation states, compact/standard/wide widths, no line overflow, detail
-views), but nobody has looked at it.
+The eleven gates in `src/domain/proof.ts` cover the full required list — `not_completed`,
+`not_blocked`, `not_cancelled`, `dependencies_completed`, `acceptance_criteria_present`,
+`required_claims_present`, `required_claims_resolve`, `criteria_covered`, `claims_supported`,
+`no_open_high_impact_risk`, `no_blocked_reason` — plus a missing work item, which throws before any
+gate is evaluated. A rejection reports **all** failing gates, not just the first.
 
-Checklist for Joshua, in a real terminal (`npm run pi`, then `/newfang home`):
+Completed work is **never** silently reverted; `/newfang doctor` reports a completed item whose
+evidence no longer revalidates as a WARNING rather than mutating it.
 
-1. `Tab` cycles **Focus → Work → Proof → Project Truth** and wraps; `Shift-Tab` reverses.
-2. The Proof view lists `CLM-1` as `supported` (or `stale`, if the tree has moved since RCP-2) with
-   its four limitations visible.
-3. `RCP-1 [failed]` and `RCP-2 [passed]` both appear, each marked `current` or `stale`.
-4. `j`/`k` move the selection across claims, then receipts, then the completion-gate row.
-5. `Enter` on a claim shows coverage and limitations; on a receipt shows metadata and an artifact
-   pointer but **no command output**; on the gate row lists every gate.
-6. The Focus view shows the proof-readiness block.
-7. `?` help lists the four-view order.
-8. Resize the terminal below 80 columns and confirm nothing overflows or is clipped mid-word.
-9. The ambient widget shows at most one proof warning and stays at two lines.
+## Tier 8 — Interactive Proof view — **PENDING**
 
-## Tier 7 — Authenticated model use — **PENDING**
+Not performed. The agent had no TTY (`process.stdin.isTTY === false`; `/newfang home` correctly
+refuses with "needs an interactive terminal"), and Pi's `ctx.ui.custom()` is TUI-only. Rendering is
+verified at the string level (all four evaluation states, compact/standard/wide widths, no line
+overflow, detail views), but nobody has looked at it. **Terminal width, Pi version, and per-item
+pass/fail are therefore unrecorded and are not claimed.**
+
+Checklist for Joshua, in a real terminal (`mise exec -- npm run pi`, then `/newfang home`).
+Record terminal width, Pi version, and pass/fail per item:
+
+1. The ambient widget still renders (two lines, at most one proof warning).
+2. `/newfang home` opens.
+3. `Tab` cycles **Focus → Work → Proof → Project Truth** and wraps; `Shift-Tab` reverses.
+4. Claim status is readable, and `pending` / `supported` / `unsupported` / `stale` are visually
+   distinguishable. Expect `CLM-1 stale` and `CLM-2 stale` (both receipts predate the final commit).
+5. `RCP-1`…`RCP-4` appear, each marked `current` or `stale`.
+6. `j`/`k` move the selection across claims, then receipts, then the completion-gate row.
+7. `Enter` opens claim detail (coverage + limitations) and closes with `Esc`.
+8. Receipt detail is bounded: metadata and an artifact pointer, **no complete stdout dump**.
+9. Completion-gate failures are readable in the gate detail.
+10. Resize below 80 columns; confirm nothing overflows or is clipped mid-word.
+11. The Packet 3 intake review UI still works: `u` opens the Understanding Check, and `a` / `v` / `x`
+    are offered (accept+apply / request revision / reject).
+12. `?` help lists the four-view order and the `a / v / x` keys; `r` reloads.
+13. `q` exits cleanly.
+
+## Tier 9 — Authenticated model use — **PENDING**
 
 Not performed and deliberately not attempted: the agent must not run `/login` or handle credentials.
 
@@ -200,16 +389,48 @@ Checklist for Joshua, after authenticating:
    completion in prose.
 4. Confirm it does not invent narrow claims solely to satisfy the gate.
 
+## Tier 10 — GitHub CI — **PENDING**
+
+Not claimed. The branch is pushed and a draft PR is open, but this row stays PENDING until the
+GitHub Actions run on the PR succeeds. Local evidence is not a substitute.
+
+## Tier 11 — Doctor
+
+`/newfang doctor` over the reconciled state: **22 PASS, 2 WARN, 0 FAIL**. No Packet 3 check
+disappeared — the check set is a strict superset of main's 22, with 9 added:
+
+```text
+added by Packet 4: proof · proof references · claim criterion agreement ·
+                   acceptance criterion coverage · receipt artifacts ·
+                   receipt output hashes · receipt staging directories ·
+                   evidence freshness · completed work revalidation
+removed:           (none)
+```
+
+Both warnings are honest, not defects:
+
+```text
+[WARN] orientation freshness: ORI-2 is stale: HEAD moved (20effff0 -> 1e39b172)
+[WARN] evidence freshness: CLM-1 is stale
+```
+
+Packet 3 checks still passing after the rebase include `intake reference: INT-8`,
+`intake artifacts: 8 intake(s) consistent`, `intake apply events: 3 accepted intake(s) recorded`,
+`focus work item: NF-2`, and `schema migration: at v4`.
+
 ## Dogfooded state after this packet
 
-- Canonical state migrated `v3 → v4` through the real path: inspected first, then `--apply`, with
-  backup `.newfang/backups/project.json.v3.2026-07-25T16-37-27-229Z`, exactly one `schema_migrated`
-  event, and a refreshed generated view.
+- Canonical state migrated `v3 → v4` through the real path: inspected first, then `--apply`, exactly
+  one `schema_migrated` event, and a refreshed generated view.
 - All eight pre-existing work items received `requiredClaimIds: []`, so none of them became
   completable as a side effect of migration.
 - `CLM-1` on `NF-3`, required, covering NF-3's single acceptance criterion, with four recorded
-  limitations, supported by `RCP-2`.
-- `RCP-1` (failed) and `RCP-2` (passed) artifacts committed under `.newfang/receipts/`.
+  limitations. **Stale** after the rebase: its receipts were recorded at `gitHead 20effff`.
+- `CLM-2` on `NF-3`, narrowly scoped to the automated gate, supported by `RCP-3`/`RCP-4` at
+  fingerprint `95ff7ef7006d…` at the time of recording.
+- `RCP-1` (failed) and `RCP-2` (passed) from the pre-rebase run; `RCP-3` and `RCP-4` (both passed)
+  from the post-rebase run. All four artifacts committed under `.newfang/receipts/`.
+- Event log: main's 48 events byte-identical, plus 49–55.
 - **0 work items completed.**
 
 ### Receipt artifact audit (performed before commit)
@@ -217,9 +438,10 @@ Checklist for Joshua, after authenticating:
 - No credentials, tokens, or secrets.
 - No environment-variable names or values; `manifest.json` records `"capturedEnvironment": "none"`.
 - No absolute repository or home paths in `manifest.json`, `stdout.txt`, or `stderr.txt` (asserted by
-  `test/dogfood.test.ts`, which checks every receipt against `homedir()` and `process.cwd()`).
+  `test/dogfood.test.ts`, which checks every receipt against `homedir()` and `process.cwd()`, and
+  re-checked by hand for `RCP-3`: 0 occurrences of the home or repository path).
 - No git diffs.
-- Both streams within the 64 KiB cap; `outputTruncated` false for both receipts.
+- All streams within the 64 KiB cap; `outputTruncated` false for every receipt.
 - No leftover staging directories under `.newfang/receipts/.tmp/`.
 
 ## Known limitations recorded honestly
@@ -238,3 +460,9 @@ Checklist for Joshua, after authenticating:
 7. Command verification only: no manual attestation, screenshots, or other evidence types.
 8. Single-writer assumption persists; a receipt whose reserved ID no longer matches the canonical
    counter is refused rather than linked.
+9. **Reconciliation-specific.** The rebase rewrote the revision numbers of the four retained Packet 4
+   events (30–36 → 49–52) while keeping their original timestamps, so the event log is ordered by
+   revision, not by wall clock, across that boundary. Main's 48 events are byte-identical.
+10. `CLM-1` is stale and stays stale. It is not re-verified here, because doing so would attach
+    post-rebase evidence to a claim whose original receipts belong to the pre-rebase tree; the honest
+    representation is a stale claim plus a new claim (`CLM-2`) with its own current evidence.

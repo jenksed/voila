@@ -4,8 +4,8 @@
   "displayName": "newfang",
   "phase": "build",
   "health": "green",
-  "nextAction": "Re-run the complete verification gate on the reconciled base so NF-3 has current evidence, then complete the interactive Proof view check.",
-  "nextActionRationale": "The proof engine was implemented on 20effff and rebased onto the integrated Packet 3 closure. CLM-1's receipts RCP-1 and RCP-2 were recorded at gitHead 20effff, so they are honestly stale against the reconciled tree and NF-3 cannot complete until current evidence exists. The focus pointer remains NF-2 (verified against authoritative .newfang/project.json focusWorkItemId).",
+  "nextAction": "Run the interactive Proof view check in a real terminal (mise exec -- npm run pi), then merge Packet 4R once GitHub Actions passes on the PR.",
+  "nextActionRationale": "The reconciled Proof Engine passes the complete automated gate (382 tests) and CLM-2 is supported by RCP-3 and RCP-4 at fingerprint 95ff7ef7006d. Two tiers remain that Claude cannot perform: the interactive Proof view needs a real TTY (process.stdin.isTTY is false here, so /newfang home correctly refuses), and GitHub CI needs the branch pushed. CLM-1 stays honestly stale because its receipts were recorded at gitHead 20effff before the rebase; NF-3 therefore remains incomplete rather than being completed retroactively.",
   "focusWorkItemId": "NF-2",
   "sequences": {
     "workItem": 9,
@@ -14,8 +14,8 @@
     "risk": 6,
     "intake": 9,
     "orientation": 3,
-    "claim": 2,
-    "receipt": 3
+    "claim": 3,
+    "receipt": 5
   },
   "workItems": [
     {
@@ -449,6 +449,27 @@
       ],
       "createdAt": "2026-07-25T16:38:42.263Z",
       "updatedAt": "2026-07-25T16:46:50.383Z"
+    },
+    {
+      "id": "CLM-2",
+      "workItemId": "NF-3",
+      "statement": "The complete automated verification gate (npm run verify = tsc --noEmit, prettier --check, and the full node --test suite) passes at the repository fingerprint recorded on its receipt, including the proof.completion tests that assert newfang_complete_work_item rejects every unsupported completion and the migration tests that run 3 -> 4 against the real integrated Packet 3 canonical state.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "newfang_complete_work_item rejects unsupported completion"
+      ],
+      "knownLimitations": [
+        "Scoped to the automated gate only: it is evidence that the suite passes, not that the interactive Proof view or any human-attested tier passed.",
+        "Support is scoped to one repository fingerprint; any commit or tracked change makes this evidence stale until verification is re-run.",
+        "The fingerprint deliberately excludes everything under .newfang/, so a change confined to NewFang bookkeeping does not invalidate this evidence.",
+        "Verification runs the command without a sandbox; it bounds time and output but does not contain side effects."
+      ],
+      "receiptIds": [
+        "RCP-3",
+        "RCP-4"
+      ],
+      "createdAt": "2026-07-25T22:26:09.232Z",
+      "updatedAt": "2026-07-25T22:29:23.996Z"
     }
   ],
   "receipts": [
@@ -493,11 +514,53 @@
       "repositoryFingerprint": "c09042efe7bcb9cab6c892052307d119a8eabcc4772f05aaf483f13a788d69f1",
       "gitHead": "20effff08615016a2cb8cd881cf5e901dc6249f8",
       "outputTruncated": false
+    },
+    {
+      "id": "RCP-3",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-3",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-25T22:26:20.197Z",
+      "finishedAt": "2026-07-25T22:26:34.885Z",
+      "repositoryFingerprint": "95ff7ef7006d7ed372a21957f3f6407d6b1260556c83f1db4791e5cf9e96a9f3",
+      "gitHead": "1e39b172156a69e45c4dd56ad1f7c1ea68486011",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-4",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-4",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-25T22:29:09.682Z",
+      "finishedAt": "2026-07-25T22:29:23.993Z",
+      "repositoryFingerprint": "95ff7ef7006d7ed372a21957f3f6407d6b1260556c83f1db4791e5cf9e96a9f3",
+      "gitHead": "1e39b172156a69e45c4dd56ad1f7c1ea68486011",
+      "outputTruncated": false
     }
   ],
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-2",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-25T20:59:26.991Z",
-  "revision": 52
+  "updatedAt": "2026-07-25T22:31:37.739Z",
+  "revision": 56
 }
