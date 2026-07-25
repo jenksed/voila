@@ -1,4 +1,4 @@
-// Canonical `.newfang/` state store (schema v2): init, load, validate, immutable update,
+// Canonical `.newfang/` state store (current schema): init, load, validate, immutable update,
 // append-only events, generated view, and migration primitives. Pure Node I/O — no Pi.
 //
 // Invariants (ADR-0003):
@@ -12,12 +12,14 @@ import { appendFile, mkdir, readFile, rename, rm, writeFile } from "node:fs/prom
 import { randomBytes } from "node:crypto";
 import type {
   Assumption,
+  Claim,
   Decision,
   IntakeRecord,
   OrientationRecord,
   ProjectState,
   Risk,
   Sequences,
+  VerificationReceiptRecord,
   WorkItem,
 } from "../domain/types.ts";
 import {
@@ -31,6 +33,7 @@ import {
   LIKELIHOODS,
   ORIENTATION_STATUSES,
   PHASES,
+  RECEIPT_RESULTS,
   RISK_STATUSES,
   SCHEMA_VERSION,
   WORK_ITEM_KINDS,
@@ -118,9 +121,53 @@ function validateWorkItem(raw: unknown, i: number, problems: string[]): void {
   if (!inEnum(o.priority, WORK_ITEM_PRIORITIES)) problems.push(`${p}.priority`);
   if (!isStringArray(o.acceptanceCriteria)) problems.push(`${p}.acceptanceCriteria`);
   if (!isStringArray(o.dependsOn)) problems.push(`${p}.dependsOn`);
+  if (!isStringArray(o.requiredClaimIds)) problems.push(`${p}.requiredClaimIds`);
   if (o.blockedReason !== undefined && typeof o.blockedReason !== "string")
     problems.push(`${p}.blockedReason`);
   validateTimestamps(o, p, problems);
+}
+
+function validateClaim(raw: unknown, i: number, problems: string[]): void {
+  const p = `claims[${i}]`;
+  if (typeof raw !== "object" || raw === null) {
+    problems.push(p);
+    return;
+  }
+  const o = raw as Record<string, unknown>;
+  if (!isNonEmptyString(o.id)) problems.push(`${p}.id`);
+  if (!isNonEmptyString(o.workItemId)) problems.push(`${p}.workItemId`);
+  if (!isNonEmptyString(o.statement)) problems.push(`${p}.statement`);
+  if (!inEnum(o.confidence, CONFIDENCES)) problems.push(`${p}.confidence`);
+  if (!isStringArray(o.coveredAcceptanceCriteria)) problems.push(`${p}.coveredAcceptanceCriteria`);
+  if (!isStringArray(o.knownLimitations)) problems.push(`${p}.knownLimitations`);
+  if (!isStringArray(o.receiptIds)) problems.push(`${p}.receiptIds`);
+  validateTimestamps(o, p, problems);
+}
+
+function validateReceipt(raw: unknown, i: number, problems: string[]): void {
+  const p = `receipts[${i}]`;
+  if (typeof raw !== "object" || raw === null) {
+    problems.push(p);
+    return;
+  }
+  const o = raw as Record<string, unknown>;
+  if (!isNonEmptyString(o.id)) problems.push(`${p}.id`);
+  if (!isNonEmptyString(o.claimId)) problems.push(`${p}.claimId`);
+  if (!inEnum(o.result, RECEIPT_RESULTS)) problems.push(`${p}.result`);
+  if (!isNonEmptyString(o.artifactRef)) problems.push(`${p}.artifactRef`);
+  if (!isNonEmptyString(o.executable)) problems.push(`${p}.executable`);
+  if (!isStringArray(o.args)) problems.push(`${p}.args`);
+  if (!isNonEmptyString(o.cwdRef)) problems.push(`${p}.cwdRef`);
+  if (o.exitCode !== undefined && !Number.isInteger(o.exitCode)) problems.push(`${p}.exitCode`);
+  if (!isNonEmptyString(o.startedAt)) problems.push(`${p}.startedAt`);
+  if (!isNonEmptyString(o.finishedAt)) problems.push(`${p}.finishedAt`);
+  if (
+    typeof o.repositoryFingerprint !== "string" ||
+    !/^[a-f0-9]{64}$/.test(o.repositoryFingerprint)
+  )
+    problems.push(`${p}.repositoryFingerprint`);
+  if (o.gitHead !== undefined && !isNonEmptyString(o.gitHead)) problems.push(`${p}.gitHead`);
+  if (typeof o.outputTruncated !== "boolean") problems.push(`${p}.outputTruncated`);
 }
 
 function validateDecision(raw: unknown, i: number, problems: string[]): void {
@@ -223,7 +270,16 @@ function validateSequences(raw: unknown, problems: string[]): void {
     return;
   }
   const o = raw as Record<string, unknown>;
-  for (const key of ["workItem", "decision", "assumption", "risk", "intake", "orientation"]) {
+  for (const key of [
+    "workItem",
+    "decision",
+    "assumption",
+    "risk",
+    "intake",
+    "orientation",
+    "claim",
+    "receipt",
+  ]) {
     if (typeof o[key] !== "number" || !Number.isInteger(o[key]) || (o[key] as number) < 1) {
       problems.push(`sequences.${key}`);
     }
@@ -238,7 +294,7 @@ function uniqueIds(items: Array<{ id: string }>, prefix: string, problems: strin
   }
 }
 
-/** Validate an untrusted parsed value as v2 ProjectState, or throw an actionable error. */
+/** Validate an untrusted parsed value as a current-schema ProjectState, or throw an actionable error. */
 export function validateProjectState(raw: unknown): ProjectState {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     throw new StateValidationError("project.json must be a JSON object.");
@@ -284,6 +340,8 @@ export function validateProjectState(raw: unknown): ProjectState {
     ["risks", validateRisk],
     ["intakes", validateIntake],
     ["orientations", validateOrientation],
+    ["claims", validateClaim],
+    ["receipts", validateReceipt],
   ] as const) {
     if (!Array.isArray(o[key])) {
       problems.push(key);
@@ -306,6 +364,8 @@ export function validateProjectState(raw: unknown): ProjectState {
   uniqueIds(state.risks, "risks", problems);
   uniqueIds(state.intakes, "intakes", problems);
   uniqueIds(state.orientations, "orientations", problems);
+  uniqueIds(state.claims, "claims", problems);
+  uniqueIds(state.receipts, "receipts", problems);
   if (problems.length > 0) {
     throw new StateValidationError(`Structural problems in project.json: ${problems.join(", ")}.`);
   }
@@ -328,6 +388,8 @@ export function validateProjectState(raw: unknown): ProjectState {
     risks: state.risks as Risk[],
     intakes: state.intakes as IntakeRecord[],
     orientations: state.orientations as OrientationRecord[],
+    claims: state.claims as Claim[],
+    receipts: state.receipts as VerificationReceiptRecord[],
     ...(state.currentIntakeId !== undefined ? { currentIntakeId: state.currentIntakeId } : {}),
     ...(state.currentOrientationId !== undefined
       ? { currentOrientationId: state.currentOrientationId }
@@ -406,7 +468,7 @@ export async function writeStatusView(root: string, state: ProjectState): Promis
 
 // --- Load / init / update ---
 
-/** Load and validate canonical v2 state. v1 -> MigrationRequiredError; other -> UnknownSchemaVersionError. */
+/** Load and validate canonical state. Older versions -> MigrationRequiredError; unknown -> UnknownSchemaVersionError. */
 export async function loadState(root: string): Promise<ProjectState> {
   const { version, raw } = await readRawState(root);
   if (version === SCHEMA_VERSION) return validateProjectState(raw);

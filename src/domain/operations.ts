@@ -144,6 +144,8 @@ export function createWorkItem(
     priority,
     acceptanceCriteria: input.acceptanceCriteria ?? [],
     dependsOn: [...new Set(dependsOn)],
+    // Proof requirements are attached deliberately (see domain/proof.ts), never at creation time.
+    requiredClaimIds: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -172,7 +174,12 @@ export function updateWorkItem(
   if (index < 0) throw new ProjectOperationError(`Work item not found: ${input.id}.`);
   const current = state.workItems[index] as WorkItem;
 
-  const next: WorkItem = { ...current, dependsOn: [...current.dependsOn], updatedAt: now };
+  const next: WorkItem = {
+    ...current,
+    dependsOn: [...current.dependsOn],
+    requiredClaimIds: [...current.requiredClaimIds],
+    updatedAt: now,
+  };
 
   if (input.title !== undefined) next.title = requireNonEmpty(input.title, "title");
   if (input.description !== undefined) next.description = input.description;

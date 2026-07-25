@@ -1,10 +1,11 @@
-// Canonical NewFang project-state types (schema version 2). Pure domain — no Pi, no I/O.
+// Canonical NewFang project-state types (schema version 4). Pure domain — no Pi, no I/O.
 
 /**
  * Current schema version. Earlier versions are migrated explicitly and never silently:
- * v1 (Packet 1) -> v2 (Packet 2 operations) -> v3 (Packet 3 intake + orientation). See migrate.ts.
+ * v1 (Packet 1) -> v2 (Packet 2 operations) -> v3 (Packet 3 intake + orientation) ->
+ * v4 (Packet 4 claims + verification receipts + protected completion). See migrate.ts.
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const PHASES = ["research", "sketch", "build", "harden", "release"] as const;
 export type Phase = (typeof PHASES)[number];
@@ -30,7 +31,7 @@ export const WORK_ITEM_STATUSES = [
 ] as const;
 export type WorkItemStatus = (typeof WORK_ITEM_STATUSES)[number];
 
-/** `completed` is reserved for the future newfang_complete_work_item transition (not in this packet). */
+/** `completed` is reachable ONLY through the protected transition (see domain/proof.ts). */
 export const COMPLETED_STATUS: WorkItemStatus = "completed";
 
 export interface WorkItem {
@@ -42,6 +43,11 @@ export interface WorkItem {
   priority: WorkItemPriority;
   acceptanceCriteria: string[];
   dependsOn: string[]; // work-item IDs
+  /**
+   * Claims that must be supported by current passing evidence before this item may be completed.
+   * An item with no required claims can never be completed (v4 default for migrated items is `[]`).
+   */
+  requiredClaimIds: string[];
   blockedReason?: string;
   createdAt: string;
   updatedAt: string;
@@ -154,6 +160,59 @@ export interface OrientationRecord {
   updatedAt: string;
 }
 
+// --- Claims (Packet 4: what is asserted to be true about a work item) ---
+
+/**
+ * A claim about a work item, stated by whoever did the work. Support is **derived** from receipts and
+ * the current repository fingerprint — there is deliberately no manual "supported" flag, and nothing
+ * in this record asserts that the claim holds. Claims are never deleted.
+ */
+export interface Claim {
+  id: string; // e.g. "CLM-1"
+  workItemId: string;
+  statement: string;
+  confidence: Confidence;
+  /** Exact acceptance-criterion strings from the referenced work item that this claim covers. */
+  coveredAcceptanceCriteria: string[];
+  /** What this claim does NOT establish. Stays visible everywhere the claim is shown. */
+  knownLimitations: string[];
+  /** Receipts recorded for this claim, in creation order. Historical receipts are never rewritten. */
+  receiptIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Verification receipts (Packet 4: immutable evidence of one executed command) ---
+
+export const RECEIPT_RESULTS = ["passed", "failed", "error", "timed_out"] as const;
+export type ReceiptResult = (typeof RECEIPT_RESULTS)[number];
+
+/**
+ * Compact canonical metadata for one verification receipt. The full artifact
+ * (`manifest.json`, `stdout.txt`, `stderr.txt`) lives under `.newfang/receipts/<id>/` and is
+ * immutable. Canonical state never holds command output, environment values, absolute paths, or
+ * diffs.
+ */
+export interface VerificationReceiptRecord {
+  id: string; // e.g. "RCP-1"
+  claimId: string;
+  result: ReceiptResult;
+  /** Repository-relative artifact directory, e.g. `receipts/RCP-1`. */
+  artifactRef: string;
+  executable: string;
+  args: string[];
+  /** Repository-relative working directory the command ran in (`.` for the repository root). */
+  cwdRef: string;
+  exitCode?: number;
+  startedAt: string;
+  finishedAt: string;
+  /** Deterministic digest of the repository work state observed when the command ran. */
+  repositoryFingerprint: string;
+  gitHead?: string;
+  /** True when either captured stream was capped. Recorded honestly; never silently hidden. */
+  outputTruncated: boolean;
+}
+
 // --- Sequence counters (next value to allocate; stored in canonical state) ---
 
 export interface Sequences {
@@ -163,6 +222,8 @@ export interface Sequences {
   risk: number;
   intake: number;
   orientation: number;
+  claim: number;
+  receipt: number;
 }
 
 /** The authoritative current-state snapshot persisted to `.newfang/project.json`. */
@@ -187,6 +248,8 @@ export interface ProjectState {
   risks: Risk[];
   intakes: IntakeRecord[];
   orientations: OrientationRecord[];
+  claims: Claim[];
+  receipts: VerificationReceiptRecord[];
   /** The intake currently in flight or most recently acted on, if any. */
   currentIntakeId?: string;
   /** The orientation snapshot treated as current, if any. */

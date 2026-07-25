@@ -116,7 +116,11 @@ test("canonical state is transformed into the console view model", async () => {
   assert.equal(model.work.counts.ready, 1);
   assert.equal(model.runtime.piVersion, "0.82.0");
   assert.ok(model.runtime.nodeVersion);
-  assert.deepEqual(model.proof, [], "no proof capability is implied");
+  // The Proof view is present but empty: a project with no claims implies no proof.
+  assert.ok(model.proof, "proof view is built");
+  assert.deepEqual(model.proof?.claims, []);
+  assert.deepEqual(model.proof?.receipts, []);
+  assert.equal(model.proof?.summary.total, 0);
 });
 
 test("missing state produces an initialization view rather than a crash", async () => {

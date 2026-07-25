@@ -7,10 +7,18 @@
 //   - no source documents, no raw event history, no credentials, no hidden reasoning.
 
 import type { ProjectState } from "../domain/types.ts";
+import type { ProofSummary } from "../domain/proof.ts";
 import { backlogSummary } from "../domain/operations.ts";
 
 /** Maximum characters of injected context. Kept small so it never crowds the real conversation. */
 export const CONTEXT_CHAR_LIMIT = 2400;
+
+/**
+ * The proof rules the model must know. Deliberately short, deterministic, and free of encouragement to
+ * make weak claims: it says what evidence means, not how to satisfy a gate.
+ */
+const PROOF_RULES =
+  "Proof: claims cite exact acceptance criteria; run commands only via newfang_run_verification (executable + args, no shell); a passing command is evidence only for the claim it ran for; stale or failed evidence cannot complete work; limitations stay visible; only newfang_complete_work_item may mark work completed.";
 
 export type ContextStatus = "ok" | "uninitialized" | "migration" | "error";
 
@@ -22,6 +30,8 @@ export interface ContextInput {
   pendingIntake?: { id: string; title: string; draftRevision: number } | null;
   /** Current orientation status, if any. */
   orientation?: { id: string; stale: boolean; reasons: string[] } | null;
+  /** Derived proof counts. Never persisted; recomputed on every injection. */
+  proof?: ProofSummary | null;
 }
 
 const TRUNCATION_SUFFIX = "\n…(context truncated)";
@@ -88,6 +98,17 @@ export function buildContextBlock(input: ContextInput): string {
   lines.push(
     `Work: ${summary.openCount} open (${summary.inProgress.length} in progress, ${summary.blocked.length} blocked, ${summary.readyByPriority.length} ready)`,
   );
+
+  const proof = input.proof;
+  if (proof && proof.total > 0) {
+    lines.push(
+      `Claims: ${proof.total} — ${proof.supported} supported, ${proof.unsupported} unsupported, ${proof.stale} stale, ${proof.pending} pending${proof.fingerprintAvailable ? "" : " (git unavailable: nothing counts as current)"}`,
+    );
+  } else {
+    lines.push("Claims: none recorded — no work item can be completed yet");
+  }
+  lines.push(PROOF_RULES);
+
   lines.push(
     "Brief: .newfang/briefs/PROJECT_BRIEF.md · Use NewFang tools (newfang_*) for project truth; never edit .newfang/ by hand.",
   );

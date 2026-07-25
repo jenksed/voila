@@ -90,6 +90,56 @@ export async function resolveRepoRelativeSource(
   };
 }
 
+/**
+ * Resolve a repository-relative **directory** safely, for use as a command working directory.
+ * Same rejections as `resolveRepoRelativeSource` (absolute, home-relative, `..` traversal, escape,
+ * symlink escape); `"."` and `""` mean the repository root.
+ */
+export async function resolveRepoRelativeDir(
+  root: string,
+  relPath?: string,
+): Promise<{ absolutePath: string; relativePath: string }> {
+  const raw = relPath === undefined || relPath.trim().length === 0 ? "." : relPath;
+  if (isAbsolute(raw) || /^[A-Za-z]:[\\/]/.test(raw)) {
+    throw new UnsafeSourcePathError(
+      `Absolute working directories are not accepted: "${raw}". Use a repository-relative path.`,
+    );
+  }
+  if (raw.startsWith("~")) {
+    throw new UnsafeSourcePathError(`Home-relative paths are not accepted: "${raw}".`);
+  }
+  if (raw.split(/[\\/]/).includes("..")) {
+    throw new UnsafeSourcePathError(`Path traversal is not accepted: "${raw}".`);
+  }
+
+  const joined = resolve(root, raw);
+  if (!isInside(resolve(root), joined)) {
+    throw new UnsafeSourcePathError(`Working directory escapes the repository: "${raw}".`);
+  }
+
+  let realTarget: string;
+  try {
+    const st = await stat(joined);
+    if (!st.isDirectory()) {
+      throw new UnsafeSourcePathError(`Working directory is not a directory: "${raw}".`);
+    }
+    realTarget = await realpath(joined);
+  } catch (error) {
+    if (error instanceof UnsafeSourcePathError) throw error;
+    throw new SourceNotFoundError(`Working directory not found: "${raw}".`);
+  }
+
+  const realRoot = await realpath(resolve(root));
+  if (!isInside(realRoot, realTarget)) {
+    throw new UnsafeSourcePathError(
+      `Working directory resolves outside the repository (symlink escape): "${raw}".`,
+    );
+  }
+
+  const rel = relative(realRoot, realTarget).split(sep).join("/");
+  return { absolutePath: realTarget, relativePath: rel === "" ? "." : rel };
+}
+
 /** Repository-relative path of a file inside the repo, for recording provenance. */
 export function repoRelative(root: string, absolutePath: string): string {
   return relative(resolve(root), absolutePath).split(sep).join("/");

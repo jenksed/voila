@@ -15,12 +15,23 @@ ownership from intent through implementation, verification, and delivery. Canoni
 
 ## Current phase
 
-Phase 0 and Packets 1, 2, 2.5 complete. **Packet 3 (planning intake, repository orientation, Steward
-context) — complete** as of 2026-07-25: schema v3 with an explicit `2 → 3` migration; exact source
-preservation with SHA-256 and path-safety; structured drafts with mandatory provenance and explicit
-model-inference marking; an Understanding Check reviewed before anything is applied; idempotent,
-duplicate-safe apply; a generated project brief; bounded orientation with staleness detection; a real
-Project Steward Pi skill; and compact automatic context injection. 173/173 tests pass.
+Phase 0 and Packets 1, 2, 2.5, 3 complete. **Packet 4 (claims, verification receipts, protected
+completion) — complete** as of 2026-07-25 on `feat/proof-engine` (not pushed): schema v4 with an
+explicit `3 → 4` migration; claims bound to exact acceptance-criterion text with no support flag;
+executable verification with no shell, recorded as immutable receipts with atomic promotion; a
+deterministic repository fingerprint driving evidence freshness; and `newfang_complete_work_item` as
+the only path to `completed`, reporting every failing gate. 360/360 tests pass.
+
+**NewFang can now mark work complete — and refuses to.** On this repository NF-3's proof gates all
+pass (CLM-1 supported by RCP-2), yet completion is correctly refused because NF-2 is not complete.
+**Zero work items are marked completed.**
+
+**Packet 3 (planning intake, repository orientation, Steward context) — complete** as of 2026-07-25:
+schema v3 with an explicit `2 → 3` migration; exact source preservation with SHA-256 and path-safety;
+structured drafts with mandatory provenance and explicit model-inference marking; an Understanding
+Check reviewed before anything is applied; idempotent, duplicate-safe apply; a generated project
+brief; bounded orientation with staleness detection; a real Project Steward Pi skill; and compact
+automatic context injection. 173/173 tests pass.
 
 **Packet 3 closure corrections applied** (2026-07-25): command evidence is described honestly
 (`CommandFinding` with an explicit basis; nothing is called "verified"), and intake draft/review history
@@ -62,6 +73,14 @@ decision reconciles the two. Neither silently overwrites the other.
 | D17 | Orientation is a bounded, provenance-backed snapshot; staleness fires on HEAD movement, instruction-file change, or explicit refresh — never on a dirty worktree. | [orientation design](../design/REPOSITORY_ORIENTATION.md) |
 | D18 | Commands are recorded as findings with an explicit basis (`declared_in_documentation` / `observed_in_session` / `candidate`); `observedResult` requires actual execution, and nothing is labeled "verified" until Phase 4 receipts exist. | [orientation design](../design/REPOSITORY_ORIENTATION.md) |
 | D19 | Every intake draft revision and Understanding Check is retained (numbered, never overwritten), and review decisions live in an append-only `reviews.jsonl` holding only narrow user-visible fields. | [intake design](../design/PLANNING_INTAKE.md) |
+| D20 | Claim support is **derived, never stored**: there is no `supported` flag on the record and no tool parameter that sets one. Status is recomputed on every read from receipts plus the current repository fingerprint. | [proof design](../design/PROOF_ENGINE.md) |
+| D21 | A claim's `coveredAcceptanceCriteria` must match the work item's criterion text **exactly**; paraphrases are refused. A claim cannot invent a criterion. | [proof design](../design/PROOF_ENGINE.md) |
+| D22 | Verification takes a structured `executable` + `args` and runs with `shell: false`. A single arbitrary shell string is refused. **Tool success means the receipt was recorded, not that verification passed.** Execution is bounded but **not sandboxed**. | [proof design](../design/PROOF_ENGINE.md) |
+| D23 | The repository fingerprint **excludes everything under `.newfang/`**, so creating a receipt cannot invalidate its own fingerprint. Accepted cost: a change confined to `.newfang/` does not invalidate evidence. | [proof design](../design/PROOF_ENGINE.md) |
+| D24 | Receipt artifacts are written to a NewFang-owned staging directory and **atomically promoted**, then linked canonically — so a failed canonical update never leaves a linked partial receipt. Artifacts are immutable and never overwritten. | [proof design](../design/PROOF_ENGINE.md) |
+| D25 | Captured output has machine-specific prefixes normalized (`repository root → <repo>`, `home → ~`) before hashing, so committed receipts leak no username and stay portable. Recorded in the manifest as `pathsNormalized`. | Packet 4 A3 (defect found by dogfooding) |
+| D26 | `newfang_complete_work_item` is the only path to `completed` and reports **every** failing gate, not the first. A rejection leaves canonical bytes byte-identical with no event appended. The guarantee covers NewFang's state transition only — not model prose, and not a hand-edited `project.json`. | [proof design](../design/PROOF_ENGINE.md) |
+| D27 | Completed work whose current evidence no longer revalidates is reported by doctor as a **WARNING**, never reverted. Silently un-completing work would be worse than a stale record. | [proof design](../design/PROOF_ENGINE.md) |
 
 ## Assumptions (reversible unless noted)
 
@@ -114,9 +133,34 @@ decision reconciles the two. Neither silently overwrites the other.
 - E6: Packet 3 record (173/173 tests, v3 migration cases, dogfooded INT-1/ORI-1 with no duplication,
   non-model Pi integration; interactive + authenticated tiers pending) —
   [../verification/PACKET_3_INTAKE_ORIENTATION.md](../verification/PACKET_3_INTAKE_ORIENTATION.md).
+- E7: Packet 4 record (360/360 tests, v4 migration cases, real command execution against temp git
+  repos, `mise exec -- npm run verify` recorded as RCP-1/RCP-2, staleness demonstrated and reversed on
+  real state, protected completion demonstrated in a fixture and correctly refused on NF-3; interactive
+  Proof view + authenticated tiers pending) —
+  [../verification/PACKET_4_PROOF_ENGINE.md](../verification/PACKET_4_PROOF_ENGINE.md).
 
 ## Work completed
 
+- W9 (2026-07-25): Packet 4 — the **proof engine**. Added schema v4 (`claims`, `receipts`,
+  `sequences.claim`/`sequences.receipt`, `workItems[].requiredClaimIds`) with an explicit `3 → 4`
+  migration chaining `1 → 2 → 3 → 4`, a read-only `schema-v3.ts` source validator, and
+  `requiredClaimIds: []` defaults so migration invents no proof. Built the pure proof domain (claims
+  with exact criterion matching, derived four-state evaluation, criterion coverage, and an eleven-gate
+  completion assessment that reports every failure); the repository fingerprint (git HEAD + tracked
+  diff + staged diff + sorted untracked hashes, excluding `.newfang/`); receipt execution and
+  immutable artifacts (`shell: false`, bounded timeout, ANSI stripping, path normalization, 64 KiB
+  per-stream caps, sha256 manifests, staging + atomic promotion, link only after the artifact exists);
+  8 Pi tools (27 total); `/newfang claims|proof|verify|complete`; the Proof console view as the third
+  principal view with claim/receipt/gate detail views; one compact widget warning; proof-aware context
+  injection and Steward skill; and 14 new read-only doctor diagnostics. 360/360 tests pass (169 new).
+  Two real defects were caught by the new tests and fixed: the receipt counter never advanced, and
+  captured output leaked an absolute home path (found by the dogfooding guard, fixed by path
+  normalization — D25). Dogfooded honestly: state migrated to v4 with a backup and one event; CLM-1
+  recorded on NF-3 with four limitations and supported by RCP-2 (RCP-1 preserved as genuine evidence
+  of a failing run); staleness demonstrated and reversed on real state; protected completion
+  demonstrated end-to-end in a temporary fixture. **NF-3 is correctly refused because NF-2 is not
+  complete, and nothing in this repository is marked completed.**
+  ([record](../verification/PACKET_4_PROOF_ENGINE.md))
 - W1 (2026-07-24): Removed two third-party agent tools per user request — `omp`
   (`can1357/tap`, Homebrew) and `openclaw` (npm global + LaunchAgent `ai.openclaw.gateway`). Service
   stopped and disabled; packages uninstalled; data dirs (`~/.omp`, `~/.openclaw`, `~/.cache/omp`)
@@ -187,8 +231,12 @@ decision reconciles the two. Neither silently overwrites the other.
 
 ## Next justified action
 
-Packet 3 closure is committed on `feat/intake-orientation` (not pushed). The remaining work is
-**integration and the two interactive acceptance runs**, in this order:
+Packet 4 is committed on `feat/proof-engine` (not pushed). Because a commit moves `HEAD`, the
+receipts committed with it read `stale` immediately afterwards — by design. The first action is
+therefore to **re-run `/newfang verify CLM-1 -- mise exec -- npm run verify`** on the committed tree
+so CLM-1 has current evidence again.
+
+The rest of the queue is unchanged and still gated on Joshua — Packet 4 did not remove any of it:
 
 1. **Joshua — interactive Steward Console check** on `feat/project-operations` (12-item checklist in
    [../verification/PACKET_2_5_STEWARD_CONSOLE.md](../verification/PACKET_2_5_STEWARD_CONSOLE.md) and
@@ -201,4 +249,9 @@ Packet 3 closure is committed on `feat/intake-orientation` (not pushed). The rem
    run produces the first real draft revision 2 and `revision_requested` review record.
 5. Only then may the bounded daily-use claim be made.
 
-**Phase 4 (claims, verification receipts, protected completion — NF-3) does not start until then.**
+Additionally, from Packet 4: the **interactive Proof view check** (tier 6 checklist in the
+[Packet 4 record](../verification/PACKET_4_PROOF_ENGINE.md)) and the **authenticated Steward proof
+behavior check** (tier 7). Both need a real terminal and, for tier 7, `/login`.
+
+**NF-3 cannot be completed until NF-2 is**, and NF-2 waits on the authenticated intake acceptance
+above. This is the intended behavior of the gate, observed on real state rather than asserted.

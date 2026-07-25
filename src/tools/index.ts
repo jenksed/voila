@@ -43,6 +43,7 @@ import {
 } from "../domain/operations.ts";
 import { workItemLabel } from "../domain/status.ts";
 import { intakeTools } from "./intake-tools.ts";
+import { proofTools } from "./proof-tools.ts";
 
 export interface NewfangToolResult {
   content: Array<{ type: "text"; text: string }>;
@@ -406,5 +407,6 @@ export function newfangTools(): NewfangTool[] {
     },
 
     ...intakeTools(),
+    ...proofTools(),
   ];
 }

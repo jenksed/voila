@@ -109,3 +109,105 @@ export const V2_FIXTURE = {
   updatedAt: T,
   revision: 12,
 };
+
+/**
+ * A valid Packet 3 (schema v3) canonical state, for v3 -> v4 migration tests. Work items deliberately
+ * have NO requiredClaimIds — the field does not exist in v3 and the migration must default it.
+ */
+export const V3_FIXTURE = {
+  schemaVersion: 3,
+  projectId: "v3-project-id",
+  displayName: "intake-demo",
+  phase: "build",
+  health: "green",
+  nextAction: "Build the proof engine.",
+  nextActionRationale: "Nothing can be completed without it.",
+  focusWorkItemId: "NF-2",
+  sequences: { workItem: 3, decision: 2, assumption: 2, risk: 2, intake: 2, orientation: 2 },
+  workItems: [
+    {
+      id: "NF-1",
+      kind: "outcome",
+      title: "Operations layer",
+      status: "in_progress",
+      priority: "high",
+      acceptanceCriteria: ["work items persist"],
+      dependsOn: [],
+      createdAt: T,
+      updatedAt: T,
+    },
+    {
+      id: "NF-2",
+      kind: "task",
+      title: "Intake",
+      status: "ready",
+      priority: "high",
+      acceptanceCriteria: [],
+      dependsOn: ["NF-1"],
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  decisions: [
+    {
+      id: "DEC-1",
+      title: "Canonical state",
+      decision: "project.json is authoritative.",
+      rationale: "ADR-0003.",
+      status: "accepted",
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  assumptions: [
+    {
+      id: "ASM-1",
+      statement: "Single machine target.",
+      confidence: "high",
+      status: "open",
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  risks: [
+    {
+      id: "RSK-1",
+      statement: "Pi version churn.",
+      likelihood: "medium",
+      impact: "medium",
+      status: "open",
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  intakes: [
+    {
+      id: "INT-1",
+      title: "docs/plans/BRIEF.md",
+      sourceType: "file",
+      sourceRef: "docs/plans/BRIEF.md",
+      sourceSha256: "a".repeat(64),
+      status: "accepted",
+      draftRevision: 1,
+      acceptedDraftRevision: 1,
+      createdAt: T,
+      updatedAt: T,
+      acceptedAt: T,
+    },
+  ],
+  orientations: [
+    {
+      id: "ORI-1",
+      artifactRef: "orientations/ORI-1/orientation.json",
+      repositoryHead: "deadbeef",
+      status: "current",
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  currentIntakeId: "INT-1",
+  currentOrientationId: "ORI-1",
+  createdAt: T,
+  updatedAt: T,
+  revision: 29,
+};

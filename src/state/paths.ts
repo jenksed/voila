@@ -9,6 +9,8 @@ export interface StatePaths {
   projectJson: string;
   eventsJsonl: string;
   receiptsDir: string;
+  /** NewFang-owned staging area for receipts under construction (atomically promoted, then gone). */
+  receiptsTempDir: string;
   backupsDir: string;
   viewsDir: string;
   statusView: string;
@@ -46,6 +48,23 @@ export function revisionPaths(root: string, intakeId: string, revision: number) 
   };
 }
 
+/**
+ * Artifact directory for one verification receipt, e.g. `.newfang/receipts/RCP-1/`.
+ * Written once and never modified; `.newfang/receipts/.tmp/<token>/` is the staging directory that is
+ * atomically renamed into place.
+ */
+export function receiptPaths(root: string, receiptId: string) {
+  const dir = join(root, NEWFANG_DIR, "receipts", receiptId);
+  return {
+    dir,
+    manifest: join(dir, "manifest.json"),
+    stdout: join(dir, "stdout.txt"),
+    stderr: join(dir, "stderr.txt"),
+    /** Repository-relative reference stored in canonical state. */
+    artifactRef: `receipts/${receiptId}`,
+  };
+}
+
 /** Artifact directory for one orientation, e.g. `.newfang/orientations/ORI-1/`. */
 export function orientationPaths(root: string, orientationId: string) {
   const dir = join(root, NEWFANG_DIR, "orientations", orientationId);
@@ -63,6 +82,7 @@ export function statePaths(root: string): StatePaths {
     projectJson: join(dir, "project.json"),
     eventsJsonl: join(dir, "events.jsonl"),
     receiptsDir: join(dir, "receipts"),
+    receiptsTempDir: join(dir, "receipts", ".tmp"),
     backupsDir: join(dir, "backups"),
     viewsDir: join(dir, "views"),
     statusView: join(dir, "views", "PROJECT_STATUS.md"),

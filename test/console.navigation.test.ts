@@ -15,17 +15,21 @@ function ui(over: Partial<ConsoleUiState> = {}): ConsoleUiState {
   return { ...INITIAL_UI, ...over };
 }
 
-test("tab and h/l cycle views and reset selection", () => {
+test("tab and h/l cycle views in order Focus -> Work -> Proof -> Project Truth", () => {
   let s = ui({ selection: 3 });
   s = handleKey(s, "tab", 5).ui;
   assert.equal(s.view, "work");
-  assert.equal(s.selection, 0);
+  assert.equal(s.selection, 0, "selection resets when the view changes");
+  s = handleKey(s, "tab", 5).ui;
+  assert.equal(s.view, "proof");
   s = handleKey(s, "tab", 5).ui;
   assert.equal(s.view, "truth");
   s = handleKey(s, "tab", 5).ui;
   assert.equal(s.view, "focus", "wraps around");
   s = handleKey(s, "shift-tab", 5).ui;
   assert.equal(s.view, "truth", "reverse wraps");
+  s = handleKey(s, "shift-tab", 5).ui;
+  assert.equal(s.view, "proof");
   assert.equal(handleKey(ui(), "l", 5).ui.view, "work");
   assert.equal(handleKey(ui(), "h", 5).ui.view, "truth");
 });

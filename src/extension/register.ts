@@ -2,6 +2,8 @@
 // so it is fully testable with a fake host. The thin Pi adapter bridges the real ExtensionAPI here.
 
 import type { ProjectState } from "../domain/types.ts";
+import { proofSummary, type ProofSummary } from "../domain/proof.ts";
+import { tryRepositoryFingerprint } from "../state/fingerprint.ts";
 import { runInit } from "../commands/init.ts";
 import { runStatus } from "../commands/status.ts";
 import { runBacklog } from "../commands/backlog.ts";
@@ -18,6 +20,7 @@ import {
   runIntakeStatus,
   runOrient,
 } from "../commands/intake.ts";
+import { runClaims, runComplete, runProof, runVerify } from "../commands/proof.ts";
 import { assembleContext } from "../context/assemble.ts";
 import { formatDoctor, runDoctor, worstLevel } from "../commands/doctor.ts";
 import type { CommandResult } from "../commands/types.ts";
@@ -76,6 +79,10 @@ export const SUBCOMMANDS = [
   "orient",
   "brief",
   "backlog",
+  "claims",
+  "proof",
+  "verify",
+  "complete",
   "decisions",
   "assumptions",
   "risks",
@@ -115,6 +122,14 @@ export function registerNewfang(host: NewfangHost, options: RegisterOptions): vo
           return renderResult(ctx, await runBrief(ctx.cwd));
         case "backlog":
           return renderResult(ctx, await runBacklog(ctx.cwd, tokens[1]));
+        case "claims":
+          return renderResult(ctx, await runClaims(ctx.cwd, tokens[1]));
+        case "proof":
+          return renderResult(ctx, await runProof(ctx.cwd, tokens[1]));
+        case "verify":
+          return renderResult(ctx, await runVerify(ctx.cwd, tokens.slice(1)));
+        case "complete":
+          return renderResult(ctx, await runComplete(ctx.cwd, tokens[1]));
         case "decisions":
           return renderResult(ctx, await runDecisions(ctx.cwd));
         case "assumptions":
@@ -243,5 +258,10 @@ export async function restoreHomeView(ctx: NewfangCtx): Promise<void> {
     ctx.ui.setWidget(HOME_WIDGET_KEY, ["NewFang · state error — run /newfang doctor"]);
     return;
   }
-  ctx.ui.setWidget(HOME_WIDGET_KEY, homeViewLines(state));
+  // Only pay for a git fingerprint when there is proof to warn about.
+  let proof: ProofSummary | null = null;
+  if (state.claims.length > 0) {
+    proof = proofSummary(state, await tryRepositoryFingerprint(ctx.cwd));
+  }
+  ctx.ui.setWidget(HOME_WIDGET_KEY, homeViewLines(state, 80, proof));
 }

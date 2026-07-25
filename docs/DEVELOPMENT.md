@@ -1,10 +1,11 @@
 # NewFang Development
 
 Local setup, pinned versions, commands, tools, schema/migration, the Steward Console, and the smoke
-procedure. Through Packet 3 NewFang has a project-operations layer (backlog, decisions, assumptions,
-risks) on canonical `.newfang/` state, a Pi-native Steward Console, and the first daily-use workflow:
-planning intake, repository orientation, and Steward context. This is not the full MVP: there are no
-claims, runtime verification receipts, completion gate, delegation, or approvals.
+procedure. Through Packet 4 NewFang has a project-operations layer (backlog, decisions, assumptions,
+risks) on canonical `.newfang/` state, a Pi-native Steward Console, planning intake and repository
+orientation, and the **proof engine**: claims, executable verification receipts, evidence freshness,
+and a protected completion transition. This is not the full MVP: there are no approval bundles,
+delegation, background processes, sandboxing, or remote execution.
 
 ## Pinned runtime and dependencies
 
@@ -86,6 +87,10 @@ The file `.pi/extensions/newfang.ts` is a thin adapter (ADR-0007); all logic liv
 | `/newfang intake review` | Shows the generated Understanding Check (source statements vs. model inferences, conflicts, exact apply summary). |
 | `/newfang intake apply [confirm]` | Without `confirm`, previews exactly what will change. With `confirm`, applies the reviewed revision. Refuses blocking conflicts. |
 | `/newfang intake reject [reason]` | Rejects an intake; source and drafts are retained. |
+| `/newfang claims [CLM-n\|NF-n]` | Claims with derived evidence status (pending/supported/unsupported/stale). Detail shows covered criteria, known limitations, and linked receipts. |
+| `/newfang proof [NF-n\|CLM-n\|RCP-n]` | Proof overview; per-work-item criterion coverage and every completion gate; or curated receipt metadata. Never dumps command output or raw JSON. |
+| `/newfang verify CLM-n -- executable [args...]` | Echoes the exact structured command (no shell) and then runs it, recording an immutable receipt. Only the **first** `--` separates, so `-- mise exec -- npm run verify` works. Recording a receipt is not the same as passing. |
+| `/newfang complete NF-n` | The only path to `completed`. Lists **every** failing gate on rejection and changes nothing. |
 | `/newfang orient` | Reports current orientation and staleness; recommends the Steward orientation workflow. |
 | `/newfang brief` | Displays the generated project brief. |
 | `/newfang doctor` | Read-only diagnostics (see below). Makes no repairs or migrations. |
@@ -130,6 +135,14 @@ reporting success, and return concise results with structured details.
 | `newfang_record_orientation` | Store a bounded, validated orientation snapshot. |
 | `newfang_set_next_action` | Set the next action, rationale, and optional focus. |
 | `newfang_get_project_context` | Read compact structured project context. |
+| `newfang_create_claim` | State a claim about a work item and the exact acceptance criteria it covers. Proves nothing by itself. |
+| `newfang_update_claim` | Revise a claim's statement, confidence, coverage, or limitations. Never rewrites receipts. |
+| `newfang_require_claim` | Make a claim a completion requirement of its work item. |
+| `newfang_list_claims` | List claims with derived evidence status (computed on read, never stored). |
+| `newfang_run_verification` | Execute one command (structured `executable` + `args`, no shell) and record an immutable receipt. |
+| `newfang_get_receipt` | Read a receipt's metadata and manifest; a bounded output excerpt only on request. |
+| `newfang_complete_work_item` | The only path to `completed`; reports all failing gates. |
+| `newfang_get_proof` | Read proof counts, per-claim evidence, criterion coverage, and completion gates. |
 
 ## Steward Console (`/newfang home`)
 
@@ -137,10 +150,12 @@ A Pi-native, keyboard-first console that answers: what am I responsible for now,
 justified action, why is it next, what needs attention, and which decisions and risks matter now.
 Design and alternatives considered: [design/STEWARD_CONSOLE.md](design/STEWARD_CONSOLE.md).
 
-- **Views**: **Focus** (next action + rationale + focus item + attention), **Work** (items grouped by
-  operational relevance), **Project Truth** (decisions, open assumptions, risks).
-- **Detail view**: opens for a selected work item, decision, assumption, or risk — curated fields
-  only, never raw JSON.
+- **Views** (navigation order): **Focus** (next action + rationale + focus item + attention + proof
+  readiness), **Work** (items grouped by operational relevance), **Proof** (claims by derived status
+  with limitations visible, curated receipt rows, and the focused item's completion gate), **Project
+  Truth** (decisions, open assumptions, risks).
+- **Detail view**: opens for a selected work item, decision, assumption, risk, claim, receipt, or
+  completion gate — curated fields only, never raw JSON and never full command output.
 - **Keys**: `Tab`/`Shift-Tab` or `h`/`l` switch view · `j`/`k` move selection · `Enter` detail ·
   `Esc` back/close · `r` reload canonical state · `?` help · `q` close. Shortcuts are scoped to the
   custom component, so Pi-global keys are untouched.
@@ -227,17 +242,21 @@ migration-required projects get exactly one hint line.
 
 ## Schema versioning and migration
 
-Canonical state is explicitly versioned (`schemaVersion`). Packet 1 wrote **v1**; Packet 2 introduces
-**v2** (operations), and Packet 3 introduces **v3** (adds `intakes`, `orientations`,
-`currentIntakeId`, `currentOrientationId`, and `sequences.intake`/`sequences.orientation`). Older
-versions are never redefined in place and never migrated silently:
+Canonical state is explicitly versioned (`schemaVersion`). Packet 1 wrote **v1**; Packet 2 introduced
+**v2** (operations); Packet 3 introduced **v3** (`intakes`, `orientations`, `currentIntakeId`,
+`currentOrientationId`, `sequences.intake`/`sequences.orientation`); Packet 4 introduces **v4** (adds
+`claims`, `receipts`, `sequences.claim`/`sequences.receipt`, and `workItems[].requiredClaimIds`).
+Older versions are never redefined in place and never migrated silently:
 
 - Loading any older state reports **migration required** (it is not usable as current state).
 - `/newfang migrate` inspects; `/newfang migrate --apply` migrates to the current version (chaining
-  1→2→3 when needed). It validates each source step and the complete candidate, writes a **timestamped backup** to `.newfang/backups/` before an atomic
-  replace, appends one `schema_migrated` event only after success, and regenerates the view.
-- A failed migration leaves the original canonical bytes intact. Re-running on v2 is a safe no-op. Unknown
-  versions are rejected.
+  1→2→3→4 when needed). It validates each source step and the complete candidate, writes a
+  **timestamped backup** to `.newfang/backups/` before an atomic replace, appends one
+  `schema_migrated` event only after success, and regenerates the view.
+- A failed migration leaves the original canonical bytes byte-identical, writes **no backup**, and
+  appends **no event**. Re-running on v4 is a safe no-op. Unknown versions are rejected.
+- Migrated work items default to `requiredClaimIds: []`, so they cannot be completed until claims are
+  attached deliberately. The migration invents no proof.
 
 ## Project-operations model (compact)
 
@@ -250,12 +269,48 @@ versions are never redefined in place and never migrated silently:
 - Deliberately excluded: estimates, story points, sprints, labels, teams, assignees, comments, custom
   statuses, or arbitrary metadata.
 
-### No completion gate yet (important)
+## Proof engine (Packet 4)
 
-Generic create/update operations **cannot** set a work item to `completed`. That transition is
-reserved for a future `newfang_complete_work_item` tool which will enforce claims and verification.
-`completed` items can only enter state via a valid canonical source (e.g., migrated or hand-authored
-files). NewFang does not yet control completion, verify claims, or understand planning documents.
+Full design: [design/PROOF_ENGINE.md](design/PROOF_ENGINE.md).
+
+The chain is **claim → executable verification → immutable receipt → freshness → protected
+completion**.
+
+- **Claims** (`CLM-n`) cite acceptance-criterion text **exactly**; near-miss text is refused. There is
+  **no support flag** — support is derived on read. `knownLimitations` stays visible everywhere.
+- **Receipts** (`RCP-n`) live in `.newfang/receipts/RCP-n/{manifest.json, stdout.txt, stderr.txt}`,
+  written to a NewFang-owned staging directory and **atomically promoted**, then linked canonically.
+  Immutable; never overwritten. Output is ANSI-stripped, hashed, and capped at 64 KiB per stream with
+  `outputTruncated` recorded honestly. No environment values, no absolute paths, no diffs.
+- **Execution** takes `{claimId, executable, args, cwdRef?, timeoutMs?}` and runs with `shell: false`.
+  A single shell string is refused. `cwdRef` must be repository-relative (traversal and symlink
+  escape rejected). Timeouts are bounded and reported as `timed_out`, never as a failure.
+  **Recording a receipt is not the same as passing** — a failing command yields a valid `failed`
+  receipt.
+- **Fingerprint**: a deterministic digest of git HEAD, the tracked and staged diffs, and untracked
+  repository files by sorted path + content hash. Everything under `.newfang/` is excluded so that
+  creating a receipt does not invalidate its own fingerprint; the tradeoff is that a change confined
+  to `.newfang/` does not invalidate evidence. Raw diffs are never stored.
+- **Evidence status**: `pending` (no receipt), `supported` (newest current receipt passed),
+  `unsupported` (newest current receipt failed/errored/timed out), `stale` (receipts exist but none
+  matches the current fingerprint). Without git, nothing is current, so evidence reads `stale`.
+
+### The completion gate (important)
+
+`newfang_complete_work_item` / `/newfang complete NF-n` is the **only** canonical path to `completed`;
+generic create and update still reject it. Completion is refused when the item is missing, cancelled,
+blocked, or carries a blocked reason; when any dependency is not completed; when acceptance criteria
+or required claims are absent; when a required claim is missing; when any acceptance criterion is
+uncovered; when any required claim is not `supported`; or when an open **high-impact** risk is linked.
+**All** failing gates are reported, and a rejection leaves canonical bytes byte-identical with no
+event appended.
+
+**What this guarantees:** NewFang's own state transition. **What it does not:** that a model never
+writes unsupported prose, or that a hand-edited `project.json` is rejected. Verification is bounded
+but is **not a sandbox** — commands may have side effects.
+
+Because a commit moves `HEAD`, evidence recorded before a commit becomes `stale` after it. That is by
+design; re-run verification when you need current evidence.
 
 ## Canonical state responsibilities (ADR-0003)
 
@@ -263,7 +318,9 @@ files). NewFang does not yet control completion, verify claims, or understand pl
 .newfang/
 ├── project.json            # authoritative current-state snapshot (the source of truth)
 ├── events.jsonl            # append-only history; never authoritative current state
-├── receipts/               # (reserved) immutable verification evidence — unused so far
+├── receipts/
+│   ├── .tmp/               # NewFang-owned staging, atomically promoted — NOT tracked in git
+│   └── RCP-n/              # immutable verification evidence (manifest.json, stdout.txt, stderr.txt)
 ├── backups/                # local pre-migration backups — NOT tracked in git
 └── views/
     └── PROJECT_STATUS.md    # GENERATED projection of project.json — do not edit by hand
@@ -306,11 +363,23 @@ Recorded runs and results:
 [verification/PACKET_1_FOUNDATION.md](verification/PACKET_1_FOUNDATION.md) and
 [verification/PACKET_2_PROJECT_OPERATIONS.md](verification/PACKET_2_PROJECT_OPERATIONS.md).
 
-## Current limitations (through Packet 3)
+## Current limitations (through Packet 4)
 
-- No claims, evidence links, runtime verification receipts, completion gate, approval bundles,
-  delegation, background processes, sandboxing, remote execution, model routing, cost tracking,
-  packaging, or release/PR automation.
+- No approval bundles, delegation, background processes, sandboxing, remote execution, model routing,
+  cost tracking, packaging, or release/PR automation.
+- **Command verification only.** No manual evidence attestation, browser screenshots, or other
+  verification types.
+- The completion gate defends NewFang's state transition, not model prose and not a hand-edited
+  `project.json`.
+- Verification is **not sandboxed**: a verification command runs with the caller's privileges and may
+  have side effects.
+- Evidence is scoped to one repository fingerprint. A commit moves `HEAD`, so receipts recorded before
+  a commit read `stale` afterwards until verification is re-run.
+- A change confined entirely to `.newfang/` does not invalidate evidence (a deliberate consequence of
+  excluding NewFang's own bookkeeping from the fingerprint).
+- Without git, no evidence can be shown as current, so nothing can be completed.
+- Single-writer assumption still applies: a receipt whose reserved ID no longer matches the canonical
+  counter is refused rather than linked.
 - Interpretation is nondeterministic: NewFang guarantees structure, provenance, gating, and
   persistence — not that the model read the document correctly.
 - Duplicate detection is exact-match only; likely-but-inexact duplicates are surfaced for review.
