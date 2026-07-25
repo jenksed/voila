@@ -16,25 +16,29 @@ suite is never mistaken for an interactive or authenticated check.
 
 ## Summary of tiers
 
-| Tier | Status | Evidence |
-|------|--------|----------|
-| 0. Rebase and reconciliation | **PASS** | `866e0d6` → `d397dfc` onto `3169878`; 6 conflicts resolved field-by-field |
-| 1. Automated tests | **PASS** | 382/382 via `mise exec -- npm run verify` (main baseline 206) |
-| 1b. Migration against the integrated v3 state | **PASS** | 7 tests over the real schema-v3 `project.json` from `3169878` |
-| 2. Pi registration (non-model) | **PASS** | 28 tools registered; asserted by tests and observed over RPC |
-| 3. Structured execution | **PASS** | `/newfang verify CLM-2 -- mise exec -- npm run verify`, no shell, explicit argv |
-| 4. Passing receipt | **PASS** | RCP-3 and RCP-4, manifest agreement and output hashes revalidated |
-| 5. Failing receipt | **PASS** | honest `failed` receipt (exit 3) in a bounded fixture repository |
-| 6. Stale-evidence demonstration | **PASS** | performed on this repository; fingerprint returns exactly |
-| 7. Protected-completion fixture | **PASS** | rejection preserves canonical bytes; success is fully gated |
-| 8. Interactive Proof view (TUI) | **PENDING** | requires a terminal; the agent had no TTY |
-| 9. Authenticated model use | **PENDING** | requires `/login`; the agent must not authenticate |
-| 10. GitHub CI | **PASS** | run 30177880494 on PR #4 — `verify` job green |
-| 11. Doctor | **PASS** | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed |
+| Tier                                          | Status      | Evidence                                                                               |
+| --------------------------------------------- | ----------- | -------------------------------------------------------------------------------------- |
+| 0. Rebase and reconciliation                  | **PASS**    | `866e0d6` → `d397dfc` onto `3169878`; 6 conflicts resolved field-by-field              |
+| 1. Automated tests                            | **PASS**    | 383/383 via `mise exec -- npm run verify` (main baseline 206)                          |
+| 1b. Migration against the integrated v3 state | **PASS**    | 7 tests over the real schema-v3 `project.json` from `3169878`                          |
+| 2. Pi registration (non-model)                | **PASS**    | 28 tools registered; asserted by tests and observed over RPC                           |
+| 3. Structured execution                       | **PASS**    | `/newfang verify CLM-2 -- mise exec -- npm run verify`, no shell, explicit argv        |
+| 4. Passing receipt                            | **PASS**    | RCP-3 and RCP-4, manifest agreement and output hashes revalidated                      |
+| 5. Failing receipt                            | **PASS**    | honest `failed` receipt (exit 3) in a bounded fixture repository                       |
+| 6. Stale-evidence demonstration               | **PASS**    | performed on this repository; fingerprint returns exactly                              |
+| 7. Protected-completion fixture               | **PASS**    | rejection preserves canonical bytes; success is fully gated                            |
+| 8. Interactive Proof view (TUI)               | **PARTIAL** | human-attested: rendering PASS, stale display PASS, skill loading FAIL → fixed, see D5 |
+| 9. Authenticated model use                    | **PENDING** | requires `/login`; the agent must not authenticate                                     |
+| 10. GitHub CI                                 | **PASS**    | run 30177880494 on PR #4 — `verify` job green                                          |
+| 11. Doctor                                    | **PASS**    | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed                       |
 
-Tiers 8 and 9 are **not claimed** — the same two human gates already outstanding from Packets 2.5
-and 3. **Packet 4R is therefore not fully accepted**: acceptance requires the interactive Proof view
-to pass, and only Joshua can perform it.
+Tier 8 is **PARTIAL**: Joshua ran it and attested three items. Two passed; the third found a real
+defect (**D5**), which is fixed and now covered by a regression test — but the fix has **not** been
+re-attested in a terminal, and the rest of the checklist is still unrun. Tier 9 remains **not
+claimed**.
+
+**Packet 4R is therefore not fully accepted.** Acceptance requires the interactive Proof view to
+pass in full, and only Joshua can perform it.
 
 ## Tier 0 — Rebase and reconciliation
 
@@ -45,14 +49,14 @@ canonical state rather than replace it.
 
 Six conflicts, each resolved at the field/operation level:
 
-| File | Conflict | Resolution |
-|------|----------|------------|
-| `src/ui/steward-console/render.ts` | help keys | kept Packet 3's `a / v / x` revision affordance **and** Packet 4's `Focus → Work → Proof → Project Truth` cycle |
-| `test/extension.integration.test.ts` | tool count 20 vs 27 | 28 = 11 core + 9 intake + 8 proof; added explicit assertions for `newfang_request_intake_revision` and `newfang_complete_work_item` |
-| `test/tools.test.ts` | sorted tool list | union of both sides; `newfang_request_intake_revision` retained alongside `newfang_require_claim` / `newfang_run_verification` |
-| `.newfang/project.json` | next action, sequences, tail | Packet 3 base (INT-8, ORI-2, `intake: 9`, `orientation: 3`, revision 48) **plus** schema-v4 additions and `claim`/`receipt` counters |
-| `.newfang/events.jsonl` | revisions 30–48 vs 30–36 | main's 48 events kept byte-identical; four Packet 4 transitions appended as 49–52 |
-| `.newfang/views/PROJECT_STATUS.md` | generated output | not spliced; regenerated through the supported operation afterwards |
+| File                                 | Conflict                     | Resolution                                                                                                                           |
+| ------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/ui/steward-console/render.ts`   | help keys                    | kept Packet 3's `a / v / x` revision affordance **and** Packet 4's `Focus → Work → Proof → Project Truth` cycle                      |
+| `test/extension.integration.test.ts` | tool count 20 vs 27          | 28 = 11 core + 9 intake + 8 proof; added explicit assertions for `newfang_request_intake_revision` and `newfang_complete_work_item`  |
+| `test/tools.test.ts`                 | sorted tool list             | union of both sides; `newfang_request_intake_revision` retained alongside `newfang_require_claim` / `newfang_run_verification`       |
+| `.newfang/project.json`              | next action, sequences, tail | Packet 3 base (INT-8, ORI-2, `intake: 9`, `orientation: 3`, revision 48) **plus** schema-v4 additions and `claim`/`receipt` counters |
+| `.newfang/events.jsonl`              | revisions 30–48 vs 30–36     | main's 48 events kept byte-identical; four Packet 4 transitions appended as 49–52                                                    |
+| `.newfang/views/PROJECT_STATUS.md`   | generated output             | not spliced; regenerated through the supported operation afterwards                                                                  |
 
 Three Packet 4 events were **dropped**: two superseded `verification_recorded` entries and the
 `receipts_reset_pre_commit` that discarded them. Their receipt artifacts were deleted before the
@@ -102,33 +106,35 @@ the backups directory stays empty until `--apply`.
 mise exec -- npm run verify          (rebased branch)
   → tsc --noEmit          clean
   → prettier --check      clean
-  → node --test           tests 382 · pass 382 · fail 0
+  → node --test           tests 383 · pass 383 · fail 0
 ```
 
 Counts across the reconciliation:
 
-| Point | Tests |
-|-------|-------|
-| integrated `main` (`3169878`) baseline | 206 |
-| `feat/proof-engine` before rebase (`866e0d6`, base `20effff`) | 360 |
-| after rebase (`d397dfc`) | 375 |
-| after reconciliation (`1e39b17`) | 382 |
+| Point                                                         | Tests |
+| ------------------------------------------------------------- | ----- |
+| integrated `main` (`3169878`) baseline                        | 206   |
+| `feat/proof-engine` before rebase (`866e0d6`, base `20effff`) | 360   |
+| after rebase (`d397dfc`)                                      | 375   |
+| after reconciliation (`1e39b17`)                              | 382   |
+| after the D5 skill-loading fix                                | 383   |
 
-No Packet 3 regression test was removed to make the rebase pass. The 375 → 382 gain is the seven new
+No Packet 3 regression test was removed to make the rebase pass. The 382 → 383 gain is the D5
+skill-loading regression test. The 375 → 382 gain is the seven new
 migration tests over the real integrated v3 state; the 360 → 375 gain is main's intake-revision
 suite arriving through the rebase.
 
 New test files:
 
-| File | Covers |
-|------|--------|
-| `test/migrate-v4.test.ts` | v3 inspection, 3→4 apply, defaults, backup, single event, view refresh, no-op rerun, byte-identical failure, v3 validator |
-| `test/proof.claims.test.ts` | ID sequence, references, exact criterion matching, updates, limitations, requirement linking, derived evaluation, coverage |
-| `test/proof.receipts.test.ts` | pass/fail/timeout/error, ANSI stripping, path normalization, truncation, cwd safety, immutability, manifest/hash consistency, link-only-after-artifact, staging cleanup |
-| `test/proof.fingerprint.test.ts` | determinism, HEAD/tracked/staged/untracked sensitivity, path independence, `.newfang/` exclusion, receipt self-invalidation, no diff retention |
-| `test/proof.completion.test.ts` | 16-case table-driven gate matrix, all-gates reporting, byte-identical rejection, focus clearing, one event, no alternative path |
-| `test/proof.ui.test.ts` | Proof view at all widths, four evaluation states, detail views, attention, widget contract, context injection |
-| `test/proof.tools.test.ts` | tool registration/schemas, each tool's behavior, all four commands, 14 doctor diagnostics |
+| File                             | Covers                                                                                                                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test/migrate-v4.test.ts`        | v3 inspection, 3→4 apply, defaults, backup, single event, view refresh, no-op rerun, byte-identical failure, v3 validator                                               |
+| `test/proof.claims.test.ts`      | ID sequence, references, exact criterion matching, updates, limitations, requirement linking, derived evaluation, coverage                                              |
+| `test/proof.receipts.test.ts`    | pass/fail/timeout/error, ANSI stripping, path normalization, truncation, cwd safety, immutability, manifest/hash consistency, link-only-after-artifact, staging cleanup |
+| `test/proof.fingerprint.test.ts` | determinism, HEAD/tracked/staged/untracked sensitivity, path independence, `.newfang/` exclusion, receipt self-invalidation, no diff retention                          |
+| `test/proof.completion.test.ts`  | 16-case table-driven gate matrix, all-gates reporting, byte-identical rejection, focus clearing, one event, no alternative path                                         |
+| `test/proof.ui.test.ts`          | Proof view at all widths, four evaluation states, detail views, attention, widget contract, context injection                                                           |
+| `test/proof.tools.test.ts`       | tool registration/schemas, each tool's behavior, all four commands, 14 doctor diagnostics                                                                               |
 
 Two real defects were caught by these tests during development and fixed:
 
@@ -208,10 +214,10 @@ Recorded RCP-3: passed (exit 0).
 `CLM-2` is a narrowly scoped claim on `NF-3`: that the complete automated gate passes at the recorded
 fingerprint. Two passing receipts support it.
 
-| Receipt | Result | Recorded via | Fingerprint |
-|---------|--------|--------------|-------------|
-| `RCP-3` | `passed` (exit 0, 14.7 s) | `/newfang verify` command | `95ff7ef7006d…` |
-| `RCP-4` | `passed` (exit 0) | `newfang_run_verification` tool | `95ff7ef7006d…` |
+| Receipt | Result                    | Recorded via                    | Fingerprint     |
+| ------- | ------------------------- | ------------------------------- | --------------- |
+| `RCP-3` | `passed` (exit 0, 14.7 s) | `/newfang verify` command       | `95ff7ef7006d…` |
+| `RCP-4` | `passed` (exit 0)         | `newfang_run_verification` tool | `95ff7ef7006d…` |
 
 Independently revalidated after recording:
 
@@ -227,7 +233,7 @@ capturedEnvironment: "none"
 
 **Receipt creation does not stale the receipt.** Immediately after `RCP-3` was written, `CLM-2`
 evaluated `supported`, and `RCP-4` — recorded later, after the artifact directory and canonical state
-had both been rewritten — carries the *same* fingerprint `95ff7ef7006d…`. Recording evidence does not
+had both been rewritten — carries the _same_ fingerprint `95ff7ef7006d…`. Recording evidence does not
 invalidate it, because the fingerprint excludes `.newfang/`.
 
 `RCP-1` and `RCP-2` (from the pre-rebase run at `gitHead 20effff`) are retained and now read
@@ -256,7 +262,7 @@ Recorded RCP-1 for CLM-1: failed (exit 3).
 The command did NOT pass. The receipt is valid evidence of that failure; the claim is not supported.
 ```
 
-The tool returning success means *a receipt was recorded*, not that verification passed — the
+The tool returning success means _a receipt was recorded_, not that verification passed — the
 distinction is stated in the tool description and demonstrated here. `timed_out` and truncation are
 covered by `test/proof.receipts.test.ts` (a real 1-second timeout, per-stream caps recorded honestly
 in both the manifest and canonical metadata).
@@ -350,32 +356,77 @@ gate is evaluated. A rejection reports **all** failing gates, not just the first
 Completed work is **never** silently reverted; `/newfang doctor` reports a completed item whose
 evidence no longer revalidates as a WARNING rather than mutating it.
 
-## Tier 8 — Interactive Proof view — **PENDING**
+## Tier 8 — Interactive Proof view — **PARTIAL** (human-attested)
 
-Not performed. The agent had no TTY (`process.stdin.isTTY === false`; `/newfang home` correctly
-refuses with "needs an interactive terminal"), and Pi's `ctx.ui.custom()` is TUI-only. Rendering is
-verified at the string level (all four evaluation states, compact/standard/wide widths, no line
-overflow, detail views), but nobody has looked at it. **Terminal width, Pi version, and per-item
-pass/fail are therefore unrecorded and are not claimed.**
+Run by Joshua in a real terminal. Claude did not observe the TUI (`process.stdin.isTTY === false`;
+`/newfang home` correctly refuses with "needs an interactive terminal"), so this tier rests entirely
+on his direct observation.
 
-Checklist for Joshua, in a real terminal (`mise exec -- npm run pi`, then `/newfang home`).
+| Item                          | Result                                |
+| ----------------------------- | ------------------------------------- |
+| Proof UI rendering            | **PASS**                              |
+| Stale-evidence display        | **PASS**                              |
+| Project Steward skill loading | **FAIL** → defect **D5**, fixed below |
+
+Not separately recorded: terminal width, Pi version, and per-item results for the remaining
+checklist entries. Those are **not claimed**.
+
+### D5 — the Project Steward skill never loaded (pre-existing, now fixed)
+
+Numbered in the **defect** namespace continued from Packet 3's D1–D4 (found by real use), which is
+distinct from the ledger's `D<n>` doctrine rows.
+
+The skill's YAML frontmatter used an **unquoted** `description:` whose text contains a colon-space
+(`…NewFang-managed project: reading project context…`). YAML parses that as a nested mapping inside a
+compact mapping, so Pi's loader rejected the frontmatter and dropped the skill:
+
+```text
+warning | Nested mappings are not allowed in compact mappings at line 2, column 14
+        | .pi/skills/project-steward/SKILL.md
+SKILLS LOADED: []
+```
+
+This is a **silent** failure mode: the file looks correct, nothing else fails, and every other tier
+still passes — which is exactly why it survived to a human check.
+
+**Not introduced by Packet 4.** The same defect reproduces against `origin/main`'s copy of the file,
+so it shipped with Packet 3 and every packet since. Packet 4 rewrote the description text but not the
+quoting.
+
+Fix: the description is now a single-quoted YAML scalar (it contains double quotes but no single
+quotes, so single-quoting is safe and the text is unchanged). After the fix:
+
+```text
+SKILLS LOADED: [ 'project-steward' ]
+description length: 585   (Pi's cap is 1024)
+DIAGNOSTICS: 0
+```
+
+Regression test added in `test/dogfood.test.ts`, asserting through **Pi's own loader** that the skill
+loads with zero diagnostics and that the description survives quoting intact. Verified to be a real
+guard: reintroducing the unquoted form fails the test, restoring it passes.
+
+Consequence worth stating plainly: for every packet before this one, the "proof-aware Project
+Steward context" was only proof-aware in the injected context and tool descriptions — the **skill
+file itself was never loaded by Pi**. Tier 9 (authenticated model use) has therefore never exercised
+the skill, and remains unclaimed.
+
+### Remaining checklist for Joshua
+
+Still unverified, in a real terminal (`mise exec -- npm run pi`, then `/newfang home`).
 Record terminal width, Pi version, and pass/fail per item:
 
-1. The ambient widget still renders (two lines, at most one proof warning).
-2. `/newfang home` opens.
-3. `Tab` cycles **Focus → Work → Proof → Project Truth** and wraps; `Shift-Tab` reverses.
-4. Claim status is readable, and `pending` / `supported` / `unsupported` / `stale` are visually
-   distinguishable. Expect `CLM-1 stale` and `CLM-2 stale` (both receipts predate the final commit).
-5. `RCP-1`…`RCP-4` appear, each marked `current` or `stale`.
-6. `j`/`k` move the selection across claims, then receipts, then the completion-gate row.
-7. `Enter` opens claim detail (coverage + limitations) and closes with `Esc`.
-8. Receipt detail is bounded: metadata and an artifact pointer, **no complete stdout dump**.
-9. Completion-gate failures are readable in the gate detail.
-10. Resize below 80 columns; confirm nothing overflows or is clipped mid-word.
-11. The Packet 3 intake review UI still works: `u` opens the Understanding Check, and `a` / `v` / `x`
-    are offered (accept+apply / request revision / reject).
-12. `?` help lists the four-view order and the `a / v / x` keys; `r` reloads.
-13. `q` exits cleanly.
+1. `j`/`k` move the selection across claims, then receipts, then the completion-gate row.
+2. `Enter` opens claim detail (coverage + limitations) and closes with `Esc`.
+3. Receipt detail is bounded: metadata and an artifact pointer, **no complete stdout dump**.
+4. Completion-gate failures are readable in the gate detail.
+5. Resize below 80 columns; confirm nothing overflows or is clipped mid-word.
+6. The Packet 3 intake review UI still works: `u` opens the Understanding Check, and `a` / `v` / `x`
+   are offered (accept+apply / request revision / reject).
+7. `?` help lists the four-view order and the `a / v / x` keys; `r` reloads.
+8. `q` exits cleanly.
+9. Re-confirm the Project Steward skill now loads: it should be offered/usable in session, with no
+   skill warning at startup.
 
 ## Tier 9 — Authenticated model use — **PENDING**
 
@@ -477,3 +528,7 @@ Packet 3 checks still passing after the rebase include `intake reference: INT-8`
 10. `CLM-1` is stale and stays stale. It is not re-verified here, because doing so would attach
     post-rebase evidence to a claim whose original receipts belong to the pre-rebase tree; the honest
     representation is a stale claim plus a new claim (`CLM-2`) with its own current evidence.
+11. **D5 was invisible to every automated tier.** The repository had no test that Pi can actually
+    load its own skill files, so a silent frontmatter failure survived four packets. The new
+    regression test closes this specific hole; nothing yet asserts that other `.pi/` resources
+    (extensions, future skills) load, beyond the extension integration test.

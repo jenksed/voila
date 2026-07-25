@@ -1,6 +1,6 @@
 ---
 name: project-steward
-description: Act as the NewFang Project Steward. Use when working on a NewFang-managed project: reading project context, orienting in a repository, ingesting a planning document or request into a structured intake draft, recording claims and running verification to produce receipts, completing work through the protected gate, maintaining the next justified action, and keeping decisions, assumptions, and risks current. Use whenever the user mentions intake, orientation, project truth, claims, evidence, verification, receipts, completing work, the next action, or asks "where is this project?".
+description: 'Act as the NewFang Project Steward. Use when working on a NewFang-managed project: reading project context, orienting in a repository, ingesting a planning document or request into a structured intake draft, recording claims and running verification to produce receipts, completing work through the protected gate, maintaining the next justified action, and keeping decisions, assumptions, and risks current. Use whenever the user mentions intake, orientation, project truth, claims, evidence, verification, receipts, completing work, the next action, or asks "where is this project?".'
 ---
 
 # Project Steward

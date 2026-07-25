@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
-import { homedir } from "node:os";
+import { mkdtemp, readFile } from "node:fs/promises";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { loadState } from "../src/state/store.ts";
@@ -115,6 +115,45 @@ test("dogfooded receipt artifacts leak no credentials, env values, or absolute p
 
 test("no receipt staging directory was left behind in the repository", async () => {
   assert.deepEqual(await leftoverReceiptTempDirs(process.cwd()), []);
+});
+
+// The Project Steward skill is only proof-aware if Pi can actually parse and load it. An unquoted
+// YAML `description:` containing a colon-space parses as a nested mapping and the skill is silently
+// dropped with a warning — the skill file looks fine, and nothing else fails. This asserts the real
+// outcome through the pinned Pi's own loader. The deep import is deliberate: `core/skills.js` is not
+// in Pi's `exports` map, but it is what decides whether the skill loads, so nothing else is a
+// faithful check. If a Pi upgrade moves this path, fix the import — do not weaken the assertion.
+test("Pi loads the Project Steward skill from this repository with no diagnostics", async () => {
+  const { loadSkills } =
+    await import("../node_modules/@earendil-works/pi-coding-agent/dist/core/skills.js");
+
+  // agentDir points at an empty temp directory so the machine's global skills cannot influence the
+  // result: this test is about THIS repository's project-local skills only.
+  const emptyAgentDir = await mkdtemp(join(tmpdir(), "newfang-agentdir-"));
+  const result = loadSkills({
+    cwd: process.cwd(),
+    agentDir: emptyAgentDir,
+    skillPaths: [],
+    includeDefaults: true,
+  });
+
+  assert.deepEqual(
+    result.diagnostics ?? [],
+    [],
+    `Pi reported skill diagnostics: ${JSON.stringify(result.diagnostics)}`,
+  );
+
+  const steward = result.skills.find((s) => s.name === "project-steward");
+  assert.ok(steward, "the project-steward skill loaded");
+  // The description survives quoting intact, including its colons and embedded double quotes.
+  assert.match(steward.description, /^Act as the NewFang Project Steward\./);
+  assert.match(steward.description, /NewFang-managed project: reading project context/);
+  assert.match(steward.description, /asks "where is this project\?"\.$/);
+  // Pi's spec caps the description at 1024 characters; a longer one is rejected outright.
+  assert.ok(
+    steward.description.length <= 1024,
+    `description is ${steward.description.length} chars, over Pi's 1024 cap`,
+  );
 });
 
 test("doctor reports no failures on the dogfooded repository state", async () => {
