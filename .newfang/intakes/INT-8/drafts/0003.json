@@ -1,0 +1,710 @@
+{
+  "intakeId": "INT-8",
+  "draftRevision": 3,
+  "objective": "Deliver NewFang's first daily-use workflow: a source request or planning document becomes repository orientation, a structured intake draft, an understanding check, accepted project truth, a next justified action, and durable resume.",
+  "findings": [
+    {
+      "id": "F1",
+      "category": "objective",
+      "statement": "Deliver NewFang's first daily-use workflow in which a source request or planning document becomes repository orientation, a structured intake draft, an understanding check, accepted project truth, a next justified action, and durable resume.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 7,
+          "endLine": 9,
+          "marker": "Objective",
+          "excerpt": "Deliver NewFang's first daily-use workflow: a source request or planning document becomes repository orientation, a structured intake draft, an understanding check, accepted project truth, a next justified action, and durable resume."
+        }
+      ],
+      "relatedFindingIds": [
+        "F3",
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "F10",
+        "F28"
+      ],
+      "confidence": "high",
+      "note": "Stated objective."
+    },
+    {
+      "id": "F2",
+      "category": "locked_decision",
+      "statement": "Schema version 3 is introduced with an explicit 2 -> 3 migration (inspect, --apply, backup, atomic replace).",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 13,
+          "endLine": 13,
+          "marker": "Scope - schema migration",
+          "excerpt": "- Schema version 3 with an explicit `2 -> 3` migration (inspect, `--apply`, backup, atomic replace)."
+        }
+      ],
+      "relatedFindingIds": [
+        "F19"
+      ],
+      "confidence": "high",
+      "note": "Settled schema and migration behavior; wording matches canonical DEC-9 in .newfang/project.json so application can recognize the duplicate."
+    },
+    {
+      "id": "F3",
+      "category": "requirement",
+      "statement": "Preserve sources exactly with SHA-256 provenance and repository-relative path safety.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 14,
+          "endLine": 14,
+          "marker": "Scope - source preservation",
+          "excerpt": "- Exact source preservation with SHA-256 provenance and repository-relative path safety."
+        }
+      ],
+      "relatedFindingIds": [
+        "F20",
+        "F21"
+      ],
+      "confidence": "high",
+      "note": "Source-derived scope bullet; restored from draft 0001, where draft 0002 had consolidated it."
+    },
+    {
+      "id": "F4",
+      "category": "requirement",
+      "statement": "The intake draft contains classified findings with source references, conflicts, and proposed work.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 15,
+          "endLine": 15,
+          "marker": "Scope - structured draft",
+          "excerpt": "- A structured intake draft: classified findings with source references, conflicts, and proposed work."
+        }
+      ],
+      "relatedFindingIds": [
+        "F22",
+        "F23"
+      ],
+      "confidence": "high",
+      "note": "Source-derived scope bullet; restored from draft 0001."
+    },
+    {
+      "id": "F5",
+      "category": "requirement",
+      "statement": "Generate an understanding check from the draft and require user review before anything is applied.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 16,
+          "endLine": 16,
+          "marker": "Scope - understanding check",
+          "excerpt": "- An understanding check generated from the draft, reviewed by the user before anything is applied."
+        }
+      ],
+      "relatedFindingIds": [
+        "F13",
+        "F23"
+      ],
+      "confidence": "high",
+      "note": "Source-derived scope bullet; restored from draft 0001."
+    },
+    {
+      "id": "F6",
+      "category": "requirement",
+      "statement": "Intake application is idempotent and does not duplicate existing project truth.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 17,
+          "endLine": 17,
+          "marker": "Scope - idempotent application",
+          "excerpt": "- Idempotent intake application that does not duplicate existing project truth."
+        }
+      ],
+      "relatedFindingIds": [
+        "F24",
+        "F25"
+      ],
+      "confidence": "high",
+      "note": "Source-derived scope bullet; restored from draft 0001."
+    },
+    {
+      "id": "F7",
+      "category": "requirement",
+      "statement": "Generate a concise project brief.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 18,
+          "endLine": 18,
+          "marker": "Scope - project brief",
+          "excerpt": "- A generated, concise project brief."
+        }
+      ],
+      "relatedFindingIds": [
+        "F28"
+      ],
+      "confidence": "high",
+      "note": "Source-derived scope bullet; restored from draft 0001."
+    },
+    {
+      "id": "F8",
+      "category": "requirement",
+      "statement": "Provide bounded repository orientation with staleness detection.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 19,
+          "endLine": 19,
+          "marker": "Scope - orientation",
+          "excerpt": "- Bounded repository orientation with staleness detection."
+        }
+      ],
+      "relatedFindingIds": [
+        "F17",
+        "F18",
+        "F26"
+      ],
+      "confidence": "high",
+      "note": "Source-derived scope bullet; restored from draft 0001."
+    },
+    {
+      "id": "F9",
+      "category": "requirement",
+      "statement": "Provide a real Project Steward Pi skill and compact automatic context injection.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 20,
+          "endLine": 20,
+          "marker": "Scope - Steward skill and context",
+          "excerpt": "- A real Project Steward Pi skill and compact automatic context injection."
+        }
+      ],
+      "relatedFindingIds": [
+        "F27",
+        "F28"
+      ],
+      "confidence": "high",
+      "note": "Source-derived scope bullet; restored from draft 0001."
+    },
+    {
+      "id": "F10",
+      "category": "requirement",
+      "statement": "Integrate the Understanding Check into the Steward Console.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 21,
+          "endLine": 21,
+          "marker": "Scope - console integration",
+          "excerpt": "- The Understanding Check integrated into the Steward Console."
+        }
+      ],
+      "relatedFindingIds": [
+        "F5"
+      ],
+      "confidence": "high",
+      "note": "Source-derived scope bullet; restored from draft 0001."
+    },
+    {
+      "id": "F11",
+      "category": "non_goal",
+      "statement": "Claims, runtime verification receipts, protected completion, delegation, approval bundles, background processes, sandboxing, remote execution, model-routing policy, cost tracking, and release automation are out of scope for this phase.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 25,
+          "endLine": 27,
+          "marker": "Non-goals",
+          "excerpt": "Claims, runtime verification receipts, protected completion, delegation, approval bundles, background processes, sandboxing, remote execution, model-routing policy, cost tracking, and release automation are all out of scope for this phase."
+        }
+      ],
+      "relatedFindingIds": [
+        "F29"
+      ],
+      "confidence": "high",
+      "note": "Explicit Packet 3 exclusions, not permanent product exclusions."
+    },
+    {
+      "id": "F12",
+      "category": "locked_decision",
+      "statement": "The language model performs interpretation; NewFang owns preservation, schemas, lifecycle, review, application, persistence, provenance, and resumability.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 31,
+          "endLine": 32,
+          "marker": "Constraints - responsibility boundary",
+          "excerpt": "- The language model performs interpretation; NewFang owns preservation, schemas, lifecycle, review, application, persistence, provenance, and resumability."
+        }
+      ],
+      "relatedFindingIds": [
+        "F13",
+        "F16"
+      ],
+      "confidence": "high",
+      "note": "Responsibility boundary; wording matches canonical DEC-7 in .newfang/project.json so application can recognize the duplicate."
+    },
+    {
+      "id": "F13",
+      "category": "locked_decision",
+      "statement": "Model-generated interpretations are never applied to canonical project truth silently; the user reviews an understanding check first.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 33,
+          "endLine": 33,
+          "marker": "Constraints - no silent application",
+          "excerpt": "- Model-generated interpretations must never be applied to canonical project truth silently."
+        }
+      ],
+      "relatedFindingIds": [
+        "F5",
+        "F23"
+      ],
+      "confidence": "high",
+      "note": "No silent application; wording matches canonical DEC-8 in .newfang/project.json so application can recognize the duplicate."
+    },
+    {
+      "id": "F14",
+      "category": "constraint",
+      "statement": "Locked decisions, proposals, examples, assumptions, and open questions remain distinguishable.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 34,
+          "endLine": 34,
+          "marker": "Constraints - finding distinctions",
+          "excerpt": "- Locked decisions, proposals, examples, assumptions, and open questions must remain distinguishable."
+        }
+      ],
+      "relatedFindingIds": [
+        "F4",
+        "F22"
+      ],
+      "confidence": "high",
+      "note": "Source-derived constraint; restored from draft 0001, where draft 0002 had consolidated it with the terminology and authority constraints."
+    },
+    {
+      "id": "F15",
+      "category": "constraint",
+      "statement": "Preserve source terminology rather than silently correcting it.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 35,
+          "endLine": 35,
+          "marker": "Constraints - source terminology",
+          "excerpt": "- Source terminology is preserved rather than silently corrected."
+        }
+      ],
+      "relatedFindingIds": [
+        "F16"
+      ],
+      "confidence": "high",
+      "note": "Source-derived constraint; restored from draft 0001."
+    },
+    {
+      "id": "F16",
+      "category": "constraint",
+      "statement": "Do not treat every sentence in a planning document as authoritative.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 36,
+          "endLine": 36,
+          "marker": "Constraints - source authority",
+          "excerpt": "- A planning document must not be treated as authoritative in every sentence."
+        }
+      ],
+      "relatedFindingIds": [
+        "F12",
+        "F15"
+      ],
+      "confidence": "high",
+      "note": "Source-derived constraint; restored from draft 0001."
+    },
+    {
+      "id": "F17",
+      "category": "constraint",
+      "statement": "Orientation uses repository-local information only unless the user explicitly requests research.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 37,
+          "endLine": 37,
+          "marker": "Constraints - local orientation",
+          "excerpt": "- Orientation uses repository-local information only unless the user explicitly requests research."
+        }
+      ],
+      "relatedFindingIds": [
+        "F8",
+        "F26"
+      ],
+      "confidence": "high",
+      "note": "Source-derived constraint; restored from draft 0001, where draft 0002 had consolidated it with F18."
+    },
+    {
+      "id": "F18",
+      "category": "constraint",
+      "statement": "Orientation artifacts must not contain secrets, environment values, or absolute private paths.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 38,
+          "endLine": 38,
+          "marker": "Constraints - artifact safety",
+          "excerpt": "- Orientation artifacts must not contain secrets, environment values, or absolute private paths."
+        }
+      ],
+      "relatedFindingIds": [
+        "F8",
+        "F26"
+      ],
+      "confidence": "high",
+      "note": "Source-derived constraint; restored from draft 0001."
+    },
+    {
+      "id": "F19",
+      "category": "acceptance_criterion",
+      "statement": "An explicit `2 -> 3` migration succeeds with a backup and leaves canonical bytes intact on failure.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 42,
+          "endLine": 42,
+          "marker": "Acceptance - migration",
+          "excerpt": "- An explicit `2 -> 3` migration succeeds with a backup and leaves canonical bytes intact on failure."
+        }
+      ],
+      "relatedFindingIds": [
+        "F2"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001, where draft 0002 had consolidated all 10 acceptance bullets into F9."
+    },
+    {
+      "id": "F20",
+      "category": "acceptance_criterion",
+      "statement": "Intake sources are preserved byte-for-byte with a verified SHA-256.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 43,
+          "endLine": 43,
+          "marker": "Acceptance - bytes and hash",
+          "excerpt": "- Intake sources are preserved byte-for-byte with a verified SHA-256."
+        }
+      ],
+      "relatedFindingIds": [
+        "F3"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F21",
+      "category": "acceptance_criterion",
+      "statement": "Absolute paths, `..` traversal, and symlink escapes are rejected.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 44,
+          "endLine": 44,
+          "marker": "Acceptance - path rejection",
+          "excerpt": "- Absolute paths, `..` traversal, and symlink escapes are rejected."
+        }
+      ],
+      "relatedFindingIds": [
+        "F3"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F22",
+      "category": "acceptance_criterion",
+      "statement": "Model inferences are distinguishable from source-derived findings.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 45,
+          "endLine": 45,
+          "marker": "Acceptance - inference distinction",
+          "excerpt": "- Model inferences are distinguishable from source-derived findings."
+        }
+      ],
+      "relatedFindingIds": [
+        "F4",
+        "F14"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F23",
+      "category": "acceptance_criterion",
+      "statement": "Blocking conflicts prevent application.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 46,
+          "endLine": 46,
+          "marker": "Acceptance - blocking conflicts",
+          "excerpt": "- Blocking conflicts prevent application."
+        }
+      ],
+      "relatedFindingIds": [
+        "F4",
+        "F5",
+        "F13"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F24",
+      "category": "acceptance_criterion",
+      "statement": "Applying the same reviewed revision twice creates nothing new.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 47,
+          "endLine": 47,
+          "marker": "Acceptance - idempotent revision",
+          "excerpt": "- Applying the same reviewed revision twice creates nothing new."
+        }
+      ],
+      "relatedFindingIds": [
+        "F6"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F25",
+      "category": "acceptance_criterion",
+      "statement": "Exact duplicates of existing decisions, risks, and work items are not recreated.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 48,
+          "endLine": 48,
+          "marker": "Acceptance - deduplication",
+          "excerpt": "- Exact duplicates of existing decisions, risks, and work items are not recreated."
+        }
+      ],
+      "relatedFindingIds": [
+        "F6"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F26",
+      "category": "acceptance_criterion",
+      "statement": "Repository orientation records provenance and detects staleness on HEAD or instruction-file change.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 49,
+          "endLine": 49,
+          "marker": "Acceptance - orientation provenance",
+          "excerpt": "- Repository orientation records provenance and detects staleness on HEAD or instruction-file change."
+        }
+      ],
+      "relatedFindingIds": [
+        "F8",
+        "F17",
+        "F18"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F27",
+      "category": "acceptance_criterion",
+      "statement": "Automatic context injection is compact and deterministic.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 50,
+          "endLine": 50,
+          "marker": "Acceptance - context injection",
+          "excerpt": "- Automatic context injection is compact and deterministic."
+        }
+      ],
+      "relatedFindingIds": [
+        "F9"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F28",
+      "category": "acceptance_criterion",
+      "statement": "Restart restores intake, brief, orientation, focus, and next action.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 51,
+          "endLine": 51,
+          "marker": "Acceptance - restart restoration",
+          "excerpt": "- Restart restores intake, brief, orientation, focus, and next action."
+        }
+      ],
+      "relatedFindingIds": [
+        "F1",
+        "F7",
+        "F8",
+        "F9"
+      ],
+      "confidence": "high",
+      "note": "Source-derived acceptance criterion; restored from draft 0001."
+    },
+    {
+      "id": "F29",
+      "category": "constraint",
+      "statement": "Stop Packet 3 when the intake-to-next-action workflow passes; do not begin claims, verification receipts, protected completion, delegation, or approval bundles within this packet.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-8",
+          "startLine": 55,
+          "endLine": 56,
+          "marker": "Stopping condition",
+          "excerpt": "Stop when the intake-to-next-action workflow passes. Do not begin claims, verification receipts, protected completion, delegation, or approval bundles."
+        }
+      ],
+      "relatedFindingIds": [
+        "F11"
+      ],
+      "confidence": "high",
+      "note": "Packet-specific stopping condition, not a restriction on later packets."
+    },
+    {
+      "id": "F30",
+      "category": "evidence",
+      "statement": "INT-8 preserves the same bytes as already-accepted Packet 3 intakes INT-1 and INT-2, so it is an exact duplicate source intake.",
+      "origin": "model_inference",
+      "sourceRefs": [],
+      "relatedFindingIds": [
+        "F25"
+      ],
+      "confidence": "high",
+      "note": "Verified against authoritative intake manifests .newfang/intakes/INT-1/manifest.json, .newfang/intakes/INT-2/manifest.json, and .newfang/intakes/INT-8/manifest.json: all three record sourceSha256 d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8 and sourceLineCount 57. Authoritative .newfang/project.json records both INT-1 and INT-2 as accepted intakes."
+    },
+    {
+      "id": "F31",
+      "category": "evidence",
+      "statement": "Current focus is NF-2; NF-3 is not the current focus and appears only in the next-action text as the upcoming claims, receipts, and protected-completion phase.",
+      "origin": "model_inference",
+      "sourceRefs": [],
+      "relatedFindingIds": [
+        "F11",
+        "F29"
+      ],
+      "confidence": "high",
+      "note": "Verified against authoritative .newfang/project.json: focusWorkItemId is NF-2; nextAction names NF-3. The distinction is also rendered in the generated .newfang/views/PROJECT_STATUS.md. The reviewer required that current focus and next destination be treated as different concepts; this finding states only what the authoritative artifact records, not a hypothesis."
+    },
+    {
+      "id": "F32",
+      "category": "assumption",
+      "statement": "Repository-local orientation is sufficient for this phase; no external research is required.",
+      "origin": "model_inference",
+      "sourceRefs": [],
+      "relatedFindingIds": [
+        "F17"
+      ],
+      "confidence": "high",
+      "note": "Inferred from F17 and the absence of an external-research request. Verified as the existing canonical assumption ASM-3 in authoritative .newfang/project.json (statement: 'Repository-local orientation is sufficient for this phase; no external research is required.', confidence high, status open)."
+    },
+    {
+      "id": "F33",
+      "category": "locked_decision",
+      "statement": "Revision requests are durably recorded before a corrected draft is staged: reviews.jsonl is append-only, each record uses the defined six fields (intakeId, reviewedRevision, action, optional feedback, timestamp, resultingStatus), and numbered prior drafts and Understanding Checks remain preserved.",
+      "origin": "model_inference",
+      "sourceRefs": [],
+      "relatedFindingIds": [
+        "F4",
+        "F6"
+      ],
+      "confidence": "high",
+      "note": "Implemented policy, not an open question. Verified against authoritative artifacts: docs/design/PLANNING_INTAKE.md ('reviews.jsonl is append-only' and the six-field record shape), src/state/intake-store.ts (ReviewRecord interface, appendReview, requestIntakeRevision), test/intake.revision.test.ts (ordering, persistence, and field-shape verification), and .newfang/intakes/INT-8/reviews.jsonl itself (contains both revision_requested records for INT-8 against reviewed revisions 1 and 2)."
+    }
+  ],
+  "conflicts": [],
+  "proposedWorkItems": [],
+  "createdAt": "2026-07-25T20:40:21.538Z",
+  "possibleDuplicates": [
+    {
+      "kind": "work_item",
+      "draftRef": "F1",
+      "existingId": "NF-2",
+      "reason": "NF-2 (title 'Build planning-document intake and repository orientation', kind outcome, status ready in .newfang/project.json) covers the Packet 3 planning-intake and repository-orientation outcome that F1 restates."
+    },
+    {
+      "kind": "decision",
+      "draftRef": "F2",
+      "existingId": "DEC-9",
+      "reason": "Exact schema-v3 migration decision. .newfang/project.json DEC-9 records the same wording and intent."
+    },
+    {
+      "kind": "decision",
+      "draftRef": "F12",
+      "existingId": "DEC-7",
+      "reason": "Exact interpretation/enforcement responsibility decision. .newfang/project.json DEC-7 records the same statement."
+    },
+    {
+      "kind": "decision",
+      "draftRef": "F13",
+      "existingId": "DEC-8",
+      "reason": "Exact no-silent-application and review decision. .newfang/project.json DEC-8 records the same statement."
+    },
+    {
+      "kind": "assumption",
+      "draftRef": "F32",
+      "existingId": "ASM-3",
+      "reason": "Exact repository-local-orientation assumption. .newfang/project.json ASM-3 records the same statement (confidence high, status open)."
+    },
+    {
+      "kind": "work_item",
+      "draftRef": "F33",
+      "existingId": "NF-8",
+      "reason": "NF-8 (title 'Capture intake revision requests as durable review records', kind task, status backlog in .newfang/project.json) records the concern that this now-implemented, durably-recorded revision-review policy resolves. F33 is the canonical answer; NF-8 is the open task whose description it satisfies."
+    }
+  ],
+  "proposedNextAction": "Define and build claims, reproducible verification receipts, and the protected completion transition for NF-3.",
+  "proposedNextActionRationale": "INT-8 preserves bytes identical to the already-accepted Packet 3 source (verified across authoritative intake manifests .newfang/intakes/INT-1|2|8/manifest.json), so it justifies no repeat Packet 3 implementation. The current focus pointer remains NF-2 (verified against authoritative .newfang/project.json focusWorkItemId); NF-3 is the next destination named in the next-action text because Packet 3's stopping condition has been satisfied.",
+  "reviewNotes": "Revision delta vs draft 0002. (a) Restored source findings F3, F4, F5, F6, F7, F8, F9, F10 (8 scope requirements bundled into a single F3 in draft 0002) with their original per-bullet sourceRefs and intra-finding relations. (b) Restored source findings F14, F15, F16 (distinction, terminology, authority constraints bundled into a single F7 in draft 0002). (c) Restored source findings F17 and F18 as separate entries (orientation research boundary and artifact-safety boundary bundled into a single F8 in draft 0002). (d) Restored source findings F19-F28 (the 10 acceptance-criterion bullets bundled into a single F9 in draft 0002). The consolidations in draft 0002 were not tied to any reviewer correction and removed complete relevant source coverage, so they are reverted; coverage is preserved by discrete, source-anchored findings rather than a target count. (e) Removed F32 (draft 0001) / F13 (draft 0002), the interpretation-nondeterminism risk finding. The reviewer instructed that this material risk is already represented by canonical RSK-5 in authoritative .newfang/project.json; the in-normalized-match mechanism in src/domain/intake.ts (normalizeForMatch: lowercase, collapse whitespace, strip trailing punctuation) is conservative and does not treat F13's paraphrased wording ('...the guarantees that canonical truth reflects the reviewed interpretation') as identical to RSK-5's wording ('...the only guarantees that canonical truth is correct'), so calling it an exact duplicate is internally inconsistent -- the apply preview would create a new risk rather than skipping one. Treating the match as a semantic or paraphrased duplicate and omitting the risk finding removes the inconsistency and ensures the apply preview creates zero new risks. (f) Removed draft 0001's F34 (open question about whether revision requests need a durable record). The reviewer instructed that this is no longer an open question; it is implemented policy, and F33 records the implemented decision with citations to the design, source, tests, and the actual reviews.jsonl records for INT-8. (g) Kept the F12 distinction (draft 0002) that focusWorkItemId is NF-2 and NF-3 appears only in the next-action text -- promoted to F31 in this draft, restated in proposedNextActionRationale. (h) Kept the F15 locked decision (draft 0002) about durable revision records -- renumbered to F33 in this draft. Every model_inference that asserts current repository or canonical state names the authoritative artifact actually checked (intake manifests, .newfang/project.json, src/state/intake-store.ts, docs/design/PLANNING_INTAKE.md, test/intake.revision.test.ts, .newfang/intakes/INT-8/reviews.jsonl); unchecked possibilities are not stated as current facts. Stage only; apply is not requested."
+}

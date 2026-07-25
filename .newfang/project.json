@@ -4,16 +4,16 @@
   "displayName": "newfang",
   "phase": "build",
   "health": "green",
-  "nextAction": "Build claims, verification receipts, and the protected completion transition (NF-3).",
-  "nextActionRationale": "Intake, orientation, and the Steward context loop now work end to end, so the next unproven promise is evidence-before-completion: NF-1 has been implemented and tested for two packets but still cannot be marked complete because no protected completion transition exists. NF-3 closes that gap and unblocks NF-4 and the self-hosting gate.",
+  "nextAction": "Define and build claims, reproducible verification receipts, and the protected completion transition for NF-3.",
+  "nextActionRationale": "INT-8 preserves bytes identical to the already-accepted Packet 3 source (verified across authoritative intake manifests .newfang/intakes/INT-1|2|8/manifest.json), so it justifies no repeat Packet 3 implementation. The current focus pointer remains NF-2 (verified against authoritative .newfang/project.json focusWorkItemId); NF-3 is the next destination named in the next-action text because Packet 3's stopping condition has been satisfied.",
   "focusWorkItemId": "NF-2",
   "sequences": {
     "workItem": 9,
-    "decision": 10,
+    "decision": 11,
     "assumption": 4,
     "risk": 6,
-    "intake": 2,
-    "orientation": 2
+    "intake": 9,
+    "orientation": 3
   },
   "workItems": [
     {
@@ -211,6 +211,15 @@
       "status": "accepted",
       "createdAt": "2026-07-25T04:51:01.991Z",
       "updatedAt": "2026-07-25T04:51:01.991Z"
+    },
+    {
+      "id": "DEC-10",
+      "title": "Revision requests are durably recorded before a corrected draft is staged: re...",
+      "decision": "Revision requests are durably recorded before a corrected draft is staged: reviews.jsonl is append-only, each record uses the defined six fields (intakeId, reviewedRevision, action, optional feedback, timestamp, resultingStatus), and numbered prior drafts and Understanding Checks remain preserved.",
+      "rationale": "From intake INT-8 finding F33.",
+      "status": "accepted",
+      "createdAt": "2026-07-25T20:59:26.990Z",
+      "updatedAt": "2026-07-25T20:59:26.990Z"
     }
   ],
   "assumptions": [
@@ -306,6 +315,87 @@
       "updatedAt": "2026-07-25T04:51:01.991Z",
       "acceptedAt": "2026-07-25T04:51:01.991Z",
       "acceptedDraftRevision": 1
+    },
+    {
+      "id": "INT-2",
+      "title": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceType": "file",
+      "sourceRef": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceSha256": "d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8",
+      "status": "accepted",
+      "draftRevision": 2,
+      "createdAt": "2026-07-25T16:37:29.630Z",
+      "updatedAt": "2026-07-25T17:21:19.425Z",
+      "acceptedDraftRevision": 2,
+      "acceptedAt": "2026-07-25T17:21:19.425Z"
+    },
+    {
+      "id": "INT-3",
+      "title": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceType": "file",
+      "sourceRef": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceSha256": "d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8",
+      "status": "source_preserved",
+      "draftRevision": 0,
+      "createdAt": "2026-07-25T17:23:39.899Z",
+      "updatedAt": "2026-07-25T17:23:39.899Z"
+    },
+    {
+      "id": "INT-4",
+      "title": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceType": "file",
+      "sourceRef": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceSha256": "d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8",
+      "status": "source_preserved",
+      "draftRevision": 0,
+      "createdAt": "2026-07-25T17:23:50.268Z",
+      "updatedAt": "2026-07-25T17:23:50.268Z"
+    },
+    {
+      "id": "INT-5",
+      "title": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceType": "file",
+      "sourceRef": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceSha256": "d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8",
+      "status": "source_preserved",
+      "draftRevision": 0,
+      "createdAt": "2026-07-25T17:35:29.637Z",
+      "updatedAt": "2026-07-25T17:35:29.637Z"
+    },
+    {
+      "id": "INT-6",
+      "title": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceType": "file",
+      "sourceRef": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceSha256": "d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8",
+      "status": "source_preserved",
+      "draftRevision": 0,
+      "createdAt": "2026-07-25T17:36:41.903Z",
+      "updatedAt": "2026-07-25T17:36:41.903Z"
+    },
+    {
+      "id": "INT-7",
+      "title": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceType": "file",
+      "sourceRef": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceSha256": "d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8",
+      "status": "source_preserved",
+      "draftRevision": 0,
+      "createdAt": "2026-07-25T17:36:56.801Z",
+      "updatedAt": "2026-07-25T17:36:56.801Z"
+    },
+    {
+      "id": "INT-8",
+      "title": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceType": "file",
+      "sourceRef": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceSha256": "d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8",
+      "status": "accepted",
+      "draftRevision": 3,
+      "createdAt": "2026-07-25T19:08:27.799Z",
+      "updatedAt": "2026-07-25T20:59:26.990Z",
+      "acceptedDraftRevision": 3,
+      "acceptedAt": "2026-07-25T20:59:26.990Z"
     }
   ],
   "orientations": [
@@ -313,14 +403,22 @@
       "id": "ORI-1",
       "artifactRef": "orientations/ORI-1/orientation.json",
       "repositoryHead": "89ec6387adedb6fcad0d92f10494dc06b7de11ce",
-      "status": "current",
+      "status": "stale",
       "createdAt": "2026-07-25T04:51:02.045Z",
-      "updatedAt": "2026-07-25T04:51:02.045Z"
+      "updatedAt": "2026-07-25T16:21:57.163Z"
+    },
+    {
+      "id": "ORI-2",
+      "artifactRef": "orientations/ORI-2/orientation.json",
+      "repositoryHead": "20effff08615016a2cb8cd881cf5e901dc6249f8",
+      "status": "current",
+      "createdAt": "2026-07-25T16:21:57.163Z",
+      "updatedAt": "2026-07-25T16:21:57.163Z"
     }
   ],
-  "currentIntakeId": "INT-1",
-  "currentOrientationId": "ORI-1",
+  "currentIntakeId": "INT-8",
+  "currentOrientationId": "ORI-2",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-25T05:27:05.602Z",
-  "revision": 29
+  "updatedAt": "2026-07-25T20:59:26.991Z",
+  "revision": 48
 }

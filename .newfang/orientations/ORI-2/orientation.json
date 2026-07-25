@@ -1,0 +1,80 @@
+{
+  "intakeStyleVersion": 1,
+  "purpose": "NewFang is a personal development operating system built on the Pi coding-agent harness. It preserves project ownership from intent through evidence-backed delivery via a project-local Pi extension and canonical repository state.",
+  "instructionFiles": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "917605b20f21dfa93176136eed7a3aa474f733ed6f335b753c6211bc608665cb",
+      "note": "Harness-neutral operating instructions; authoritative over harness-specific notes."
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "73b381ad3a2cb0bd5b83a8ef456c9c5def99bc8503a078eab6a5bcf45da1af23",
+      "note": "Claude-specific guidance; contains a stale Phase 0 restriction that conflicts with current AGENTS.md and therefore does not govern."
+    }
+  ],
+  "keyDocuments": [
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".newfang/briefs/PROJECT_BRIEF.md",
+    "docs/product/PRODUCT_DIRECTION.md",
+    "docs/plans/MVP_IMPLEMENTATION_PLAN.md",
+    "docs/DEVELOPMENT.md",
+    "docs/project/PROJECT_LEDGER.md",
+    "docs/verification/PACKET_3_INTAKE_ORIENTATION.md",
+    "package.json",
+    "mise.toml"
+  ],
+  "implementationAreas": [
+    ".pi/extensions/newfang.ts",
+    ".pi/skills/project-steward/",
+    "src/domain/",
+    "src/state/",
+    "src/tools/",
+    "src/context/",
+    "src/commands/",
+    "src/ui/",
+    "test/"
+  ],
+  "commands": [
+    {
+      "command": "mise exec -- npm run verify",
+      "basis": "observed_in_session",
+      "observedResult": "passed",
+      "evidenceNote": "Executed during this orientation session; package.json expands it to typecheck, formatting check, and tests."
+    }
+  ],
+  "relevantWork": [
+    "NF-3 — Build claims, verification receipts, and the protected completion transition; this is the next unproven product promise.",
+    "NF-1 — Implemented and tested but remains in progress until NF-3 provides the protected completion transition.",
+    "NF-2 — Intake and orientation are implemented; the previous focus is stale relative to the recorded next action."
+  ],
+  "risks": [
+    "RSK-2 remains open: canonical .newfang/ state assumes a single writer and could race under concurrent writers.",
+    "CLAUDE.md still states that the repository is in Phase 0 and forbids runtime implementation; this conflicts with the current build phase in AGENTS.md, which has precedence.",
+    "Completion evidence cannot yet be represented as protected claims and receipts, so implementation/test status must not be promoted to completion."
+  ],
+  "unknowns": [
+    "The authenticated Project-Steward acceptance run remains pending according to README.md.",
+    "The detailed NF-3 implementation boundary and acceptance criteria were not re-derived during this bounded orientation; consult the canonical work item and accepted implementation plan before coding."
+  ],
+  "observedAt": "2026-07-25T16:21:57.161Z",
+  "provenance": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    ".newfang/briefs/PROJECT_BRIEF.md",
+    "package.json",
+    "mise.toml",
+    ".pi/skills/project-steward/SKILL.md",
+    ".pi/skills/project-steward/references/ORIENTATION_PLAYBOOK.md",
+    "bounded directory listings for repository root, src/, and docs/",
+    "git status, branch, and HEAD inspected in this session",
+    "mise exec -- npm run verify executed in this session"
+  ],
+  "branch": "feat/intake-orientation",
+  "head": "20effff08615016a2cb8cd881cf5e901dc6249f8",
+  "dirty": false,
+  "dirtySummary": "Worktree was clean during orientation."
+}

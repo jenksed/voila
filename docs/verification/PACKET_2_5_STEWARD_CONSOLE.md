@@ -9,12 +9,12 @@ recorded as PENDING with a checklist. RPC output is never used as evidence for a
 
 ## Environment and exact versions
 
-| Field | Value |
-|-------|-------|
-| mise | `2026.7.13 macos-arm64` |
-| Node (via mise) | `v22.23.1` |
-| npm | `10.9.8` |
-| Pi CLI (project-local) | `@earendil-works/pi-coding-agent@0.82.0` |
+| Field                                         | Value                                    |
+| --------------------------------------------- | ---------------------------------------- |
+| mise                                          | `2026.7.13 macos-arm64`                  |
+| Node (via mise)                               | `v22.23.1`                               |
+| npm                                           | `10.9.8`                                 |
+| Pi CLI (project-local)                        | `@earendil-works/pi-coding-agent@0.82.0` |
 | TypeScript / @types/node / prettier / typebox | `7.0.2` / `22.20.1` / `3.9.6` / `1.1.38` |
 
 No new dependencies were added in this packet.
@@ -72,10 +72,18 @@ Additionally observed through Pi **RPC** mode (recorded as RPC evidence only, no
 [notify:info] The Steward Console needs an interactive terminal; showing status instead.
 ```
 
-## Tier 3 — Interactive TUI verification (PENDING — not performed by Claude)
+## Tier 3 — Interactive TUI verification (PASS — human-attested)
 
 Claude's shell is not a TTY (`process.stdin.isTTY === false`), so Pi's interactive TUI could not be
-launched or observed. Per the packet rule, this is **pending**, not passed.
+launched or observed by Claude. **Joshua ran the console in a real terminal on 2026-07-25 and
+attested PASS.** That attestation is the sole basis for this tier; Claude makes no independent claim.
+Pass/fail per item, terminal width, and Pi version were not separately recorded.
+
+> **Stale expectations below.** This checklist was written against earlier dogfooded state. As of
+> `20effff` the canonical state is 8 work items (1 in progress, 1 ready, 6 backlog, **0 completed**),
+> 9 decisions, 3 assumptions, and 5 risks of which **4 are open** (RSK-1 is `mitigated`). The widget
+> therefore reads `4 risks`, not the `3 risks` item 1 states. Verify shape and restraint, not these
+> literals.
 
 ### Checklist for Joshua
 
