@@ -14,6 +14,7 @@ import {
   runIntakeCreate,
   runIntakeReject,
   runIntakeReview,
+  runIntakeRevise,
   runIntakeStatus,
   runOrient,
 } from "../commands/intake.ts";
@@ -149,6 +150,18 @@ export function registerNewfang(host: NewfangHost, options: RegisterOptions): vo
   });
 }
 
+/** A leading `INT-n` argument selects that intake rather than the current one. */
+const INTAKE_ID = /^INT-\d+$/;
+
+/** Strip one matching pair of surrounding quotes, so `revise "text"` stores `text`. */
+function stripQuotes(text: string): string {
+  const t = text.trim();
+  if (t.length >= 2 && ((t[0] === '"' && t.at(-1) === '"') || (t[0] === "'" && t.at(-1) === "'"))) {
+    return t.slice(1, -1);
+  }
+  return t;
+}
+
 /** Route `/newfang intake …` subcommands. Apply requires the explicit `confirm` token. */
 async function runIntakeSub(ctx: NewfangCtx, args: string[]): Promise<CommandResult> {
   const sub = args[0];
@@ -160,8 +173,24 @@ async function runIntakeSub(ctx: NewfangCtx, args: string[]): Promise<CommandRes
       return runIntakeReview(ctx.cwd, args[1]);
     case "apply":
       return runIntakeApply(ctx.cwd, { confirm: args.includes("confirm") });
-    case "reject":
-      return runIntakeReject(ctx.cwd, args.slice(1).join(" ") || undefined);
+    case "revise": {
+      const rest = args.slice(1);
+      const target = rest[0] && INTAKE_ID.test(rest[0]) ? rest.shift() : undefined;
+      const supersede = rest.includes("supersede");
+      const feedback = rest.filter((a) => a !== "supersede").join(" ");
+      return runIntakeRevise(ctx.cwd, stripQuotes(feedback), {
+        ...(target ? { intakeId: target } : {}),
+        ...(supersede ? { supersedePrevious: true } : {}),
+      });
+    }
+    case "reject": {
+      // An intake ID must route to that intake. Treating it as free-text reason rejected the
+      // *current* intake and filed the ID as the reason.
+      const rest = args.slice(1);
+      const target = rest[0] && INTAKE_ID.test(rest[0]) ? rest.shift() : undefined;
+      const reason = stripQuotes(rest.join(" ")) || undefined;
+      return runIntakeReject(ctx.cwd, reason, target);
+    }
     default:
       // Anything else is treated as a repository-relative source path.
       return runIntakeCreate(ctx.cwd, args.join(" "));

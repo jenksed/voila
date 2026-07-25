@@ -40,6 +40,7 @@ test("expected tool surface is registered with schemas", () => {
     "newfang_record_orientation",
     "newfang_record_risk",
     "newfang_reject_intake",
+    "newfang_request_intake_revision",
     "newfang_set_focus",
     "newfang_set_next_action",
     "newfang_stage_intake_draft",

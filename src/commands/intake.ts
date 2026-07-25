@@ -14,6 +14,7 @@ import {
   readDraft,
   readUnderstanding,
   rejectIntake,
+  requestIntakeRevision,
   writeProjectBrief,
 } from "../state/intake-store.ts";
 import { currentOrientationStatus } from "../state/orientation-store.ts";
@@ -138,9 +139,65 @@ export async function runIntakeReview(root: string, intakeId?: string): Promise<
       "",
       data.blocked
         ? "Apply is blocked by conflicts requiring your resolution."
-        : `To accept: /newfang intake apply  ·  To reject: /newfang intake reject`,
+        : `To accept: /newfang intake apply  ·  To correct: /newfang intake revise "<feedback>"  ·  To reject: /newfang intake reject`,
     ],
   };
+}
+
+/**
+ * `/newfang intake revise "<feedback>"` — record a request for a corrected draft.
+ *
+ * Changes no project truth and does not move the intake out of `review_required`; it durably records
+ * that this exact revision was read and found wanting, which is what makes the next draft attributable.
+ */
+export async function runIntakeRevise(
+  root: string,
+  feedback: string,
+  opts: { intakeId?: string; supersedePrevious?: boolean } = {},
+): Promise<CommandResult> {
+  let state;
+  try {
+    state = await loadState(root);
+  } catch (error) {
+    return loadErrorResult(error);
+  }
+  const id = opts.intakeId ?? state.currentIntakeId;
+  if (!id) {
+    return { level: "warning", lines: ["No current intake. Run /newfang intake <path> first."] };
+  }
+  const record = state.intakes.find((i) => i.id === id);
+  if (!record) return { level: "warning", lines: [`No intake ${id}.`] };
+  if (!feedback || feedback.trim().length === 0) {
+    return {
+      level: "warning",
+      lines: [
+        'Describe the correction: /newfang intake revise "<what must change>"',
+        "The feedback is stored verbatim in the review log, so keep it concise and specific.",
+      ],
+    };
+  }
+
+  try {
+    const result = await requestIntakeRevision(root, id, {
+      reviewedDraftRevision: record.draftRevision,
+      feedback,
+      ...(opts.supersedePrevious ? { supersedePrevious: true } : {}),
+    });
+    return {
+      level: "info",
+      lines: [
+        `Revision requested for ${result.intake.id} revision ${result.record.reviewedRevision}.`,
+        `  recorded: ${result.record.feedback}`,
+        result.supersededRequests > 0
+          ? `  note:     adds to ${result.supersededRequests} earlier request(s) on this revision`
+          : "  status:   review_required (unchanged) — no project truth was modified",
+        "",
+        "Next: ask the Project Steward to stage a corrected draft addressing this request.",
+      ],
+    };
+  } catch (error) {
+    return operationError(error) ?? loadErrorResult(error);
+  }
 }
 
 /**

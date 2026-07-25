@@ -1,4 +1,27 @@
-// Shared test fixtures.
+// Shared test fixtures and helpers.
+
+import { loadState } from "../src/state/store.ts";
+import { requestIntakeRevision } from "../src/state/intake-store.ts";
+
+/**
+ * Record a revision request against an intake's current draft.
+ *
+ * Staging revision N+1 requires a recorded request against revision N, so tests that legitimately
+ * stage a corrected draft go through the same gate a reviewer does.
+ */
+export async function requestRevision(
+  root: string,
+  intakeId: string,
+  feedback = "Correct the objective before this is applied.",
+): Promise<void> {
+  const state = await loadState(root);
+  const record = state.intakes.find((i) => i.id === intakeId);
+  if (!record) throw new Error(`test helper: no intake ${intakeId}`);
+  await requestIntakeRevision(root, intakeId, {
+    reviewedDraftRevision: record.draftRevision,
+    feedback,
+  });
+}
 
 /** A valid Packet 1 (schema v1) canonical state, for migration tests. */
 export const V1_FIXTURE = {

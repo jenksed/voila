@@ -145,6 +145,25 @@ export async function openStewardConsole(ctx: OpenConsoleCtx, piVersion?: string
         ctx.ui.notify(result.lines.join("\n"), result.level);
         return buildModelForRoot(ctx.cwd, piVersion);
       },
+      // A correction has to be authored as text, and the console has no input primitive (it stays
+      // read-mostly by design). So `v` surfaces the exact supported command, pre-filled with the
+      // intake and the revision actually under review.
+      reviseIntake: async () => {
+        const model = await buildModelForRoot(ctx.cwd, piVersion);
+        const pending = model.pendingIntake;
+        ctx.ui.notify(
+          pending
+            ? [
+                `To request a corrected draft of ${pending.id} revision ${pending.draftRevision}, run:`,
+                `  /newfang intake revise "<what must change>"`,
+                "The feedback is stored verbatim in the append-only review log, and the corrected",
+                "draft cannot be staged until it is recorded.",
+              ].join("\n")
+            : "No intake is awaiting review.",
+          "info",
+        );
+        return model;
+      },
       rejectIntake: async () => {
         const result = await runIntakeReject(ctx.cwd, "rejected in Steward Console");
         ctx.ui.notify(result.lines.join("\n"), result.level);

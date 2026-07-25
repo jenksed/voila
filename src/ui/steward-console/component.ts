@@ -44,6 +44,8 @@ export function matchLogicalKey(data: string): LogicalKey | null {
       return "understanding";
     case "a":
       return "accept";
+    case "v":
+      return "revise";
     case "x":
       return "reject";
     default:
@@ -59,6 +61,8 @@ export interface ConsoleComponentDeps {
   reload: () => Promise<ConsoleModel>;
   /** Accept+apply the pending intake (explicit in-console user confirmation). */
   applyIntake?: () => Promise<ConsoleModel>;
+  /** Request a corrected draft. The console has no text input, so this routes to the command. */
+  reviseIntake?: () => Promise<ConsoleModel>;
   /** Reject the pending intake. */
   rejectIntake?: () => Promise<ConsoleModel>;
   matchKey?: (data: string) => LogicalKey | null;
@@ -103,6 +107,12 @@ export function createConsoleComponent(deps: ConsoleComponentDeps): ConsoleCompo
           ui = { ...ui, view: ui.returnView ?? "focus", scroll: 0 };
           runAsync(deps.applyIntake);
         }
+        return;
+      }
+      if (result.action === "revise_intake") {
+        // Stays on the Understanding Check: the reviewer still needs the draft in front of them
+        // while composing the correction.
+        if (deps.reviseIntake) runAsync(deps.reviseIntake);
         return;
       }
       if (result.action === "reject_intake") {

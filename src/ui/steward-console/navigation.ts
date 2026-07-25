@@ -23,7 +23,8 @@ export const INITIAL_UI: ConsoleUiState = {
   scroll: 0,
 };
 
-export type NavAction = "none" | "close" | "reload" | "apply_intake" | "reject_intake";
+export type NavAction =
+  "none" | "close" | "reload" | "apply_intake" | "revise_intake" | "reject_intake";
 
 /** Logical keys the console understands (the Pi component normalizes raw input to these). */
 export type LogicalKey =
@@ -40,6 +41,7 @@ export type LogicalKey =
   | "reload"
   | "understanding"
   | "accept"
+  | "revise"
   | "reject";
 
 function cycleView(view: ConsoleView, dir: 1 | -1): ConsoleView {
@@ -75,6 +77,8 @@ export function handleKey(
         return { ui: { ...ui, scroll: Math.max(0, ui.scroll - 1) }, action: "none" };
       case "accept":
         return { ui, action: "apply_intake" };
+      case "revise":
+        return { ui, action: "revise_intake" };
       case "reject":
         return { ui, action: "reject_intake" };
       case "escape":

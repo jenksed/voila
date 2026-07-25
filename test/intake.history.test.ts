@@ -1,3 +1,4 @@
+import { requestRevision } from "./helpers.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -16,6 +17,7 @@ import {
   readReviews,
   readUnderstanding,
   rejectIntake,
+  requestIntakeRevision,
   stageIntakeDraft,
 } from "../src/state/intake-store.ts";
 import { intakePaths, revisionPaths } from "../src/state/paths.ts";
@@ -70,6 +72,7 @@ function check(checks: Awaited<ReturnType<typeof runDoctor>>, name: string) {
 test("two staged revisions produce two numbered artifacts", async () => {
   const { root, intakeId } = await repoWithSource();
   await stageIntakeDraft(root, intakeId, draftFor(intakeId));
+  await requestRevision(root, intakeId);
   await stageIntakeDraft(root, intakeId, draftFor(intakeId, { objective: "Revised objective." }));
 
   assert.deepEqual(await listDraftRevisions(root, intakeId), [1, 2]);
@@ -88,6 +91,7 @@ test("a prior draft revision is preserved verbatim", async () => {
   await stageIntakeDraft(root, intakeId, draftFor(intakeId));
   const firstBytes = await readFile(revisionPaths(root, intakeId, 1).draft, "utf8");
 
+  await requestRevision(root, intakeId);
   await stageIntakeDraft(root, intakeId, draftFor(intakeId, { objective: "Revised objective." }));
 
   assert.equal(
@@ -109,6 +113,7 @@ test("a prior Understanding Check is preserved", async () => {
   const first = await readUnderstanding(root, intakeId, 1);
   assert.ok(first && first.includes("Ship a local-first tool."));
 
+  await requestRevision(root, intakeId);
   await stageIntakeDraft(root, intakeId, draftFor(intakeId, { objective: "Revised objective." }));
   assert.equal(await readUnderstanding(root, intakeId, 1), first, "revision 1 view unchanged");
   const second = await readUnderstanding(root, intakeId, 2);
@@ -120,13 +125,9 @@ test("a prior Understanding Check is preserved", async () => {
 test("a revision-request review event is recorded", async () => {
   const { root, intakeId } = await repoWithSource();
   await stageIntakeDraft(root, intakeId, draftFor(intakeId));
-  await appendReview(root, {
-    intakeId,
-    reviewedRevision: 1,
-    action: "revision_requested",
+  await requestIntakeRevision(root, intakeId, {
+    reviewedDraftRevision: 1,
     feedback: "Reclassify the storage decision as a proposal.",
-    timestamp: "2026-07-25T00:00:00.000Z",
-    resultingStatus: "review_required",
   });
   await stageIntakeDraft(root, intakeId, draftFor(intakeId, { objective: "Revised objective." }));
 
@@ -140,6 +141,7 @@ test("a revision-request review event is recorded", async () => {
 test("accepting appends an accepted review record and records the exact revision", async () => {
   const { root, intakeId } = await repoWithSource();
   await stageIntakeDraft(root, intakeId, draftFor(intakeId));
+  await requestRevision(root, intakeId);
   const staged = await stageIntakeDraft(
     root,
     intakeId,
@@ -216,6 +218,7 @@ test("doctor detects an accepted-revision mismatch", async () => {
 test("doctor detects a missing revision artifact and non-monotonic revisions", async () => {
   const { root, intakeId } = await repoWithSource();
   await stageIntakeDraft(root, intakeId, draftFor(intakeId));
+  await requestRevision(root, intakeId);
   await stageIntakeDraft(root, intakeId, draftFor(intakeId, { objective: "Rev 2." }));
   assert.equal(check(await runDoctor(doctorInput(root)), "intake artifacts").level, "pass");
 
@@ -286,6 +289,7 @@ test("the review log is append-only across the lifecycle", async () => {
 test("revision history and review log survive a restart", async () => {
   const { root, intakeId } = await repoWithSource();
   await stageIntakeDraft(root, intakeId, draftFor(intakeId));
+  await requestRevision(root, intakeId);
   const staged = await stageIntakeDraft(
     root,
     intakeId,
@@ -302,13 +306,30 @@ test("revision history and review log survive a restart", async () => {
   assert.deepEqual(await listDraftRevisions(root, intakeId), [1, 2]);
   assert.ok((await readDraft(root, intakeId, 1))?.objective === "Ship a local-first tool.");
   assert.ok((await readDraft(root, intakeId, 2))?.objective === "Rev 2.");
-  assert.equal((await readReviews(root, intakeId)).length, 1);
+
+  // The full review history survives, in order: the request that caused revision 2 precedes the
+  // acceptance of it.
+  const reviews = await readReviews(root, intakeId);
+  assert.equal(reviews.length, 2);
+  assert.deepEqual(
+    reviews.map((r) => [r.action, r.reviewedRevision]),
+    [
+      ["revision_requested", 1],
+      ["accepted", 2],
+    ],
+  );
+  assert.ok(
+    Date.parse(reviews[0]!.timestamp) <= Date.parse(reviews[1]!.timestamp),
+    "review log is chronological",
+  );
   assert.equal(check(await runDoctor(doctorInput(root)), "intake artifacts").level, "pass");
 });
 
 test("staging never overwrites an existing revision artifact", async () => {
   const { root, intakeId } = await repoWithSource();
   await stageIntakeDraft(root, intakeId, draftFor(intakeId));
+  // Pass the revision-request gate so this exercises overwrite protection, not the gate.
+  await requestRevision(root, intakeId);
   // Force a collision by pre-creating the next revision's artifact.
   await writeFile(revisionPaths(root, intakeId, 2).draft, "{}", "utf8");
   await assert.rejects(

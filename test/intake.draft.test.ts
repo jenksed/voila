@@ -1,3 +1,4 @@
+import { requestRevision } from "./helpers.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
@@ -309,6 +310,7 @@ test("staging increments draftRevision, writes artifacts, and changes no project
   assert.equal(first.draft.draftRevision, 1);
   assert.equal(first.intake.status, "review_required");
 
+  await requestRevision(root, intakeId);
   const second = await stageIntakeDraft(root, intakeId, baseDraft(intakeId));
   assert.equal(second.draft.draftRevision, 2, "revision increments per staging");
 
@@ -328,6 +330,7 @@ test("the preserved source is immutable across draft revisions", async () => {
   const { root, intakeId } = await repoWithSource();
   const original = await readSource(root, intakeId);
   await stageIntakeDraft(root, intakeId, baseDraft(intakeId));
+  await requestRevision(root, intakeId);
   await stageIntakeDraft(root, intakeId, baseDraft(intakeId, { objective: "Changed objective." }));
   assert.equal(await readSource(root, intakeId), original, "source.md never rewritten");
 });

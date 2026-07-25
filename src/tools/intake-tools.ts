@@ -11,7 +11,9 @@ import {
   applyIntake,
   createIntake,
   findIntake,
+  MAX_REVIEW_FEEDBACK_LENGTH,
   rejectIntake,
+  requestIntakeRevision,
   stageIntakeDraft,
   writeProjectBrief,
 } from "../state/intake-store.ts";
@@ -249,6 +251,56 @@ export function intakeTools(): NewfangTool[] {
           intake: result.intake,
           summary: result.summary,
         });
+      },
+    },
+
+    {
+      name: "newfang_request_intake_revision",
+      label: "Request Intake Revision",
+      description:
+        "Record the user's request for a corrected intake draft. Requires status review_required and the exact current draft revision. Appends one revision_requested record to the append-only review log and changes NO project truth; the intake stays review_required. Staging a corrected draft requires this record first, so the next revision is attributable. Feedback must be the user's concise correction — never your own reasoning, and never a transcript.",
+      promptSnippet: "Record a user's request for a corrected NewFang intake draft",
+      promptGuidelines: [
+        "Use newfang_request_intake_revision only to record a correction the user actually asked for; never invent a revision request, and store their concise wording rather than your explanation of it.",
+      ],
+      parameters: Type.Object(
+        {
+          intakeId: Type.String(),
+          reviewedDraftRevision: Type.Integer({ minimum: 1 }),
+          feedback: Type.String({
+            minLength: 1,
+            maxLength: MAX_REVIEW_FEEDBACK_LENGTH,
+            description: "The user's concise description of what must change",
+          }),
+          supersedePrevious: Type.Optional(
+            Type.Boolean({
+              description:
+                "Explicitly add a further correction to a revision that already has a request",
+            }),
+          ),
+        },
+        { additionalProperties: false },
+      ),
+      async execute(_id, params, _signal, _onUpdate, ctx) {
+        const p = params as {
+          intakeId: string;
+          reviewedDraftRevision: number;
+          feedback: string;
+          supersedePrevious?: boolean;
+        };
+        const result = await requestIntakeRevision(ctx.cwd, p.intakeId, {
+          reviewedDraftRevision: p.reviewedDraftRevision,
+          feedback: p.feedback,
+          ...(p.supersedePrevious ? { supersedePrevious: true } : {}),
+        });
+        return text(
+          `Recorded a revision request for ${p.intakeId} revision ${result.record.reviewedRevision}. Stage a corrected draft that addresses it; project truth is unchanged.`,
+          {
+            intake: result.intake,
+            review: result.record,
+            supersededRequests: result.supersededRequests,
+          },
+        );
       },
     },
 

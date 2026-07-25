@@ -1,3 +1,4 @@
+import { requestRevision } from "./helpers.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
@@ -118,6 +119,7 @@ test("apply is refused before review and without confirmation", async () => {
 test("apply requires the exact reviewed draft revision", async () => {
   const { root, intakeId } = await repoWithSource();
   await stageIntakeDraft(root, intakeId, fullDraft(intakeId));
+  await requestRevision(root, intakeId);
   await stageIntakeDraft(root, intakeId, fullDraft(intakeId)); // now revision 2
   await assert.rejects(
     () => applyIntake(root, intakeId, { reviewedDraftRevision: 1, confirmed: true }),

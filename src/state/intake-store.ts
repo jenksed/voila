@@ -68,6 +68,12 @@ export interface ReviewRecord {
   resultingStatus: string;
 }
 
+/**
+ * Maximum stored revision feedback. Reviewer corrections are concise and user-visible; this cap
+ * exists so a transcript or hidden reasoning can never be parked in the review log.
+ */
+export const MAX_REVIEW_FEEDBACK_LENGTH = 2000;
+
 /** Append one review record. The log is append-only and never rewritten. */
 export async function appendReview(root: string, record: ReviewRecord): Promise<void> {
   const paths = intakePaths(root, record.intakeId);
@@ -289,6 +295,22 @@ export async function stageIntakeDraft(
       `Intake ${intakeId} is ${record.status}; stage a new intake instead of revising a closed one.`,
     );
   }
+  // A draft under review is replaced only because a reviewer asked for a correction. Requiring the
+  // request first is what makes revision N+1 attributable instead of an unexplained restage.
+  if (record.draftRevision >= 1) {
+    const reviews = await readReviews(root, intakeId);
+    const requested = reviews.some(
+      (r) => r.action === "revision_requested" && r.reviewedRevision === record.draftRevision,
+    );
+    if (!requested) {
+      throw new ProjectOperationError(
+        `Draft revision ${record.draftRevision} of ${intakeId} is awaiting review. Record a revision ` +
+          `request against it (/newfang intake revise "<feedback>") before staging revision ${
+            record.draftRevision + 1
+          }.`,
+      );
+    }
+  }
   const manifest = await readManifest(root, intakeId);
 
   const draft = validateIntakeDraft(
@@ -468,6 +490,113 @@ export async function applyIntake(
     intake: findIntake(nextState, intakeId),
     summary: preview.summary,
     alreadyApplied: false,
+  };
+}
+
+export interface RequestRevisionInput {
+  /** The revision the reviewer actually read. Must equal the intake's current draft revision. */
+  reviewedDraftRevision: number;
+  /** Concise, user-visible description of what must change. Never reasoning or a transcript. */
+  feedback: string;
+  /**
+   * Explicitly add a further correction to a revision that already has one. Off by default so a
+   * repeated request is a deliberate act rather than an accident.
+   */
+  supersedePrevious?: boolean;
+}
+
+export interface RequestRevisionResult {
+  intake: IntakeRecord;
+  record: ReviewRecord;
+  supersededRequests: number;
+}
+
+/**
+ * Record a reviewer's request for a corrected draft.
+ *
+ * Appends exactly one `revision_requested` record and changes no project truth. The intake stays in
+ * `review_required`: asking for a correction is a reviewer action, not a new lifecycle state. Prior
+ * drafts, understanding views, and review records are never touched.
+ */
+export async function requestIntakeRevision(
+  root: string,
+  intakeId: string,
+  input: RequestRevisionInput,
+): Promise<RequestRevisionResult> {
+  const state = await loadState(root);
+  const record = findIntake(state, intakeId);
+
+  if (record.status !== "review_required") {
+    throw new ProjectOperationError(
+      `Intake ${intakeId} is ${record.status}; only an intake awaiting review (status review_required) can receive a revision request.`,
+    );
+  }
+  if (record.draftRevision < 1) {
+    throw new ProjectOperationError(
+      `Intake ${intakeId} has no staged draft; there is nothing to request a revision of.`,
+    );
+  }
+  if (record.draftRevision !== input.reviewedDraftRevision) {
+    throw new ProjectOperationError(
+      `Reviewed revision ${input.reviewedDraftRevision} does not match the current draft revision ${record.draftRevision}; re-review before requesting a revision.`,
+    );
+  }
+
+  const feedback = input.feedback.trim();
+  if (feedback.length === 0) {
+    throw new ProjectOperationError(
+      "A revision request requires concise feedback describing what must change.",
+    );
+  }
+  if (feedback.length > MAX_REVIEW_FEEDBACK_LENGTH) {
+    throw new ProjectOperationError(
+      `Revision feedback is ${feedback.length} characters; keep it under ${MAX_REVIEW_FEEDBACK_LENGTH}. Record the correction, not the discussion.`,
+    );
+  }
+
+  const reviews = await readReviews(root, intakeId);
+  const priorRequests = reviews.filter(
+    (r) => r.action === "revision_requested" && r.reviewedRevision === record.draftRevision,
+  );
+  if (priorRequests.length > 0 && !input.supersedePrevious) {
+    throw new ProjectOperationError(
+      `Revision ${record.draftRevision} of ${intakeId} already has a revision request. Stage the ` +
+        `revised draft, or set supersedePrevious to add a further correction to the same revision.`,
+    );
+  }
+
+  const now = new Date().toISOString();
+  const nextState = await updateState(
+    root,
+    (cur) => ({
+      ...cur,
+      intakes: cur.intakes.map((i) => (i.id === intakeId ? { ...i, updatedAt: now } : i)),
+      currentIntakeId: intakeId,
+    }),
+    {
+      type: "intake_revision_requested",
+      id: intakeId,
+      reviewedRevision: record.draftRevision,
+      ...(priorRequests.length > 0 ? { supersedes: priorRequests.length } : {}),
+    },
+  );
+
+  // Appended after the canonical write so a failure here fails closed: with no record on disk,
+  // staging the next revision stays blocked rather than silently permitted.
+  const reviewRecord: ReviewRecord = {
+    intakeId,
+    reviewedRevision: record.draftRevision,
+    action: "revision_requested",
+    feedback,
+    timestamp: now,
+    resultingStatus: "review_required",
+  };
+  await appendReview(root, reviewRecord);
+
+  return {
+    intake: findIntake(nextState, intakeId),
+    record: reviewRecord,
+    supersededRequests: priorRequests.length,
   };
 }
 

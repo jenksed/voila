@@ -294,7 +294,9 @@ function understandingView(
     st.fg(
       "muted",
       truncate(
-        pi.blocked ? "x reject · Esc back" : "a accept and apply · x reject · Esc back",
+        pi.blocked
+          ? "v request revision · x reject · Esc back"
+          : "a accept and apply · v request revision · x reject · Esc back",
         width,
       ),
     ),
@@ -412,7 +414,7 @@ function detailView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: 
 
 const HELP_LINES = [
   "u                          open Understanding Check (pending intake)",
-  "a / x                      accept+apply / reject (in Understanding Check)",
+  "a / v / x                  accept+apply / request revision / reject (Understanding Check)",
   "Tab / Shift-Tab or h / l   switch view",
   "j / k                      move selection",
   "Enter                      open detail",
