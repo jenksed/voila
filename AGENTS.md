@@ -10,11 +10,13 @@ NewFang is a personal development operating system built on the Pi coding-agent 
 [docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) for the canonical product
 statement.
 
-Phase 0 (research/architecture) is complete. Through **Packet 2** the repository has a runnable Pi
-extension (`.pi/extensions/newfang.ts` + modular `src/`) with canonical `.newfang/` state, schema
-versioning/migration, and a compact project-operations layer (backlog, decisions, assumptions,
-risks). Build only what the accepted plan phase calls for; do not add features outside the current
-packet's scope. The next phase is **Phase 3 — planning-document intake and repository orientation**.
+Phase 0 (research/architecture) is complete. Through **Packet 3** the repository has a runnable Pi
+extension (`.pi/extensions/newfang.ts` + modular `src/`) with canonical `.newfang/` state (schema v3),
+a compact project-operations layer, a Steward Console, and the first daily-use workflow: planning
+intake with preserved sources and provenance, repository orientation, a Project Steward skill, and
+automatic context injection. Build only what the accepted plan phase calls for; do not add features
+outside the current packet's scope. The next phase is **claims, verification receipts, and the
+protected completion transition** — NewFang cannot yet mark work complete.
 
 ## Core doctrine
 

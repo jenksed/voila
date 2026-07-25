@@ -9,6 +9,10 @@ export interface ConsoleUiState {
   selection: number;
   detailOpen: boolean;
   helpOpen: boolean;
+  /** Scroll offset for long content (the Understanding Check). */
+  scroll: number;
+  /** The view to return to when the Understanding Check closes. */
+  returnView?: ConsoleView;
 }
 
 export const INITIAL_UI: ConsoleUiState = {
@@ -16,13 +20,27 @@ export const INITIAL_UI: ConsoleUiState = {
   selection: 0,
   detailOpen: false,
   helpOpen: false,
+  scroll: 0,
 };
 
-export type NavAction = "none" | "close" | "reload";
+export type NavAction = "none" | "close" | "reload" | "apply_intake" | "reject_intake";
 
 /** Logical keys the console understands (the Pi component normalizes raw input to these). */
 export type LogicalKey =
-  "tab" | "shift-tab" | "h" | "l" | "j" | "k" | "enter" | "escape" | "q" | "help" | "reload";
+  | "tab"
+  | "shift-tab"
+  | "h"
+  | "l"
+  | "j"
+  | "k"
+  | "enter"
+  | "escape"
+  | "q"
+  | "help"
+  | "reload"
+  | "understanding"
+  | "accept"
+  | "reject";
 
 function cycleView(view: ConsoleView, dir: 1 | -1): ConsoleView {
   const i = CONSOLE_VIEWS.indexOf(view);
@@ -48,9 +66,42 @@ export function handleKey(
     return { ui: { ...ui, helpOpen: false }, action: "none" };
   }
 
+  // Understanding Check: scrolling and review actions take precedence.
+  if (ui.view === "understanding") {
+    switch (key) {
+      case "j":
+        return { ui: { ...ui, scroll: ui.scroll + 1 }, action: "none" };
+      case "k":
+        return { ui: { ...ui, scroll: Math.max(0, ui.scroll - 1) }, action: "none" };
+      case "accept":
+        return { ui, action: "apply_intake" };
+      case "reject":
+        return { ui, action: "reject_intake" };
+      case "escape":
+      case "understanding":
+        return {
+          ui: { ...ui, view: ui.returnView ?? "focus", scroll: 0, detailOpen: false },
+          action: "none",
+        };
+      case "q":
+        return { ui, action: "close" };
+      case "help":
+        return { ui: { ...ui, helpOpen: true }, action: "none" };
+      case "reload":
+        return { ui, action: "reload" };
+      default:
+        return { ui, action: "none" };
+    }
+  }
+
   switch (key) {
     case "help":
       return { ui: { ...ui, helpOpen: true }, action: "none" };
+    case "understanding":
+      return {
+        ui: { ...ui, view: "understanding", returnView: ui.view, scroll: 0, detailOpen: false },
+        action: "none",
+      };
     case "reload":
       return { ui, action: "reload" };
     case "q":

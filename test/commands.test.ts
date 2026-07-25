@@ -101,13 +101,13 @@ test("runMigrate inspects then applies", async () => {
   await writeFile(statePaths(root).projectJson, `${JSON.stringify(V1_FIXTURE, null, 2)}\n`, "utf8");
 
   const inspect = await runMigrate(root, false);
-  assert.match(inspect.lines.join("\n"), /Migration available: v1 -> v2/);
+  assert.match(inspect.lines.join("\n"), /Migration available: v1 -> v3/);
 
   const applied = await runMigrate(root, true);
-  assert.match(applied.lines.join("\n"), /Migrated schema v1 -> v2/);
-  assert.equal((await loadState(root)).schemaVersion, 2);
+  assert.match(applied.lines.join("\n"), /Migrated schema v1 -> v3/);
+  assert.equal((await loadState(root)).schemaVersion, 3);
 
-  assert.match((await runMigrate(root, false)).lines.join("\n"), /already v2/);
+  assert.match((await runMigrate(root, false)).lines.join("\n"), /already v3/);
 });
 
 test("runDoctor passes on a healthy seeded project", async () => {

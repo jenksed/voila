@@ -12,3 +12,77 @@ export const V1_FIXTURE = {
   updatedAt: "2026-07-24T00:00:00.000Z",
   revision: 3,
 };
+
+const T = "2026-07-24T00:00:00.000Z";
+
+/** A valid Packet 2 (schema v2) canonical state with real operations, for v2 -> v3 migration tests. */
+export const V2_FIXTURE = {
+  schemaVersion: 2,
+  projectId: "v2-project-id",
+  displayName: "ops-demo",
+  phase: "build",
+  health: "green",
+  nextAction: "Ship the operations layer.",
+  nextActionRationale: "It unblocks intake.",
+  focusWorkItemId: "NF-1",
+  sequences: { workItem: 3, decision: 2, assumption: 2, risk: 2 },
+  workItems: [
+    {
+      id: "NF-1",
+      kind: "outcome",
+      title: "Operations layer",
+      status: "in_progress",
+      priority: "high",
+      acceptanceCriteria: ["work items persist"],
+      dependsOn: [],
+      createdAt: T,
+      updatedAt: T,
+    },
+    {
+      id: "NF-2",
+      kind: "task",
+      title: "Intake",
+      status: "ready",
+      priority: "high",
+      acceptanceCriteria: [],
+      dependsOn: ["NF-1"],
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  decisions: [
+    {
+      id: "DEC-1",
+      title: "Canonical state",
+      decision: "project.json is authoritative.",
+      rationale: "ADR-0003.",
+      status: "accepted",
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  assumptions: [
+    {
+      id: "ASM-1",
+      statement: "Single machine target.",
+      confidence: "high",
+      status: "open",
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  risks: [
+    {
+      id: "RSK-1",
+      statement: "Pi version churn.",
+      likelihood: "medium",
+      impact: "medium",
+      status: "open",
+      createdAt: T,
+      updatedAt: T,
+    },
+  ],
+  createdAt: T,
+  updatedAt: T,
+  revision: 12,
+};

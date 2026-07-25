@@ -1,7 +1,10 @@
 // Canonical NewFang project-state types (schema version 2). Pure domain — no Pi, no I/O.
 
-/** Current schema version. Version 1 (Packet 1) is migrated explicitly; see migrate.ts. */
-export const SCHEMA_VERSION = 2;
+/**
+ * Current schema version. Earlier versions are migrated explicitly and never silently:
+ * v1 (Packet 1) -> v2 (Packet 2 operations) -> v3 (Packet 3 intake + orientation). See migrate.ts.
+ */
+export const SCHEMA_VERSION = 3;
 
 export const PHASES = ["research", "sketch", "build", "harden", "release"] as const;
 export type Phase = (typeof PHASES)[number];
@@ -101,6 +104,53 @@ export interface Risk {
   updatedAt: string;
 }
 
+// --- Intake (planning-document / request ingestion) ---
+
+export const INTAKE_SOURCE_TYPES = ["file", "conversation", "pasted_text"] as const;
+export type IntakeSourceType = (typeof INTAKE_SOURCE_TYPES)[number];
+
+export const INTAKE_STATUSES = [
+  "source_preserved",
+  "draft_ready",
+  "review_required",
+  "accepted",
+  "rejected",
+] as const;
+export type IntakeStatus = (typeof INTAKE_STATUSES)[number];
+
+/**
+ * Compact canonical metadata about an intake. The preserved source, the structured draft, and the
+ * generated understanding view live as artifacts under `.newfang/intakes/<id>/` — never inline here.
+ */
+export interface IntakeRecord {
+  id: string; // e.g. "INT-1"
+  title: string;
+  sourceType: IntakeSourceType;
+  /** Repository-relative path for file sources, or a stable label for text sources. */
+  sourceRef: string;
+  sourceSha256: string;
+  status: IntakeStatus;
+  draftRevision: number;
+  createdAt: string;
+  updatedAt: string;
+  acceptedAt?: string;
+}
+
+// --- Repository orientation ---
+
+export const ORIENTATION_STATUSES = ["current", "stale"] as const;
+export type OrientationStatus = (typeof ORIENTATION_STATUSES)[number];
+
+/** Compact canonical metadata about an orientation snapshot; the artifact holds the detail. */
+export interface OrientationRecord {
+  id: string; // e.g. "ORI-1"
+  artifactRef: string;
+  repositoryHead?: string;
+  status: OrientationStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // --- Sequence counters (next value to allocate; stored in canonical state) ---
 
 export interface Sequences {
@@ -108,6 +158,8 @@ export interface Sequences {
   decision: number;
   assumption: number;
   risk: number;
+  intake: number;
+  orientation: number;
 }
 
 /** The authoritative current-state snapshot persisted to `.newfang/project.json`. */
@@ -130,6 +182,12 @@ export interface ProjectState {
   decisions: Decision[];
   assumptions: Assumption[];
   risks: Risk[];
+  intakes: IntakeRecord[];
+  orientations: OrientationRecord[];
+  /** The intake currently in flight or most recently acted on, if any. */
+  currentIntakeId?: string;
+  /** The orientation snapshot treated as current, if any. */
+  currentOrientationId?: string;
   createdAt: string;
   updatedAt: string;
   revision: number;

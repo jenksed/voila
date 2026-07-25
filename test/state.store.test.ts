@@ -30,13 +30,22 @@ async function tempRoot(): Promise<string> {
   return mkdtemp(join(tmpdir(), "newfang-store-"));
 }
 
-test("initState creates v2 canonical state with empty collections", async () => {
+test("initState creates v3 canonical state with empty collections", async () => {
   const root = await tempRoot();
   const state = await initState(root, { displayName: "demo", now: "2026-07-24T00:00:00.000Z" });
   assert.equal(state.schemaVersion, SCHEMA_VERSION);
   assert.equal(state.revision, 1);
   assert.deepEqual(state.workItems, []);
-  assert.deepEqual(state.sequences, { workItem: 1, decision: 1, assumption: 1, risk: 1 });
+  assert.deepEqual(state.sequences, {
+    workItem: 1,
+    decision: 1,
+    assumption: 1,
+    risk: 1,
+    intake: 1,
+    orientation: 1,
+  });
+  assert.deepEqual(state.intakes, []);
+  assert.deepEqual(state.orientations, []);
   assert.equal(state.focusWorkItemId, null);
   const paths = statePaths(root);
   assert.ok(
@@ -50,7 +59,7 @@ test("initState refuses to overwrite existing state", async () => {
   await assert.rejects(() => initState(root, { displayName: "demo2" }), StateExistsError);
 });
 
-test("loadState round-trips persisted v2 state", async () => {
+test("loadState round-trips persisted v3 state", async () => {
   const root = await tempRoot();
   const created = await initState(root, { displayName: "demo", projectId: "fixed" });
   assert.deepEqual(await loadState(root), created);

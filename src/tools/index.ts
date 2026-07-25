@@ -42,6 +42,7 @@ import {
   updateWorkItem,
 } from "../domain/operations.ts";
 import { workItemLabel } from "../domain/status.ts";
+import { intakeTools } from "./intake-tools.ts";
 
 export interface NewfangToolResult {
   content: Array<{ type: "text"; text: string }>;
@@ -403,5 +404,7 @@ export function newfangTools(): NewfangTool[] {
         return text(`Updated ${input.id}`, { risk: state.risks.find((r) => r.id === input.id) });
       },
     },
+
+    ...intakeTools(),
   ];
 }

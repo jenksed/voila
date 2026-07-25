@@ -13,6 +13,8 @@ import { randomBytes } from "node:crypto";
 import type {
   Assumption,
   Decision,
+  IntakeRecord,
+  OrientationRecord,
   ProjectState,
   Risk,
   Sequences,
@@ -24,7 +26,10 @@ import {
   DECISION_STATUSES,
   HEALTHS,
   IMPACTS,
+  INTAKE_SOURCE_TYPES,
+  INTAKE_STATUSES,
   LIKELIHOODS,
+  ORIENTATION_STATUSES,
   PHASES,
   RISK_STATUSES,
   SCHEMA_VERSION,
@@ -34,6 +39,7 @@ import {
 } from "../domain/types.ts";
 import { createInitialState } from "../domain/defaults.ts";
 import { renderStatusView } from "../domain/status.ts";
+import { migrationPlan } from "../domain/migrate.ts";
 import { statePaths } from "./paths.ts";
 import {
   MigrationRequiredError,
@@ -168,13 +174,56 @@ function validateRisk(raw: unknown, i: number, problems: string[]): void {
   validateTimestamps(o, p, problems);
 }
 
+function validateIntake(raw: unknown, i: number, problems: string[]): void {
+  const p = `intakes[${i}]`;
+  if (typeof raw !== "object" || raw === null) {
+    problems.push(p);
+    return;
+  }
+  const o = raw as Record<string, unknown>;
+  if (!isNonEmptyString(o.id)) problems.push(`${p}.id`);
+  if (!isNonEmptyString(o.title)) problems.push(`${p}.title`);
+  if (!inEnum(o.sourceType, INTAKE_SOURCE_TYPES)) problems.push(`${p}.sourceType`);
+  if (!isNonEmptyString(o.sourceRef)) problems.push(`${p}.sourceRef`);
+  if (typeof o.sourceSha256 !== "string" || !/^[a-f0-9]{64}$/.test(o.sourceSha256)) {
+    problems.push(`${p}.sourceSha256`);
+  }
+  if (!inEnum(o.status, INTAKE_STATUSES)) problems.push(`${p}.status`);
+  if (
+    typeof o.draftRevision !== "number" ||
+    !Number.isInteger(o.draftRevision) ||
+    o.draftRevision < 0
+  ) {
+    problems.push(`${p}.draftRevision`);
+  }
+  if (o.acceptedAt !== undefined && !isNonEmptyString(o.acceptedAt))
+    problems.push(`${p}.acceptedAt`);
+  validateTimestamps(o, p, problems);
+}
+
+function validateOrientation(raw: unknown, i: number, problems: string[]): void {
+  const p = `orientations[${i}]`;
+  if (typeof raw !== "object" || raw === null) {
+    problems.push(p);
+    return;
+  }
+  const o = raw as Record<string, unknown>;
+  if (!isNonEmptyString(o.id)) problems.push(`${p}.id`);
+  if (!isNonEmptyString(o.artifactRef)) problems.push(`${p}.artifactRef`);
+  if (o.repositoryHead !== undefined && !isNonEmptyString(o.repositoryHead)) {
+    problems.push(`${p}.repositoryHead`);
+  }
+  if (!inEnum(o.status, ORIENTATION_STATUSES)) problems.push(`${p}.status`);
+  validateTimestamps(o, p, problems);
+}
+
 function validateSequences(raw: unknown, problems: string[]): void {
   if (typeof raw !== "object" || raw === null) {
     problems.push("sequences");
     return;
   }
   const o = raw as Record<string, unknown>;
-  for (const key of ["workItem", "decision", "assumption", "risk"]) {
+  for (const key of ["workItem", "decision", "assumption", "risk", "intake", "orientation"]) {
     if (typeof o[key] !== "number" || !Number.isInteger(o[key]) || (o[key] as number) < 1) {
       problems.push(`sequences.${key}`);
     }
@@ -220,6 +269,12 @@ export function validateProjectState(raw: unknown): ProjectState {
   if (o.nextActionRationale !== undefined && !isNonEmptyString(o.nextActionRationale)) {
     problems.push("nextActionRationale");
   }
+  if (o.currentIntakeId !== undefined && !isNonEmptyString(o.currentIntakeId)) {
+    problems.push("currentIntakeId");
+  }
+  if (o.currentOrientationId !== undefined && !isNonEmptyString(o.currentOrientationId)) {
+    problems.push("currentOrientationId");
+  }
   validateSequences(o.sequences, problems);
 
   for (const [key, fn] of [
@@ -227,6 +282,8 @@ export function validateProjectState(raw: unknown): ProjectState {
     ["decisions", validateDecision],
     ["assumptions", validateAssumption],
     ["risks", validateRisk],
+    ["intakes", validateIntake],
+    ["orientations", validateOrientation],
   ] as const) {
     if (!Array.isArray(o[key])) {
       problems.push(key);
@@ -247,6 +304,8 @@ export function validateProjectState(raw: unknown): ProjectState {
   uniqueIds(state.decisions, "decisions", problems);
   uniqueIds(state.assumptions, "assumptions", problems);
   uniqueIds(state.risks, "risks", problems);
+  uniqueIds(state.intakes, "intakes", problems);
+  uniqueIds(state.orientations, "orientations", problems);
   if (problems.length > 0) {
     throw new StateValidationError(`Structural problems in project.json: ${problems.join(", ")}.`);
   }
@@ -267,6 +326,12 @@ export function validateProjectState(raw: unknown): ProjectState {
     decisions: state.decisions as Decision[],
     assumptions: state.assumptions as Assumption[],
     risks: state.risks as Risk[],
+    intakes: state.intakes as IntakeRecord[],
+    orientations: state.orientations as OrientationRecord[],
+    ...(state.currentIntakeId !== undefined ? { currentIntakeId: state.currentIntakeId } : {}),
+    ...(state.currentOrientationId !== undefined
+      ? { currentOrientationId: state.currentOrientationId }
+      : {}),
     createdAt: state.createdAt,
     updatedAt: state.updatedAt,
     revision: state.revision,
@@ -345,7 +410,10 @@ export async function writeStatusView(root: string, state: ProjectState): Promis
 export async function loadState(root: string): Promise<ProjectState> {
   const { version, raw } = await readRawState(root);
   if (version === SCHEMA_VERSION) return validateProjectState(raw);
-  if (version === 1) throw new MigrationRequiredError(1, SCHEMA_VERSION);
+  // Any version with a known migration path reports "migration required", never "unknown".
+  if (typeof version === "number" && migrationPlan(version) !== null) {
+    throw new MigrationRequiredError(version, SCHEMA_VERSION);
+  }
   throw new UnknownSchemaVersionError(version);
 }
 
@@ -364,6 +432,9 @@ export async function initState(root: string, input: InitStateInput): Promise<Pr
   }
   await mkdir(paths.receiptsDir, { recursive: true });
   await mkdir(paths.viewsDir, { recursive: true });
+  await mkdir(paths.intakesDir, { recursive: true });
+  await mkdir(paths.orientationsDir, { recursive: true });
+  await mkdir(paths.briefsDir, { recursive: true });
 
   const state = createInitialState({
     displayName: input.displayName,

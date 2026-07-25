@@ -81,6 +81,23 @@ better narrow-width behavior.
 A **detail view** opens for a selected work item, decision, assumption, or risk, showing only
 meaningful fields (never raw JSON).
 
+### Understanding Check (Packet 3)
+
+When an intake awaits review, the console surfaces it in three places: an **Attention** entry, an
+**INTAKE** status block in Focus, and a dedicated **Understanding Check** view opened with `u`. The
+view is contextual — it is not part of the `Tab` cycle — and returns to wherever you opened it from.
+
+It shows the source title/type/hash abbreviation and draft revision, then the generated review
+artifact: objective, locked and proposed decisions, constraints and non-goals, requirements and
+acceptance criteria, proposed work items, open questions, risks and assumptions, conflicts, **model
+inferences in their own section**, and the exact apply summary. Long content scrolls with `j`/`k` and
+reports its position.
+
+Review actions: `a` accepts and applies (this keypress *is* the explicit user confirmation the apply
+path requires), `x` rejects, `Esc` returns. When blocking conflicts exist, the view says apply is
+blocked and **does not offer accept** — only reject or back. There is no document editor: a revision
+request goes to the Project Steward, which stages a new draft revision.
+
 ## Keyboard navigation
 
 `Tab`/`Shift-Tab` (and `h`/`l`) switch view · `j`/`k` move selection · `Enter` open detail ·

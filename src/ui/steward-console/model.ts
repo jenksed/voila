@@ -12,13 +12,34 @@ export interface RuntimeContext {
 
 export type ConsoleStatus = "ok" | "uninitialized" | "migration" | "error";
 
+export interface PendingIntakeView {
+  id: string;
+  title: string;
+  draftRevision: number;
+  sourceType: string;
+  sourceRef: string;
+  sourceSha256: string;
+  blocked: boolean;
+  /** Pre-rendered Understanding Check lines (generated artifact), if available. */
+  understanding: string[];
+}
+
+export interface OrientationView {
+  id: string;
+  stale: boolean;
+  reasons: string[];
+}
+
 export interface ConsoleInput {
   status: ConsoleStatus;
   state?: ProjectState;
   message?: string;
+  pendingIntake?: PendingIntakeView | null;
+  orientation?: OrientationView | null;
 }
 
-export type ConsoleView = "focus" | "work" | "truth";
+export type ConsoleView = "focus" | "work" | "truth" | "understanding";
+/** Views reachable by Tab. The Understanding Check is opened contextually, not cycled into. */
 export const CONSOLE_VIEWS: ConsoleView[] = ["focus", "work", "truth"];
 
 export type AttentionSeverity = "high" | "medium" | "info";
@@ -52,6 +73,9 @@ export interface ConsoleModel {
     groups: WorkGroup[];
   };
   truth: { decisions: Decision[]; assumptions: Assumption[]; risks: Risk[] };
+  /** Intake awaiting review, with its generated Understanding Check. */
+  pendingIntake: PendingIntakeView | null;
+  orientation: OrientationView | null;
   /** Reserved insertion point for a future Proof/Delivery rail. Always empty in this packet. */
   proof: never[];
 }
@@ -65,8 +89,25 @@ function byPriority(items: WorkItem[]): WorkItem[] {
 }
 
 /** Derive a concise attention list from existing state (no notification subsystem). */
-export function deriveAttention(state: ProjectState): AttentionItem[] {
+export function deriveAttention(
+  state: ProjectState,
+  extra: { pendingIntake?: PendingIntakeView | null; orientation?: OrientationView | null } = {},
+): AttentionItem[] {
   const attention: AttentionItem[] = [];
+  if (extra.pendingIntake) {
+    attention.push({
+      severity: extra.pendingIntake.blocked ? "high" : "medium",
+      label: extra.pendingIntake.blocked
+        ? `Intake ${extra.pendingIntake.id} has conflicts needing your resolution`
+        : `Intake ${extra.pendingIntake.id} awaits review (revision ${extra.pendingIntake.draftRevision})`,
+    });
+  }
+  if (extra.orientation?.stale) {
+    attention.push({
+      severity: "medium",
+      label: `Orientation ${extra.orientation.id} is stale: ${extra.orientation.reasons.join("; ")}`,
+    });
+  }
   const focus = state.workItems.find((w) => w.id === state.focusWorkItemId);
   if (focus && focus.status === "blocked") {
     attention.push({
@@ -133,6 +174,8 @@ export function buildConsoleModel(input: ConsoleInput, runtime: RuntimeContext):
       attention: [],
       work: { counts: { ready: 0, inProgress: 0, blocked: 0, backlog: 0, open: 0 }, groups: [] },
       truth: { decisions: [], assumptions: [], risks: [] },
+      pendingIntake: null,
+      orientation: null,
       proof: [],
     };
   }
@@ -154,7 +197,10 @@ export function buildConsoleModel(input: ConsoleInput, runtime: RuntimeContext):
       focusId: s.focusWorkItemId,
     },
     focus,
-    attention: deriveAttention(s),
+    attention: deriveAttention(s, {
+      pendingIntake: input.pendingIntake ?? null,
+      orientation: input.orientation ?? null,
+    }),
     work: {
       counts: {
         ready: count("ready"),
@@ -171,6 +217,8 @@ export function buildConsoleModel(input: ConsoleInput, runtime: RuntimeContext):
       assumptions: s.assumptions.filter((a) => a.status === "open" || a.status === "invalidated"),
       risks: s.risks.filter((r) => r.status === "open" || r.status === "mitigated"),
     },
+    pendingIntake: input.pendingIntake ?? null,
+    orientation: input.orientation ?? null,
     proof: [],
   };
 }

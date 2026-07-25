@@ -206,6 +206,29 @@ function focusView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
   const attnPanel = attentionLines(model, panelWidths.right, selected, st);
   const body = wide ? columns(workPanel, attnPanel, width, st) : [...workPanel, "", ...attnPanel];
 
+  const intakeLines: string[] = [];
+  if (model.pendingIntake) {
+    const pi = model.pendingIntake;
+    intakeLines.push(heading("Intake", width, st));
+    intakeLines.push(
+      st.fg(
+        pi.blocked ? "error" : "warning",
+        truncate(
+          `${pi.id} awaits review (rev ${pi.draftRevision}) — ${pi.title}${pi.blocked ? " [conflicts]" : ""}`,
+          width,
+        ),
+      ),
+    );
+    intakeLines.push(st.fg("muted", truncate("press u to open the Understanding Check", width)));
+    intakeLines.push("");
+  }
+  if (model.orientation?.stale) {
+    intakeLines.push(
+      st.fg("warning", truncate(`Orientation ${model.orientation.id} is stale`, width)),
+      "",
+    );
+  }
+
   const truth: string[] = [heading("Project truth", width, st)];
   const topDecisions = model.truth.decisions.filter((d) => d.status === "accepted").slice(0, 2);
   const topRisks = model.truth.risks.filter((r) => r.status === "open").slice(0, 2);
@@ -213,7 +236,70 @@ function focusView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
   for (const r of topRisks) truth.push(st.fg("muted", truncate(`${r.id}  ${r.statement}`, width)));
   if (topDecisions.length + topRisks.length === 0) truth.push(st.fg("muted", "  (none)"));
 
-  return [...body, "", ...truth];
+  return [...body, "", ...intakeLines, ...truth];
+}
+
+/** Understanding Check: the generated review artifact, scrollable, with review actions. */
+function understandingView(
+  model: ConsoleModel,
+  ui: ConsoleUiState,
+  width: number,
+  st: Styler,
+): string[] {
+  const pi = model.pendingIntake;
+  const out = [heading("Understanding check", width, st)];
+  if (!pi) {
+    out.push(st.fg("muted", "No intake awaits review."));
+    return out;
+  }
+  out.push(
+    st.fg("accent", truncate(`${pi.id} — ${pi.title}`, width)),
+    st.fg(
+      "muted",
+      truncate(
+        `${pi.sourceType} · ${pi.sourceRef} · sha ${pi.sourceSha256.slice(0, 12)}… · draft revision ${pi.draftRevision}`,
+        width,
+      ),
+    ),
+    "",
+  );
+  if (pi.blocked) {
+    out.push(
+      st.fg("error", truncate("Apply is blocked: conflicts require your resolution.", width)),
+      "",
+    );
+  }
+
+  // Scrollable body from the generated artifact.
+  const bodyLines = pi.understanding.flatMap((l) => wrapText(l.length ? l : " ", width));
+  const viewport = 24;
+  const maxScroll = Math.max(0, bodyLines.length - viewport);
+  const offset = Math.min(ui.scroll, maxScroll);
+  const windowed = bodyLines.slice(offset, offset + viewport);
+  for (const l of windowed) out.push(l === " " ? "" : l);
+  if (bodyLines.length > viewport) {
+    out.push(
+      "",
+      st.fg(
+        "muted",
+        truncate(
+          `lines ${offset + 1}-${offset + windowed.length} of ${bodyLines.length} · j/k scroll`,
+          width,
+        ),
+      ),
+    );
+  }
+  out.push(
+    "",
+    st.fg(
+      "muted",
+      truncate(
+        pi.blocked ? "x reject · Esc back" : "a accept and apply · x reject · Esc back",
+        width,
+      ),
+    ),
+  );
+  return out;
 }
 
 function workView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: Styler): string[] {
@@ -325,6 +411,8 @@ function detailView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: 
 }
 
 const HELP_LINES = [
+  "u                          open Understanding Check (pending intake)",
+  "a / x                      accept+apply / reject (in Understanding Check)",
   "Tab / Shift-Tab or h / l   switch view",
   "j / k                      move selection",
   "Enter                      open detail",
@@ -341,7 +429,7 @@ function helpView(width: number, st: Styler): string[] {
 function footer(width: number, st: Styler): string {
   return st.fg(
     "muted",
-    truncate("? help · j/k move · Enter detail · Tab view · r reload · q quit", width),
+    truncate("? help · j/k move · Enter detail · u intake · Tab view · r reload · q quit", width),
   );
 }
 
@@ -389,9 +477,12 @@ export function renderConsole(
   } else if (ui.detailOpen) {
     lines.push(...detailView(model, ui, w, st));
   } else {
-    lines.push(tabsLine(ui.view, w, st));
-    lines.push("");
-    if (ui.view === "focus") lines.push(...focusView(model, ui, w, st));
+    if (ui.view !== "understanding") {
+      lines.push(tabsLine(ui.view, w, st));
+      lines.push("");
+    }
+    if (ui.view === "understanding") lines.push(...understandingView(model, ui, w, st));
+    else if (ui.view === "focus") lines.push(...focusView(model, ui, w, st));
     else if (ui.view === "work") lines.push(...workView(model, ui, w, st));
     else lines.push(...truthView(model, ui, w, st));
   }

@@ -20,19 +20,19 @@ async function withV1(): Promise<string> {
   return root;
 }
 
-test("inspecting a v1 project reports the supported 1 -> 2 migration", async () => {
+test("inspecting a v1 project reports the supported chained migration", async () => {
   const root = await withV1();
   const report = await runMigration(root, { apply: false });
   assert.equal(report.status, "inspectable");
   assert.equal(report.fromVersion, 1);
-  assert.equal(report.toVersion, 2);
+  assert.equal(report.toVersion, 3);
   assert.ok(report.additions.length >= 4);
   assert.ok(report.safe);
   // No write happened.
   assert.equal((await readRawState(root)).version, 1);
 });
 
-test("applying migration produces valid v2, backup, identity preservation, event, and view", async () => {
+test("applying migration produces valid v3, backup, identity preservation, event, and view", async () => {
   const root = await withV1();
   const before = await readFile(statePaths(root).projectJson, "utf8");
 
@@ -45,7 +45,7 @@ test("applying migration produces valid v2, backup, identity preservation, event
 
   // Canonical is now valid v2 with preserved identity and bumped revision.
   const v2 = await loadState(root);
-  assert.equal(v2.schemaVersion, 2);
+  assert.equal(v2.schemaVersion, 3);
   assert.equal(v2.projectId, V1_FIXTURE.projectId);
   assert.equal(v2.createdAt, V1_FIXTURE.createdAt);
   assert.equal(v2.displayName, V1_FIXTURE.displayName);
@@ -57,14 +57,14 @@ test("applying migration produces valid v2, backup, identity preservation, event
     .trim()
     .split("\n")
     .map((l) => JSON.parse(l));
-  assert.ok(events.some((e) => e.type === "schema_migrated" && e.from === 1 && e.to === 2));
+  assert.ok(events.some((e) => e.type === "schema_migrated" && e.from === 1 && e.to === 3));
 
   // Status view regenerated and consistent.
   const view = await readFile(statePaths(root).statusView, "utf8");
   assert.equal(view, renderStatusView(v2));
 });
 
-test("rerunning migration on v2 is a safe no-op", async () => {
+test("rerunning migration on the current version is a safe no-op", async () => {
   const root = await mkdtemp(join(tmpdir(), "newfang-migrate-"));
   await initState(root, { displayName: "demo" });
   const report = await runMigration(root, { apply: true });

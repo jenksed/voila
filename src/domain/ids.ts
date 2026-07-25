@@ -9,6 +9,8 @@ export const ID_PREFIXES: Record<SequenceKey, string> = {
   decision: "DEC",
   assumption: "ASM",
   risk: "RSK",
+  intake: "INT",
+  orientation: "ORI",
 };
 
 /**

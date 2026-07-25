@@ -28,13 +28,21 @@ test("expected tool surface is registered with schemas", () => {
     .map((t) => t.name)
     .sort();
   assert.deepEqual(names, [
+    "newfang_apply_intake",
+    "newfang_create_intake",
     "newfang_create_work_item",
+    "newfang_get_intake_draft",
+    "newfang_get_project_context",
     "newfang_list_project_operations",
     "newfang_list_work_items",
     "newfang_record_assumption",
     "newfang_record_decision",
+    "newfang_record_orientation",
     "newfang_record_risk",
+    "newfang_reject_intake",
     "newfang_set_focus",
+    "newfang_set_next_action",
+    "newfang_stage_intake_draft",
     "newfang_update_assumption",
     "newfang_update_decision",
     "newfang_update_risk",

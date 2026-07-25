@@ -1,0 +1,388 @@
+// Intake artifact I/O: preserve sources, store drafts, generate the understanding view, and drive
+// canonical intake metadata + lifecycle transitions. All canonical writes go through updateState.
+//
+// Invariants:
+//   - source.md is written exactly once and never rewritten (a new interpretation is a new draft).
+//   - the source is read from disk for file intake; the model never reproduces it.
+//   - canonical state changes only at defined lifecycle points; staging changes no project truth.
+
+import { existsSync } from "node:fs";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { intakePaths, statePaths } from "./paths.ts";
+import { loadState, updateState, writeStatusView } from "./store.ts";
+import { NewfangStateError } from "./errors.ts";
+import { resolveRepoRelativeSource, sha256, sha256Bytes } from "./source.ts";
+import { allocateId } from "../domain/ids.ts";
+import { ProjectOperationError } from "../domain/errors.ts";
+import type { IntakeDraft } from "../domain/intake.ts";
+import { validateIntakeDraft } from "../domain/intake.ts";
+import { applyDraft, type ApplySummary } from "../domain/apply.ts";
+import { renderUnderstanding } from "../domain/understanding.ts";
+import { renderProjectBrief } from "../domain/brief.ts";
+import type { IntakeRecord, IntakeSourceType, ProjectState } from "../domain/types.ts";
+
+export class IntakeNotFoundError extends NewfangStateError {
+  constructor(id: string) {
+    super(`Intake not found: ${id}.`);
+    this.name = "IntakeNotFoundError";
+  }
+}
+
+async function atomicWrite(path: string, contents: string): Promise<void> {
+  const tmp = `${path}.tmp-${randomBytes(6).toString("hex")}`;
+  await writeFile(tmp, contents, "utf8");
+  try {
+    await rename(tmp, path);
+  } catch (error) {
+    await rm(tmp, { force: true });
+    throw error;
+  }
+}
+
+export interface IntakeManifest {
+  intakeId: string;
+  title: string;
+  sourceType: IntakeSourceType;
+  sourceRef: string;
+  sourceSha256: string;
+  sourceLineCount: number;
+  createdAt: string;
+}
+
+export async function readManifest(root: string, intakeId: string): Promise<IntakeManifest> {
+  const paths = intakePaths(root, intakeId);
+  if (!existsSync(paths.manifest)) throw new IntakeNotFoundError(intakeId);
+  return JSON.parse(await readFile(paths.manifest, "utf8")) as IntakeManifest;
+}
+
+export async function readSource(root: string, intakeId: string): Promise<string> {
+  const paths = intakePaths(root, intakeId);
+  if (!existsSync(paths.source)) throw new IntakeNotFoundError(intakeId);
+  return readFile(paths.source, "utf8");
+}
+
+export async function readDraft(root: string, intakeId: string): Promise<IntakeDraft | null> {
+  const paths = intakePaths(root, intakeId);
+  if (!existsSync(paths.draft)) return null;
+  return JSON.parse(await readFile(paths.draft, "utf8")) as IntakeDraft;
+}
+
+export function findIntake(state: ProjectState, intakeId: string): IntakeRecord {
+  const record = state.intakes.find((i) => i.id === intakeId);
+  if (!record) throw new IntakeNotFoundError(intakeId);
+  return record;
+}
+
+export interface CreateIntakeInput {
+  /** Repository-relative file path. Mutually exclusive with `text`. */
+  path?: string;
+  /** Exact text for conversation/pasted-text intake. Mutually exclusive with `path`. */
+  text?: string;
+  sourceType?: IntakeSourceType;
+  title?: string;
+}
+
+export interface CreateIntakeResult {
+  intake: IntakeRecord;
+  lineCount: number;
+}
+
+/**
+ * Preserve a source exactly, then record compact canonical metadata. The source artifact is written
+ * before canonical state is updated, so success always implies the bytes are on disk.
+ */
+export async function createIntake(
+  root: string,
+  input: CreateIntakeInput,
+): Promise<CreateIntakeResult> {
+  const hasPath = typeof input.path === "string" && input.path.length > 0;
+  const hasText = typeof input.text === "string" && input.text.length > 0;
+  if (hasPath === hasText) {
+    throw new ProjectOperationError(
+      "Provide exactly one source: a repository-relative path or text.",
+    );
+  }
+
+  let content: string;
+  let sourceRef: string;
+  let sourceType: IntakeSourceType;
+  let hash: string;
+  let title: string;
+
+  if (hasPath) {
+    const resolved = await resolveRepoRelativeSource(root, input.path as string);
+    const bytes = await readFile(resolved.absolutePath);
+    content = bytes.toString("utf8");
+    hash = sha256Bytes(bytes);
+    sourceRef = resolved.relativePath;
+    sourceType = "file";
+    title = input.title ?? resolved.relativePath;
+  } else {
+    content = input.text as string;
+    hash = sha256(content);
+    sourceType = input.sourceType === "conversation" ? "conversation" : "pasted_text";
+    sourceRef = input.title ? `text:${input.title}` : `text:${hash.slice(0, 12)}`;
+    title = input.title ?? `Pasted source ${hash.slice(0, 8)}`;
+  }
+
+  const state = await loadState(root);
+  const { id } = allocateId(state.sequences, "intake");
+  const paths = intakePaths(root, id);
+  if (existsSync(paths.source)) {
+    throw new ProjectOperationError(
+      `Intake ${id} already has a preserved source; refusing to overwrite.`,
+    );
+  }
+
+  const now = new Date().toISOString();
+  const lineCount = content.split("\n").length;
+
+  // Artifacts first: source bytes + manifest.
+  await mkdir(paths.dir, { recursive: true });
+  await atomicWrite(paths.source, content);
+  const manifest: IntakeManifest = {
+    intakeId: id,
+    title,
+    sourceType,
+    sourceRef,
+    sourceSha256: hash,
+    sourceLineCount: lineCount,
+    createdAt: now,
+  };
+  await atomicWrite(paths.manifest, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  // Then canonical metadata.
+  const nextState = await updateState(
+    root,
+    (cur) => {
+      const alloc = allocateId(cur.sequences, "intake");
+      const record: IntakeRecord = {
+        id: alloc.id,
+        title,
+        sourceType,
+        sourceRef,
+        sourceSha256: hash,
+        status: "source_preserved",
+        draftRevision: 0,
+        createdAt: now,
+        updatedAt: now,
+      };
+      return {
+        ...cur,
+        sequences: alloc.sequences,
+        intakes: [...cur.intakes, record],
+        currentIntakeId: alloc.id,
+      };
+    },
+    { type: "intake_source_preserved", id, sourceType, sha256: hash },
+  );
+
+  return { intake: findIntake(nextState, id), lineCount };
+}
+
+export interface StageDraftResult {
+  intake: IntakeRecord;
+  draft: IntakeDraft;
+  summary: ApplySummary;
+  blocked: boolean;
+}
+
+/**
+ * Validate and store a structured interpretation. Increments draftRevision, regenerates the
+ * understanding view, and moves the intake to `review_required`. Changes NO project truth.
+ */
+export async function stageIntakeDraft(
+  root: string,
+  intakeId: string,
+  rawDraft: unknown,
+): Promise<StageDraftResult> {
+  const state = await loadState(root);
+  const record = findIntake(state, intakeId);
+  if (record.status === "accepted" || record.status === "rejected") {
+    throw new ProjectOperationError(
+      `Intake ${intakeId} is ${record.status}; stage a new intake instead of revising a closed one.`,
+    );
+  }
+  const manifest = await readManifest(root, intakeId);
+
+  const draft = validateIntakeDraft(
+    { ...(rawDraft as object), intakeId },
+    { sourceLineCount: manifest.sourceLineCount, state },
+  );
+
+  const nextRevision = record.draftRevision + 1;
+  const stored: IntakeDraft = { ...draft, draftRevision: nextRevision };
+
+  // Deterministic apply preview from the same code path that will perform the apply.
+  let summary: ApplySummary;
+  let blocked = false;
+  try {
+    summary = applyDraft(state, stored, new Date().toISOString()).summary;
+  } catch {
+    blocked = true;
+    summary = {
+      intakeId,
+      draftRevision: nextRevision,
+      entries: [],
+      createdCounts: { decisions: 0, assumptions: 0, risks: 0, workItems: 0 },
+      skippedDuplicates: 0,
+    };
+  }
+
+  const paths = intakePaths(root, intakeId);
+  await mkdir(paths.dir, { recursive: true });
+  await atomicWrite(paths.draft, `${JSON.stringify(stored, null, 2)}\n`);
+
+  const nextState = await updateState(
+    root,
+    (cur) => ({
+      ...cur,
+      intakes: cur.intakes.map((i) =>
+        i.id === intakeId
+          ? {
+              ...i,
+              status: "review_required" as const,
+              draftRevision: nextRevision,
+              updatedAt: new Date().toISOString(),
+            }
+          : i,
+      ),
+      currentIntakeId: intakeId,
+    }),
+    { type: "intake_draft_staged", id: intakeId, draftRevision: nextRevision, blocked },
+  );
+
+  const updated = findIntake(nextState, intakeId);
+  await atomicWrite(paths.understanding, renderUnderstanding(updated, stored, summary));
+
+  return { intake: updated, draft: stored, summary, blocked };
+}
+
+/** Regenerate `.newfang/briefs/PROJECT_BRIEF.md` from canonical state. */
+export async function writeProjectBrief(root: string, state: ProjectState): Promise<void> {
+  const paths = statePaths(root);
+  await mkdir(paths.briefsDir, { recursive: true });
+  await atomicWrite(paths.projectBrief, renderProjectBrief(state));
+}
+
+export interface ApplyIntakeResult {
+  intake: IntakeRecord;
+  summary: ApplySummary;
+  alreadyApplied: boolean;
+}
+
+/**
+ * Apply a reviewed draft. Requires `review_required`, the reviewer's exact draft revision, and an
+ * explicit confirmation flag supplied by the intake workflow (never inferred from model intent).
+ * Idempotent: re-applying an already-accepted revision creates nothing.
+ */
+export async function applyIntake(
+  root: string,
+  intakeId: string,
+  opts: { reviewedDraftRevision: number; confirmed: boolean },
+): Promise<ApplyIntakeResult> {
+  const state = await loadState(root);
+  const record = findIntake(state, intakeId);
+
+  if (record.status === "accepted") {
+    if (record.draftRevision === opts.reviewedDraftRevision) {
+      const draft = await readDraft(root, intakeId);
+      return {
+        intake: record,
+        summary: {
+          intakeId,
+          draftRevision: record.draftRevision,
+          entries: [],
+          createdCounts: { decisions: 0, assumptions: 0, risks: 0, workItems: 0 },
+          skippedDuplicates: draft ? draft.proposedWorkItems.length : 0,
+        },
+        alreadyApplied: true,
+      };
+    }
+    throw new ProjectOperationError(
+      `Intake ${intakeId} is already accepted at revision ${record.draftRevision}.`,
+    );
+  }
+  if (record.status !== "review_required") {
+    throw new ProjectOperationError(
+      `Intake ${intakeId} is ${record.status}; it must be reviewed (status review_required) before apply.`,
+    );
+  }
+  if (!opts.confirmed) {
+    throw new ProjectOperationError(
+      "Applying an intake requires explicit user confirmation through the intake workflow.",
+    );
+  }
+  if (record.draftRevision !== opts.reviewedDraftRevision) {
+    throw new ProjectOperationError(
+      `Reviewed revision ${opts.reviewedDraftRevision} does not match the current draft revision ${record.draftRevision}; re-review before applying.`,
+    );
+  }
+
+  const draft = await readDraft(root, intakeId);
+  if (!draft) throw new ProjectOperationError(`Intake ${intakeId} has no staged draft to apply.`);
+
+  const now = new Date().toISOString();
+  // Compute once to fail before any write when blocking conflicts exist.
+  const preview = applyDraft(state, draft, now);
+
+  const nextState = await updateState(
+    root,
+    (cur) => {
+      const applied = applyDraft(cur, draft, now).state;
+      return {
+        ...applied,
+        intakes: applied.intakes.map((i) =>
+          i.id === intakeId
+            ? { ...i, status: "accepted" as const, acceptedAt: now, updatedAt: now }
+            : i,
+        ),
+        currentIntakeId: intakeId,
+      };
+    },
+    {
+      type: "intake_applied",
+      id: intakeId,
+      draftRevision: draft.draftRevision,
+      created: preview.summary.createdCounts,
+      skippedDuplicates: preview.summary.skippedDuplicates,
+    },
+  );
+
+  await writeProjectBrief(root, nextState);
+  await writeStatusView(root, nextState);
+
+  return {
+    intake: findIntake(nextState, intakeId),
+    summary: preview.summary,
+    alreadyApplied: false,
+  };
+}
+
+/** Reject an intake. The preserved source and drafts remain on disk for the record. */
+export async function rejectIntake(
+  root: string,
+  intakeId: string,
+  reason?: string,
+): Promise<IntakeRecord> {
+  const state = await loadState(root);
+  const record = findIntake(state, intakeId);
+  if (record.status === "accepted") {
+    throw new ProjectOperationError(
+      `Intake ${intakeId} is already accepted and cannot be rejected.`,
+    );
+  }
+  const now = new Date().toISOString();
+  const nextState = await updateState(
+    root,
+    (cur) => ({
+      ...cur,
+      intakes: cur.intakes.map((i) =>
+        i.id === intakeId ? { ...i, status: "rejected" as const, updatedAt: now } : i,
+      ),
+    }),
+    { type: "intake_rejected", id: intakeId, ...(reason ? { reason } : {}) },
+  );
+  return findIntake(nextState, intakeId);
+}

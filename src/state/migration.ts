@@ -1,4 +1,4 @@
-// Migration orchestration (I/O): inspect and apply the explicit v1 -> v2 migration.
+// Migration orchestration (I/O): inspect and apply explicit schema migrations to the current version.
 // No migration ever happens silently; callers must opt in with { apply: true }.
 
 import { statePaths } from "./paths.ts";
@@ -11,8 +11,7 @@ import {
   writeStatusView,
 } from "./store.ts";
 import { StateValidationError, UnknownSchemaVersionError } from "./errors.ts";
-import { validateProjectStateV1 } from "../domain/schema-v1.ts";
-import { migrateV1ToV2, migrationAdditions, type MigrationAddition } from "../domain/migrate.ts";
+import { migrateToCurrent, migrationPlan, type MigrationAddition } from "../domain/migrate.ts";
 import { SCHEMA_VERSION } from "../domain/types.ts";
 
 export type MigrationStatus = "noop" | "inspectable" | "migrated";
@@ -21,6 +20,7 @@ export interface MigrationReport {
   status: MigrationStatus;
   fromVersion: number;
   toVersion: number;
+  steps: Array<{ from: number; to: number }>;
   additions: MigrationAddition[];
   backupLocation: string | null;
   safe: boolean;
@@ -28,11 +28,11 @@ export interface MigrationReport {
 }
 
 /**
- * Inspect (apply=false) or apply (apply=true) the v1 -> v2 migration.
- * - v2 source: safe no-op.
- * - v1 source: validated, then either reported (inspect) or migrated with a timestamped backup.
- * - other versions: rejected.
- * A failed migration leaves the canonical v1 bytes intact (validation precedes any write).
+ * Inspect (apply=false) or apply (apply=true) the migration chain to the current schema version.
+ * - Current version: safe no-op.
+ * - Known older version: validated at each step, then reported or migrated with a timestamped backup.
+ * - Unknown version: rejected.
+ * A failed migration leaves the canonical bytes intact (all validation precedes any write).
  */
 export async function runMigration(
   root: string,
@@ -46,49 +46,54 @@ export async function runMigration(
       status: "noop",
       fromVersion: toVersion,
       toVersion,
+      steps: [],
       additions: [],
       backupLocation: null,
       safe: true,
       detail: "Already at the current schema version; nothing to migrate.",
     };
   }
-  if (version !== 1) {
-    throw new UnknownSchemaVersionError(version);
-  }
+  if (typeof version !== "number") throw new UnknownSchemaVersionError(version);
+  const plan = migrationPlan(version);
+  if (!plan) throw new UnknownSchemaVersionError(version);
 
-  // Validate the source (throws on malformed v1 before any write).
-  let v1;
+  const fromVersion = version;
+
+  // Build and validate the complete candidate before touching anything on disk.
+  let validated;
   try {
-    v1 = validateProjectStateV1(raw);
+    const nowIso = new Date().toISOString();
+    const candidate = migrateToCurrent(raw, fromVersion);
+    validated = validateProjectState({
+      ...candidate,
+      updatedAt: nowIso,
+      revision: candidate.revision + 1,
+    });
   } catch (error) {
-    throw new StateValidationError(`Source v1 state is invalid: ${(error as Error).message}`);
+    throw new StateValidationError(
+      `Source v${fromVersion} state is invalid: ${(error as Error).message}`,
+    );
   }
-
-  // Build and validate the complete v2 candidate.
-  const nowIso = new Date().toISOString();
-  const candidate = { ...migrateV1ToV2(v1), updatedAt: nowIso, revision: v1.revision + 1 };
-  const validated = validateProjectState(candidate);
-
-  const additions = migrationAdditions();
 
   if (!opts.apply) {
     return {
       status: "inspectable",
-      fromVersion: 1,
+      fromVersion,
       toVersion,
-      additions,
-      backupLocation: `${statePaths(root).backupsDir}/project.json.v1.<timestamp>`,
+      steps: plan.steps,
+      additions: plan.additions,
+      backupLocation: `${statePaths(root).backupsDir}/project.json.v${fromVersion}.<timestamp>`,
       safe: true,
-      detail: "Migration 1 -> 2 is supported. Re-run with --apply to migrate.",
+      detail: `Migration v${fromVersion} -> v${toVersion} is supported. Re-run with --apply to migrate.`,
     };
   }
 
   // Apply: backup original bytes, atomic canonical replace, then event + view.
-  const backup = await backupProjectJson(root, bytes, 1, nowIso);
+  const backup = await backupProjectJson(root, bytes, fromVersion);
   await writeCanonical(root, validated);
   await appendEvent(root, {
     type: "schema_migrated",
-    from: 1,
+    from: fromVersion,
     to: toVersion,
     revision: validated.revision,
   });
@@ -96,11 +101,12 @@ export async function runMigration(
 
   return {
     status: "migrated",
-    fromVersion: 1,
+    fromVersion,
     toVersion,
-    additions,
+    steps: plan.steps,
+    additions: plan.additions,
     backupLocation: backup,
     safe: true,
-    detail: `Migrated 1 -> ${toVersion}. Backup written to ${backup}.`,
+    detail: `Migrated v${fromVersion} -> v${toVersion}. Backup written to ${backup}.`,
   };
 }

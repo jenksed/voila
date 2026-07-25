@@ -1,17 +1,19 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
   "displayName": "newfang",
   "phase": "build",
   "health": "green",
-  "nextAction": "Build planning-document intake and repository orientation (NF-2).",
-  "nextActionRationale": "It is the first slice that makes NewFang useful daily, and NF-3 (claims, receipts, and the completion gate) depends on it. NF-1 is implemented and tested but cannot be marked complete until that protected completion transition exists.",
+  "nextAction": "Build claims, verification receipts, and the protected completion transition (NF-3).",
+  "nextActionRationale": "Intake, orientation, and the Steward context loop now work end to end, so the next unproven promise is evidence-before-completion: NF-1 has been implemented and tested for two packets but still cannot be marked complete because no protected completion transition exists. NF-3 closes that gap and unblocks NF-4 and the self-hosting gate.",
   "focusWorkItemId": "NF-2",
   "sequences": {
-    "workItem": 8,
-    "decision": 7,
-    "assumption": 3,
-    "risk": 5
+    "workItem": 9,
+    "decision": 10,
+    "assumption": 4,
+    "risk": 6,
+    "intake": 2,
+    "orientation": 2
   },
   "workItems": [
     {
@@ -112,6 +114,20 @@
       ],
       "createdAt": "2026-07-25T02:00:04.860Z",
       "updatedAt": "2026-07-25T02:00:04.860Z"
+    },
+    {
+      "id": "NF-8",
+      "kind": "task",
+      "title": "Capture intake revision requests as durable review records",
+      "description": "Today a revision request produces a new draft revision but no durable record of what the user asked to change. Decide whether to record review feedback alongside the draft.",
+      "status": "backlog",
+      "priority": "low",
+      "acceptanceCriteria": [
+        "a revision request is recorded or explicitly documented as out of scope"
+      ],
+      "dependsOn": [],
+      "createdAt": "2026-07-25T04:51:01.991Z",
+      "updatedAt": "2026-07-25T04:51:01.991Z"
     }
   ],
   "decisions": [
@@ -168,6 +184,33 @@
       "status": "accepted",
       "createdAt": "2026-07-25T02:00:04.867Z",
       "updatedAt": "2026-07-25T02:00:04.867Z"
+    },
+    {
+      "id": "DEC-7",
+      "title": "The language model performs interpretation; NewFang owns preservation, schema...",
+      "decision": "The language model performs interpretation; NewFang owns preservation, schemas, lifecycle, review, application, persistence, provenance, and resumability.",
+      "rationale": "From intake INT-1 finding F2.",
+      "status": "accepted",
+      "createdAt": "2026-07-25T04:51:01.991Z",
+      "updatedAt": "2026-07-25T04:51:01.991Z"
+    },
+    {
+      "id": "DEC-8",
+      "title": "Model-generated interpretations are never applied to canonical project truth ...",
+      "decision": "Model-generated interpretations are never applied to canonical project truth silently; the user reviews an understanding check first.",
+      "rationale": "From intake INT-1 finding F3.",
+      "status": "accepted",
+      "createdAt": "2026-07-25T04:51:01.991Z",
+      "updatedAt": "2026-07-25T04:51:01.991Z"
+    },
+    {
+      "id": "DEC-9",
+      "title": "Schema version 3 is introduced with an explicit 2 -> 3 migration (inspect, --...",
+      "decision": "Schema version 3 is introduced with an explicit 2 -> 3 migration (inspect, --apply, backup, atomic replace).",
+      "rationale": "From intake INT-1 finding F4.",
+      "status": "accepted",
+      "createdAt": "2026-07-25T04:51:01.991Z",
+      "updatedAt": "2026-07-25T04:51:01.991Z"
     }
   ],
   "assumptions": [
@@ -186,6 +229,14 @@
       "status": "open",
       "createdAt": "2026-07-25T02:00:04.874Z",
       "updatedAt": "2026-07-25T02:00:04.874Z"
+    },
+    {
+      "id": "ASM-3",
+      "statement": "Repository-local orientation is sufficient for this phase; no external research is required.",
+      "confidence": "high",
+      "status": "open",
+      "createdAt": "2026-07-25T04:51:01.991Z",
+      "updatedAt": "2026-07-25T04:51:01.991Z"
     }
   ],
   "risks": [
@@ -231,9 +282,44 @@
       "mitigation": "Progressive rigor; strict, compact operations model.",
       "createdAt": "2026-07-25T02:00:04.872Z",
       "updatedAt": "2026-07-25T02:00:04.872Z"
+    },
+    {
+      "id": "RSK-5",
+      "statement": "Interpretation of planning documents is nondeterministic, so the understanding check and human acceptance are the only guarantees that canonical truth is correct.",
+      "likelihood": "medium",
+      "impact": "medium",
+      "status": "open",
+      "createdAt": "2026-07-25T04:51:01.991Z",
+      "updatedAt": "2026-07-25T04:51:01.991Z"
     }
   ],
+  "intakes": [
+    {
+      "id": "INT-1",
+      "title": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceType": "file",
+      "sourceRef": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "sourceSha256": "d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8",
+      "status": "accepted",
+      "draftRevision": 1,
+      "createdAt": "2026-07-25T04:51:01.975Z",
+      "updatedAt": "2026-07-25T04:51:01.991Z",
+      "acceptedAt": "2026-07-25T04:51:01.991Z"
+    }
+  ],
+  "orientations": [
+    {
+      "id": "ORI-1",
+      "artifactRef": "orientations/ORI-1/orientation.json",
+      "repositoryHead": "89ec6387adedb6fcad0d92f10494dc06b7de11ce",
+      "status": "current",
+      "createdAt": "2026-07-25T04:51:02.045Z",
+      "updatedAt": "2026-07-25T04:51:02.045Z"
+    }
+  ],
+  "currentIntakeId": "INT-1",
+  "currentOrientationId": "ORI-1",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-25T02:00:04.877Z",
-  "revision": 23
+  "updatedAt": "2026-07-25T04:51:02.047Z",
+  "revision": 28
 }

@@ -1,8 +1,15 @@
 // Console opener: loads canonical state into a view model, then shows the component through Pi's
 // `ctx.ui.custom`. This is the only console module aware of the Pi UI context shape.
 
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { loadState } from "../../state/store.ts";
 import { MigrationRequiredError, StateNotFoundError } from "../../state/errors.ts";
+import { intakePaths } from "../../state/paths.ts";
+import { readDraft } from "../../state/intake-store.ts";
+import { currentOrientationStatus } from "../../state/orientation-store.ts";
+import { blockingConflicts } from "../../domain/intake.ts";
+import { runIntakeApply, runIntakeReject } from "../../commands/intake.ts";
 import { buildConsoleModel, type ConsoleModel } from "./model.ts";
 import { getRuntimeContext } from "./runtime.ts";
 import { createConsoleComponent, type ConsoleComponent } from "./component.ts";
@@ -57,7 +64,38 @@ export async function buildModelForRoot(root: string, piVersion?: string): Promi
   const runtime = getRuntimeContext(root, piVersion);
   try {
     const state = await loadState(root);
-    return buildConsoleModel({ status: "ok", state }, runtime);
+
+    // Pending intake + its generated Understanding Check (read-only).
+    let pendingIntake = null as Parameters<typeof buildConsoleModel>[0]["pendingIntake"];
+    const pending = state.intakes.find((i) => i.status === "review_required");
+    if (pending) {
+      const draft = await readDraft(root, pending.id);
+      const paths = intakePaths(root, pending.id);
+      const understanding = existsSync(paths.understanding)
+        ? (await readFile(paths.understanding, "utf8")).split("\n")
+        : ["(understanding view missing; re-stage the draft)"];
+      pendingIntake = {
+        id: pending.id,
+        title: pending.title,
+        draftRevision: pending.draftRevision,
+        sourceType: pending.sourceType,
+        sourceRef: pending.sourceRef,
+        sourceSha256: pending.sourceSha256,
+        blocked: draft ? blockingConflicts(draft).length > 0 : false,
+        understanding,
+      };
+    }
+
+    const orientationStatus = await currentOrientationStatus(root, state);
+    const orientation = orientationStatus.record
+      ? {
+          id: orientationStatus.record.id,
+          stale: orientationStatus.staleness.stale,
+          reasons: orientationStatus.staleness.reasons,
+        }
+      : null;
+
+    return buildConsoleModel({ status: "ok", state, pendingIntake, orientation }, runtime);
   } catch (error) {
     if (error instanceof StateNotFoundError) {
       return buildConsoleModel({ status: "uninitialized" }, runtime);
@@ -101,6 +139,18 @@ export async function openStewardConsole(ctx: OpenConsoleCtx, piVersion?: string
       requestRender: () => tui.requestRender(),
       done: () => done(undefined),
       reload: () => buildModelForRoot(ctx.cwd, piVersion),
+      // Review actions from the Understanding Check. `confirm: true` here IS the user's explicit
+      // in-console confirmation (they pressed `a` on the reviewed draft).
+      applyIntake: async () => {
+        const result = await runIntakeApply(ctx.cwd, { confirm: true });
+        ctx.ui.notify(result.lines.join("\n"), result.level);
+        return buildModelForRoot(ctx.cwd, piVersion);
+      },
+      rejectIntake: async () => {
+        const result = await runIntakeReject(ctx.cwd, "rejected in Steward Console");
+        ctx.ui.notify(result.lines.join("\n"), result.level);
+        return buildModelForRoot(ctx.cwd, piVersion);
+      },
     }),
   );
 }

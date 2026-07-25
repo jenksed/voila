@@ -5,7 +5,10 @@ import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
-import { statePaths } from "../state/paths.ts";
+import { intakePaths, statePaths } from "../state/paths.ts";
+import { readDraft, readManifest } from "../state/intake-store.ts";
+import { currentOrientationStatus } from "../state/orientation-store.ts";
+import { sha256 } from "../state/source.ts";
 import { loadState, readRawState } from "../state/store.ts";
 import { StateNotFoundError, StateValidationError } from "../state/errors.ts";
 import { renderStatusView } from "../domain/status.ts";
@@ -246,13 +249,30 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   let state: ProjectState;
   try {
     state = await loadState(input.root);
-    checks.push({ name: "canonical state valid", level: "pass", detail: "schema-valid v2" });
+    checks.push({
+      name: "canonical state valid",
+      level: "pass",
+      detail: `schema-valid v${SCHEMA_VERSION}`,
+    });
   } catch (error) {
     checks.push({ name: "canonical state valid", level: "fail", detail: (error as Error).message });
     return checks;
   }
 
   checks.push(...stateIntegrityChecks(state));
+  checks.push(...(await intakeChecks(input.root, state)));
+  checks.push(...(await orientationChecks(input.root, state)));
+
+  // Project brief presence.
+  checks.push(
+    existsSync(paths.projectBrief)
+      ? { name: "project brief", level: "pass", detail: "briefs/PROJECT_BRIEF.md present" }
+      : {
+          name: "project brief",
+          level: state.intakes.some((i) => i.status === "accepted") ? "warn" : "pass",
+          detail: existsSync(paths.projectBrief) ? "present" : "not generated yet",
+        },
+  );
 
   // Generated-view consistency.
   if (existsSync(paths.statusView)) {
@@ -281,4 +301,152 @@ export function worstLevel(checks: DoctorCheck[]): "info" | "warning" | "error" 
   if (checks.some((c) => c.level === "fail")) return "error";
   if (checks.some((c) => c.level === "warn")) return "warning";
   return "info";
+}
+
+/** Intake metadata/artifact consistency: hashes, drafts, views, apply events, current pointer. */
+async function intakeChecks(root: string, state: ProjectState): Promise<DoctorCheck[]> {
+  const checks: DoctorCheck[] = [];
+  if (state.intakes.length === 0) {
+    if (state.currentIntakeId) {
+      checks.push({
+        name: "intake reference",
+        level: "fail",
+        detail: `currentIntakeId ${state.currentIntakeId} but no intakes exist`,
+      });
+    }
+    return checks;
+  }
+
+  if (state.currentIntakeId && !state.intakes.some((i) => i.id === state.currentIntakeId)) {
+    checks.push({
+      name: "intake reference",
+      level: "fail",
+      detail: `currentIntakeId ${state.currentIntakeId} does not exist`,
+    });
+  } else {
+    checks.push({
+      name: "intake reference",
+      level: "pass",
+      detail: state.currentIntakeId ?? "none",
+    });
+  }
+
+  const problems: string[] = [];
+  const warnings: string[] = [];
+  for (const record of state.intakes) {
+    const paths = intakePaths(root, record.id);
+    if (!existsSync(paths.source)) {
+      problems.push(`${record.id}: preserved source missing`);
+      continue;
+    }
+    // Source hash consistency: the preserved bytes must still match the recorded digest.
+    try {
+      const content = await readFile(paths.source, "utf8");
+      if (sha256(content) !== record.sourceSha256) {
+        problems.push(`${record.id}: source hash mismatch (artifact modified?)`);
+      }
+    } catch {
+      problems.push(`${record.id}: source unreadable`);
+    }
+    try {
+      const manifest = await readManifest(root, record.id);
+      if (manifest.sourceSha256 !== record.sourceSha256) {
+        problems.push(`${record.id}: manifest hash disagrees with canonical metadata`);
+      }
+    } catch {
+      warnings.push(`${record.id}: manifest missing`);
+    }
+    if (record.draftRevision > 0) {
+      const draft = await readDraft(root, record.id);
+      if (!draft)
+        warnings.push(`${record.id}: draft.json missing for revision ${record.draftRevision}`);
+      if (!existsSync(paths.understanding)) warnings.push(`${record.id}: UNDERSTANDING.md missing`);
+    }
+  }
+
+  checks.push(
+    problems.length === 0
+      ? {
+          name: "intake artifacts",
+          level: "pass",
+          detail: `${state.intakes.length} intake(s) consistent`,
+        }
+      : { name: "intake artifacts", level: "fail", detail: problems.join("; ") },
+  );
+  if (warnings.length > 0) {
+    checks.push({ name: "intake artifact views", level: "warn", detail: warnings.join("; ") });
+  }
+
+  // Accepted intakes must have a corresponding apply event in history.
+  const accepted = state.intakes.filter((i) => i.status === "accepted");
+  if (accepted.length > 0) {
+    let events = "";
+    try {
+      events = await readFile(statePaths(root).eventsJsonl, "utf8");
+    } catch {
+      // history unreadable; reported below
+    }
+    const missing = accepted.filter(
+      (i) => !events.includes('"intake_applied"') || !events.includes(`"${i.id}"`),
+    );
+    checks.push(
+      missing.length === 0
+        ? {
+            name: "intake apply events",
+            level: "pass",
+            detail: `${accepted.length} accepted intake(s) recorded`,
+          }
+        : {
+            name: "intake apply events",
+            level: "warn",
+            detail: `accepted without an apply event: ${missing.map((i) => i.id).join(", ")}`,
+          },
+    );
+  }
+
+  return checks;
+}
+
+/** Orientation reference validity and staleness (read-only; never re-orients). */
+async function orientationChecks(root: string, state: ProjectState): Promise<DoctorCheck[]> {
+  const checks: DoctorCheck[] = [];
+  if (!state.currentOrientationId) {
+    checks.push({
+      name: "orientation",
+      level: state.orientations.length > 0 ? "warn" : "warn",
+      detail: "no current orientation recorded",
+    });
+    return checks;
+  }
+  if (!state.orientations.some((o) => o.id === state.currentOrientationId)) {
+    checks.push({
+      name: "orientation reference",
+      level: "fail",
+      detail: `currentOrientationId ${state.currentOrientationId} does not exist`,
+    });
+    return checks;
+  }
+  const status = await currentOrientationStatus(root, state);
+  if (!status.artifact) {
+    checks.push({
+      name: "orientation artifact",
+      level: "fail",
+      detail: "orientation artifact missing",
+    });
+    return checks;
+  }
+  checks.push(
+    status.staleness.stale
+      ? {
+          name: "orientation freshness",
+          level: "warn",
+          detail: `${state.currentOrientationId} is stale: ${status.staleness.reasons.join("; ")}`,
+        }
+      : {
+          name: "orientation freshness",
+          level: "pass",
+          detail: `${state.currentOrientationId} current`,
+        },
+  );
+  return checks;
 }

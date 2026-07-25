@@ -21,3 +21,8 @@
 {"type":"phase_set","to":"build","revision":21,"ts":"2026-07-25T02:00:04.876Z"}
 {"type":"focus_set","id":"NF-2","revision":22,"ts":"2026-07-25T02:00:04.877Z"}
 {"type":"next_action_set","revision":23,"ts":"2026-07-25T02:00:04.878Z"}
+{"type":"schema_migrated","from":2,"to":3,"revision":24,"ts":"2026-07-25T04:49:55.426Z"}
+{"type":"intake_source_preserved","id":"INT-1","sourceType":"file","sha256":"d47fb76402150b8865e13099cf02f1ed18c453fbdb0474c2a862117fab5a29c8","revision":25,"ts":"2026-07-25T04:51:01.980Z"}
+{"type":"intake_draft_staged","id":"INT-1","draftRevision":1,"blocked":false,"revision":26,"ts":"2026-07-25T04:51:01.988Z"}
+{"type":"intake_applied","id":"INT-1","draftRevision":1,"created":{"decisions":3,"assumptions":1,"risks":1,"workItems":1},"skippedDuplicates":0,"revision":27,"ts":"2026-07-25T04:51:01.993Z"}
+{"type":"orientation_recorded","id":"ORI-1","head":"89ec6387adedb6fcad0d92f10494dc06b7de11ce","revision":28,"ts":"2026-07-25T04:51:02.047Z"}

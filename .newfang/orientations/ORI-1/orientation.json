@@ -1,0 +1,82 @@
+{
+  "intakeStyleVersion": 1,
+  "purpose": "NewFang is a personal development operating system built as a Pi extension: it maintains ownership of work from intent through implementation, verification, and delivery, with canonical state in .newfang/.",
+  "instructionFiles": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "ad48c3210452acc824ea6908e3577b7613937f59db3fac831a1680c20f91ffab",
+      "note": "harness-neutral operating instructions"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "73b381ad3a2cb0bd5b83a8ef456c9c5def99bc8503a078eab6a5bcf45da1af23",
+      "note": "Claude-specific refinements"
+    }
+  ],
+  "keyDocuments": [
+    "README.md",
+    "docs/product/PRODUCT_DIRECTION.md",
+    "docs/architecture/RECOMMENDED_ARCHITECTURE.md",
+    "docs/plans/MVP_IMPLEMENTATION_PLAN.md",
+    "docs/DEVELOPMENT.md"
+  ],
+  "implementationAreas": [
+    ".pi/extensions/newfang.ts",
+    "src/domain",
+    "src/state",
+    "src/commands",
+    "src/tools",
+    "src/ui/steward-console",
+    "test"
+  ],
+  "verifiedCommands": [
+    {
+      "purpose": "verify gate",
+      "command": "mise exec -- npm run verify",
+      "evidence": "declared in package.json scripts"
+    },
+    {
+      "purpose": "tests",
+      "command": "mise exec -- npm test",
+      "evidence": "declared in package.json scripts"
+    },
+    {
+      "purpose": "typecheck",
+      "command": "mise exec -- npm run typecheck",
+      "evidence": "declared in package.json scripts"
+    },
+    {
+      "purpose": "run Pi",
+      "command": "mise exec -- npm run pi",
+      "evidence": "declared in package.json scripts"
+    }
+  ],
+  "candidateCommands": [
+    "mise exec -- npm run format"
+  ],
+  "relevantWork": [
+    "NF-2 (focus): planning-document intake and repository orientation",
+    "NF-3 (next): claims, receipts, and protected completion"
+  ],
+  "risks": [
+    "Pi version churn during the 0.8x series",
+    "single-writer assumption for .newfang/"
+  ],
+  "unknowns": [
+    "GitHub Actions has never run: the project-operations work is unpushed",
+    "interactive Steward Console verification is still pending"
+  ],
+  "observedAt": "2026-07-25T04:51:02.045Z",
+  "provenance": [
+    "read AGENTS.md",
+    "read CLAUDE.md",
+    "read README.md",
+    "read package.json scripts",
+    "read mise.toml",
+    "newfang_get_project_context"
+  ],
+  "branch": "feat/intake-orientation",
+  "head": "89ec6387adedb6fcad0d92f10494dc06b7de11ce",
+  "dirty": true,
+  "dirtySummary": "Packet 3 work in progress"
+}

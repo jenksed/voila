@@ -1,10 +1,10 @@
 # NewFang Development
 
 Local setup, pinned versions, commands, tools, schema/migration, the Steward Console, and the smoke
-procedure. Through Packet 2.5 NewFang has a project-operations layer (backlog, decisions, assumptions,
-risks) on canonical `.newfang/` state plus a Pi-native Steward Console. This is not the full MVP:
-there is no planning intake, claims, verification receipts, completion gate, delegation, or
-approvals.
+procedure. Through Packet 3 NewFang has a project-operations layer (backlog, decisions, assumptions,
+risks) on canonical `.newfang/` state, a Pi-native Steward Console, and the first daily-use workflow:
+planning intake, repository orientation, and Steward context. This is not the full MVP: there are no
+claims, runtime verification receipts, completion gate, delegation, or approvals.
 
 ## Pinned runtime and dependencies
 
@@ -81,17 +81,27 @@ The file `.pi/extensions/newfang.ts` is a thin adapter (ADR-0007); all logic liv
 | `/newfang assumptions` | Compact list of assumptions (id, status, confidence, statement). |
 | `/newfang risks` | Compact list of risks (id, status, likelihood/impact, mitigation, links). |
 | `/newfang migrate [--apply]` | Inspects the schema migration (current/target version, additions, backup location, safety). `--apply` performs the migration with a timestamped backup. |
+| `/newfang intake <path>` | Preserves a repository-relative source byte-for-byte with a SHA-256, makes it current, and recommends Steward analysis. Rejects absolute paths, traversal, and symlink escapes. |
+| `/newfang intake status` | Lists intakes with status and draft revision. |
+| `/newfang intake review` | Shows the generated Understanding Check (source statements vs. model inferences, conflicts, exact apply summary). |
+| `/newfang intake apply [confirm]` | Without `confirm`, previews exactly what will change. With `confirm`, applies the reviewed revision. Refuses blocking conflicts. |
+| `/newfang intake reject [reason]` | Rejects an intake; source and drafts are retained. |
+| `/newfang orient` | Reports current orientation and staleness; recommends the Steward orientation workflow. |
+| `/newfang brief` | Displays the generated project brief. |
 | `/newfang doctor` | Read-only diagnostics (see below). Makes no repairs or migrations. |
 
 A quiet persistent ambient widget shows at most two lines — e.g.
 `NewFang · BUILD · GREEN · Focus NF-2` and `Next: … · 3 risks · 1 blocked` — omitting empty counts and
 degrading at narrow widths. It shows a single init hint when uninitialized, or a migration hint when
-the state is v1.
+the state is older than the current schema.
 
 `/newfang doctor` checks (PASS / WARN / FAIL): pinned Pi version, Node version, git repo, Pi trust
 visibility, writable state dir, state presence, **schema migration requirement**, canonical state
 validity, **ID counter consistency**, **missing work-item references**, **dependency cycles**,
-**focus work-item reference**, and generated-view consistency.
+**focus work-item reference**, generated-view consistency, and (v3) **intake metadata/artifact and
+source-hash consistency**, missing draft or understanding view, accepted intakes without an apply
+event, invalid current-intake or orientation references, **orientation staleness**, and project-brief
+presence.
 
 ## Pi tools (LLM-callable)
 
@@ -112,6 +122,14 @@ reporting success, and return concise results with structured details.
 | `newfang_update_decision` | Accept or supersede a decision (`supersededById` required when superseding). |
 | `newfang_update_assumption` | Validate or invalidate an assumption; update notes. |
 | `newfang_update_risk` | Mitigate, accept, or close a risk (closing requires a resolution). |
+| `newfang_create_intake` | Preserve a source (repo-relative path read from disk, or exact text). Interprets nothing. |
+| `newfang_stage_intake_draft` | Submit a structured interpretation for review. Changes no project truth. |
+| `newfang_apply_intake` | Apply a reviewed draft. Requires the exact revision, no blocking conflicts, and `userConfirmed`. |
+| `newfang_reject_intake` | Reject an intake. |
+| `newfang_get_intake_draft` | Read a staged draft for review or revision. |
+| `newfang_record_orientation` | Store a bounded, validated orientation snapshot. |
+| `newfang_set_next_action` | Set the next action, rationale, and optional focus. |
+| `newfang_get_project_context` | Read compact structured project context. |
 
 ## Steward Console (`/newfang home`)
 
@@ -141,17 +159,76 @@ focused; an outcome may be focused while child tasks carry implementation. Compl
 items cannot be focused. `nextActionRationale` is an optional Steward-authored explanation of why the
 next action is justified; it is never generated automatically.
 
+## Planning intake and orientation (Packet 3)
+
+The daily-use workflow: source → orientation → structured draft → understanding check → accepted truth
+→ next action → durable resume. Design docs:
+[design/PLANNING_INTAKE.md](design/PLANNING_INTAKE.md) and
+[design/REPOSITORY_ORIENTATION.md](design/REPOSITORY_ORIENTATION.md).
+
+### Who owns what
+
+- **The model interprets** (under the Project Steward skill) and its interpretation is fallible.
+- **NewFang enforces**: exact source preservation + SHA-256, structured schemas with mandatory
+  provenance, lifecycle transitions, review gating, atomic persistence, idempotency, and duplicate
+  suppression.
+- **You accept.** Nothing enters canonical project truth until you confirm at the review step.
+
+### Artifacts
+
+```text
+.newfang/
+├── intakes/INT-n/{manifest.json, source.md, draft.json, UNDERSTANDING.md}
+├── orientations/ORI-n/{orientation.json, ORIENTATION.md}
+└── briefs/PROJECT_BRIEF.md
+```
+
+`source.md` is written once and never rewritten — a revised interpretation is a new `draftRevision`.
+Canonical state stores only compact metadata, never document text or command output.
+
+### Provenance
+
+Findings with `origin: "source"` must cite `sourceRefs` (line ranges for files, marker/excerpt for
+text), validated against the source's real length. Model additions use `origin: "model_inference"` and
+render in their own section of the Understanding Check.
+
+### Apply semantics
+
+Locked decisions → accepted decisions; proposed decisions → proposed; assumptions → open; risks → open;
+**only explicit `proposedWorkItems`** become work items (requirements do not auto-convert). Blocking
+conflicts refuse the apply. Exact normalized duplicates are skipped and reported. Re-applying the same
+accepted revision creates nothing. The preview you confirm is computed by the same function that
+applies.
+
+### Project Steward skill
+
+A real Pi skill at [`.pi/skills/project-steward/SKILL.md`](../.pi/skills/project-steward/SKILL.md),
+with an ordered [orientation playbook](../.pi/skills/project-steward/references/ORIENTATION_PLAYBOOK.md).
+It instructs the model to read canonical context first, preserve before interpreting, separate source
+from inference, respect locked decisions, surface conflicts, orient narrowly, use `newfang_*` tools
+instead of writing `.newfang/` by hand, and keep ownership. Project skills load after the project is
+trusted; `/skill:project-steward` forces it.
+
+### Automatic context injection
+
+A `before_agent_start` hook injects a compact, deterministic block (≤2400 chars): identity, phase,
+health, focus, next action + rationale, pending intake, orientation status, top accepted decisions,
+open high-impact risks, a work summary, and pointers to the brief and tools. It contains no source
+documents, no raw event history, and no credentials, and it never mutates state. Uninitialized or
+migration-required projects get exactly one hint line.
+
 ## Schema versioning and migration
 
 Canonical state is explicitly versioned (`schemaVersion`). Packet 1 wrote **v1**; Packet 2 introduces
-**v2** (adds `focusWorkItemId`, optional `nextActionRationale`, `sequences`, `workItems`, `decisions`,
-`assumptions`, `risks`). v1 is never redefined in place and never migrated silently:
+**v2** (operations), and Packet 3 introduces **v3** (adds `intakes`, `orientations`,
+`currentIntakeId`, `currentOrientationId`, and `sequences.intake`/`sequences.orientation`). Older
+versions are never redefined in place and never migrated silently:
 
-- Loading a v1 state reports **migration required** (it is not usable as current state).
-- `/newfang migrate` inspects; `/newfang migrate --apply` migrates 1→2. It validates the source and
-  the complete v2 candidate, writes a **timestamped backup** to `.newfang/backups/` before an atomic
+- Loading any older state reports **migration required** (it is not usable as current state).
+- `/newfang migrate` inspects; `/newfang migrate --apply` migrates to the current version (chaining
+  1→2→3 when needed). It validates each source step and the complete candidate, writes a **timestamped backup** to `.newfang/backups/` before an atomic
   replace, appends one `schema_migrated` event only after success, and regenerates the view.
-- A failed migration leaves the v1 canonical bytes intact. Re-running on v2 is a safe no-op. Unknown
+- A failed migration leaves the original canonical bytes intact. Re-running on v2 is a safe no-op. Unknown
   versions are rejected.
 
 ## Project-operations model (compact)
@@ -221,11 +298,16 @@ Recorded runs and results:
 [verification/PACKET_1_FOUNDATION.md](verification/PACKET_1_FOUNDATION.md) and
 [verification/PACKET_2_PROJECT_OPERATIONS.md](verification/PACKET_2_PROJECT_OPERATIONS.md).
 
-## Current limitations (through Packet 2.5)
+## Current limitations (through Packet 3)
 
-- No planning-document intake, repository orientation, claims, evidence links, runtime verification
-  receipts, completion gate, approval bundles, delegation, background processes, sandboxing, remote
-  execution, model routing, cost tracking, packaging, or release/PR automation.
+- No claims, evidence links, runtime verification receipts, completion gate, approval bundles,
+  delegation, background processes, sandboxing, remote execution, model routing, cost tracking,
+  packaging, or release/PR automation.
+- Interpretation is nondeterministic: NewFang guarantees structure, provenance, gating, and
+  persistence — not that the model read the document correctly.
+- Duplicate detection is exact-match only; likely-but-inexact duplicates are surfaced for review.
+- Review feedback produces a new draft revision but is not itself stored durably (work item NF-8).
+- The authenticated Project Steward acceptance tier is **pending**; daily-use readiness is not claimed.
 - Generic tools cannot mark work `completed` (reserved for a future completion tool). The dogfooded
   state reflects this honestly: nothing is marked complete.
 - The Steward Console is **read-mostly** — no editing forms; selection resets when switching views.
@@ -237,4 +319,5 @@ Recorded runs and results:
 Recorded runs and results:
 [verification/PACKET_1_FOUNDATION.md](verification/PACKET_1_FOUNDATION.md),
 [verification/PACKET_2_PROJECT_OPERATIONS.md](verification/PACKET_2_PROJECT_OPERATIONS.md),
-[verification/PACKET_2_5_STEWARD_CONSOLE.md](verification/PACKET_2_5_STEWARD_CONSOLE.md).
+[verification/PACKET_2_5_STEWARD_CONSOLE.md](verification/PACKET_2_5_STEWARD_CONSOLE.md),
+[verification/PACKET_3_INTAKE_ORIENTATION.md](verification/PACKET_3_INTAKE_ORIENTATION.md).

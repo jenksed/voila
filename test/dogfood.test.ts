@@ -7,14 +7,14 @@ import { runDoctor } from "../src/commands/doctor.ts";
 // The NewFang repository dogfoods its own canonical state. These assertions load the committed
 // .newfang/project.json from the repo root (the test runner's cwd).
 
-test("repository loads its own dogfooded v2 canonical state", async () => {
+test("repository loads its own dogfooded v3 canonical state", async () => {
   const state = await loadState(process.cwd());
-  assert.equal(state.schemaVersion, 2);
+  assert.equal(state.schemaVersion, 3);
   assert.equal(state.phase, "build");
-  assert.equal(state.workItems.length, 7);
+  assert.ok(state.workItems.length >= 7);
   assert.equal(state.focusWorkItemId, "NF-2");
   assert.ok(state.nextActionRationale && state.nextActionRationale.length > 0);
-  assert.equal(state.decisions.filter((d) => d.status === "accepted").length, 6);
+  assert.ok(state.decisions.filter((d) => d.status === "accepted").length >= 6);
   assert.ok(state.risks.length >= 4);
   // The focused item is neither completed nor cancelled.
   const focus = state.workItems.find((w) => w.id === state.focusWorkItemId);

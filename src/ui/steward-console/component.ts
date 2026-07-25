@@ -40,6 +40,12 @@ export function matchLogicalKey(data: string): LogicalKey | null {
       return "reload";
     case "?":
       return "help";
+    case "u":
+      return "understanding";
+    case "a":
+      return "accept";
+    case "x":
+      return "reject";
     default:
       return null;
   }
@@ -51,6 +57,10 @@ export interface ConsoleComponentDeps {
   requestRender: () => void;
   done: () => void;
   reload: () => Promise<ConsoleModel>;
+  /** Accept+apply the pending intake (explicit in-console user confirmation). */
+  applyIntake?: () => Promise<ConsoleModel>;
+  /** Reject the pending intake. */
+  rejectIntake?: () => Promise<ConsoleModel>;
   matchKey?: (data: string) => LogicalKey | null;
 }
 
@@ -58,6 +68,17 @@ export function createConsoleComponent(deps: ConsoleComponentDeps): ConsoleCompo
   let model = deps.initialModel;
   let ui: ConsoleUiState = { ...INITIAL_UI };
   const match = deps.matchKey ?? matchLogicalKey;
+
+  function runAsync(fn: () => Promise<ConsoleModel>): void {
+    fn()
+      .then((m) => {
+        model = m;
+        deps.requestRender();
+      })
+      .catch(() => {
+        deps.requestRender();
+      });
+  }
 
   return {
     render(width: number): string[] {
@@ -74,13 +95,21 @@ export function createConsoleComponent(deps: ConsoleComponentDeps): ConsoleCompo
         return;
       }
       if (result.action === "reload") {
-        deps
-          .reload()
-          .then((m) => {
-            model = m;
-            deps.requestRender();
-          })
-          .catch(() => {});
+        runAsync(deps.reload);
+        return;
+      }
+      if (result.action === "apply_intake") {
+        if (deps.applyIntake) {
+          ui = { ...ui, view: ui.returnView ?? "focus", scroll: 0 };
+          runAsync(deps.applyIntake);
+        }
+        return;
+      }
+      if (result.action === "reject_intake") {
+        if (deps.rejectIntake) {
+          ui = { ...ui, view: ui.returnView ?? "focus", scroll: 0 };
+          runAsync(deps.rejectIntake);
+        }
         return;
       }
       deps.requestRender();

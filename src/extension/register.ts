@@ -8,6 +8,16 @@ import { runBacklog } from "../commands/backlog.ts";
 import { runAssumptions, runDecisions, runRisks } from "../commands/lists.ts";
 import { runMigrate } from "../commands/migrate.ts";
 import { runFocus } from "../commands/focus.ts";
+import {
+  runBrief,
+  runIntakeApply,
+  runIntakeCreate,
+  runIntakeReject,
+  runIntakeReview,
+  runIntakeStatus,
+  runOrient,
+} from "../commands/intake.ts";
+import { assembleContext } from "../context/assemble.ts";
 import { formatDoctor, runDoctor, worstLevel } from "../commands/doctor.ts";
 import type { CommandResult } from "../commands/types.ts";
 import { loadState } from "../state/store.ts";
@@ -61,6 +71,9 @@ export const SUBCOMMANDS = [
   "init",
   "status",
   "focus",
+  "intake",
+  "orient",
+  "brief",
   "backlog",
   "decisions",
   "assumptions",
@@ -93,6 +106,12 @@ export function registerNewfang(host: NewfangHost, options: RegisterOptions): vo
           return renderResult(ctx, await runInit(ctx.cwd));
         case "focus":
           return renderResult(ctx, await runFocus(ctx.cwd, tokens[1]));
+        case "intake":
+          return renderResult(ctx, await runIntakeSub(ctx, tokens.slice(1)));
+        case "orient":
+          return renderResult(ctx, await runOrient(ctx.cwd));
+        case "brief":
+          return renderResult(ctx, await runBrief(ctx.cwd));
         case "backlog":
           return renderResult(ctx, await runBacklog(ctx.cwd, tokens[1]));
         case "decisions":
@@ -118,6 +137,35 @@ export function registerNewfang(host: NewfangHost, options: RegisterOptions): vo
   host.on("session_start", async (_event, ctx) => {
     await restoreHomeView(ctx);
   });
+
+  // Inject compact, deterministic NewFang context before agent work. Read-only: never mutates state.
+  host.on("before_agent_start", async (_event, ctx) => {
+    try {
+      const content = await assembleContext(ctx.cwd);
+      return { message: { customType: "newfang-context", content, display: false } };
+    } catch {
+      return undefined;
+    }
+  });
+}
+
+/** Route `/newfang intake …` subcommands. Apply requires the explicit `confirm` token. */
+async function runIntakeSub(ctx: NewfangCtx, args: string[]): Promise<CommandResult> {
+  const sub = args[0];
+  if (!sub) return runIntakeStatus(ctx.cwd);
+  switch (sub) {
+    case "status":
+      return runIntakeStatus(ctx.cwd);
+    case "review":
+      return runIntakeReview(ctx.cwd, args[1]);
+    case "apply":
+      return runIntakeApply(ctx.cwd, { confirm: args.includes("confirm") });
+    case "reject":
+      return runIntakeReject(ctx.cwd, args.slice(1).join(" ") || undefined);
+    default:
+      // Anything else is treated as a repository-relative source path.
+      return runIntakeCreate(ctx.cwd, args.join(" "));
+  }
 }
 
 async function renderResult(ctx: NewfangCtx, result: CommandResult): Promise<void> {
