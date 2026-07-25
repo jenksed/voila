@@ -27,16 +27,19 @@ suite is never mistaken for an interactive or authenticated check.
 | 5. Failing receipt                            | **PASS**    | honest `failed` receipt (exit 3) in a bounded fixture repository                |
 | 6. Stale-evidence demonstration               | **PASS**    | performed on this repository; fingerprint returns exactly                       |
 | 7. Protected-completion fixture               | **PASS**    | rejection preserves canonical bytes; success is fully gated                     |
-| 8. Interactive Proof view (TUI)               | **PARTIAL** | 18/19 items PASS; D5 fixed; **D6 narrow-width overflow OPEN**                   |
+| 8. Interactive Proof view (TUI)               | **PARTIAL** | 18/19 items PASS; D5 fixed; **D6 OPEN** — renderer overflow confirmed <27 cols  |
 | 9. Authenticated model use                    | **PENDING** | requires `/login`; the agent must not authenticate                              |
 | 10. GitHub CI                                 | **PASS**    | run 30177880494 on PR #4 — `verify` job green                                   |
 | 11. Doctor                                    | **PASS**    | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed                |
 
 Tier 8 ran over three human-attested passes and found **two** real defects. **D5** (the Project
 Steward skill never loaded) is fixed, regression-tested, and re-attested. **D6** (overflow at
-minimized terminal width) is **open**: Joshua corrected an initial pass on that item, and Claude
-could not reproduce it in the pure renderer at any width from 20 to 120. Eighteen of nineteen items
-pass; rendered values were cross-checked against the domain, so what renders is accurate.
+minimized terminal width) is **open**: Joshua corrected an initial pass on that item. A first
+reproduction attempt reported "no overflow" — that result was a false negative from a malformed
+probe and has been **retracted**; see the correction under D6. The corrected sweep confirms a real
+renderer overflow below 27 columns, though it is probably not the wrap Joshua observed. Eighteen of
+nineteen items pass; rendered values were cross-checked against the domain, so what renders is
+accurate.
 
 Tier 9 (authenticated model use) remains **not claimed**. It is the same human gate outstanding
 since Packet 2.5, is not a Packet 4R acceptance gate, and requires credentials Claude must not
@@ -507,33 +510,62 @@ Joshua confirmed the remaining eight items in a real terminal
 **Tier 8 remains PARTIAL**: eighteen of nineteen items attested PASS, with one real defect found and
 fixed (**D5**) and one still open (**D6**, narrow-width overflow).
 
-### D6 — overflow at minimized terminal width (OPEN, not reproduced in the renderer)
+### D6 — overflow at minimized terminal width (OPEN)
 
 Joshua initially reported the sub-80-column item as passing, then corrected it: minimizing the
 terminal width produces visible overflow. The correction is taken at face value and the item is
 recorded as **FAIL**, not smoothed into a pass.
 
-**Claude could not reproduce it in the pure renderer.** `renderConsole` was exercised over the real
-canonical state at widths 20, 30, 40, 50, 55, 59, 60, 70, 80, 100, and 120, across all four views,
-every selection index, and every combination of `detailOpen` and `helpOpen` — 0 overflowing
-combinations and 0 exceptions. The ambient widget was probed the same way at widths 20–80 with no
-overflow. So the console's own line sizing is not obviously at fault.
+#### Correction: the first reproduction attempt was invalid
 
-Unverified hypothesis, recorded as a lead rather than a finding: `renderConsole` pads separator and
-heading lines to **exactly** `width` (measured: 1–2 lines per screen are exactly `width` characters).
-If Pi's custom-component frame reserves any horizontal space — a border, padding, or gutter — while
-still reporting the full terminal width, those full-width lines would wrap, and the effect would be
-most obvious when narrow because the separator rule is always full width. This has **not** been
-confirmed; it may equally be Pi-side chrome, unwrapped `notify` text (the long `nextActionRationale`
-was observed spilling in scrollback), or terminal reflow outside NewFang's control.
+An earlier revision of this section reported "0 overflowing combinations" across widths 20–120 and
+concluded the renderer was not at fault. **That result was wrong and is retracted.** The probe built
+its view model with `buildConsoleModel({ state, fingerprint })`, but `ConsoleInput` has no
+`fingerprint` field and requires `status`. The model therefore fell through to the error path, and
+every "clean" width was measuring a six-line _"NewFang state problem"_ screen — not the console. The
+finding was a false negative produced by a malformed probe.
+
+The probe now builds the model through `buildModelForRoot()`, the same function the TUI uses, and
+asserts `model.status === "ok"` before measuring.
+
+#### Corrected measurements
+
+Over the real canonical state, all four views, every selection index, and every combination of
+`detailOpen` and `helpOpen` — **1728 combinations** at widths 20, 30, 40, 50, 55, 59, 60, 70, 80,
+100, 120, 160:
+
+```text
+combinations: 1728 · exceeding width: 3 · exceptions: 0
+
+overflowing cases (all at width 20, claim detail open, 7 columns over):
+  width 20 view=proof selection=0 detail=true   max 27
+  width 20 view=proof selection=1 detail=true   max 27
+  width 20 view=focus selection=1 detail=true   max 27
+
+the offending line, in every case:
+  OVER [27] "covers acceptance criteria:"
+```
+
+So there **is** a genuine renderer-side overflow: the detail-view label `covers acceptance criteria:`
+is emitted at its natural 27-character length without truncation, and overflows any width below 27.
+It is a NewFang **content line** originating from `renderConsole`.
+
+Two things this does **not** establish:
+
+1. **It is probably not what Joshua saw.** It only manifests below 27 columns and only with claim
+   detail open. A merely "minimized" terminal is unlikely to be that narrow.
+2. Lines padded to **exactly** `width` are far more numerous than first reported — **26 to 35 per
+   screen** at every width, not 1–2. If Pi's component frame reserves any horizontal space while
+   reporting full terminal width, a large fraction of every screen would wrap. That remains an
+   unconfirmed hypothesis about the host boundary, not a finding.
 
 Existing coverage does not close this: `test/proof.ui.test.ts` asserts no overflow only at
 `WIDTHS = [60, 80, 100, 120, 160]`, so **nothing below 60 columns is tested**, and no test models
-Pi's own frame.
+Pi's own frame — which is exactly why a sub-27-column defect survived.
 
-D6 is left **open and unfixed**, consistent with how D1 and D4 were handled at Packet 3 closure:
-diagnosing it needs terminal observation Claude cannot perform, and fixing it blind would mean
-changing layout code against an unconfirmed cause.
+D6 stays **open**. The confirmed sub-27-column label defect is narrow and fixable, but it is not yet
+established as the cause of the reported wrap, and the packet direction is explicit: classify against
+a real TUI observation first, and do not change layout code speculatively.
 
 Scope of the attestation, recorded precisely so it is not read as more than it is:
 
