@@ -271,3 +271,6 @@
 {"type":"operation_run_created","runId":"RUN-3","definitionId":"r2a.state-store-tests","revision":270,"ts":"2026-07-26T19:50:05.758Z"}
 {"type":"operation_run_created","runId":"RUN-4","definitionId":"r2a.state-store-tests","revision":276,"ts":"2026-07-26T19:53:50.160Z"}
 {"type":"operation_run_acknowledged","runId":"RUN-4","revision":282,"ts":"2026-07-26T19:53:50.433Z"}
+{"type":"focus_set","id":"NF-16","revision":283,"ts":"2026-07-26T19:56:20.789Z"}
+{"type":"next_action_set","revision":284,"ts":"2026-07-26T19:56:20.792Z"}
+{"type":"focus_cleared","revision":285,"ts":"2026-07-26T20:44:12.158Z"}
