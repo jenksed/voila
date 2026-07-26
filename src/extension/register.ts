@@ -26,6 +26,7 @@ import { formatDoctor, runDoctor, worstLevel } from "../commands/doctor.ts";
 import type { CommandResult } from "../commands/types.ts";
 import { loadState } from "../state/store.ts";
 import { MigrationRequiredError, StateNotFoundError } from "../state/errors.ts";
+import { LegacyStateMigrationRequiredError, StateDirectoryConflictError } from "../state/legacy.ts";
 import { homeViewLines } from "../ui/homeview.ts";
 import { voilaTools, type VoilaTool } from "../tools/index.ts";
 import { openStewardConsole, type ConsoleUiSurface } from "../ui/steward-console/open.ts";
@@ -248,6 +249,16 @@ export async function restoreHomeView(ctx: VoilaCtx): Promise<void> {
   } catch (error) {
     if (error instanceof StateNotFoundError) {
       ctx.ui.setWidget(HOME_WIDGET_KEY, homeViewLines(null));
+      return;
+    }
+    if (error instanceof StateDirectoryConflictError) {
+      ctx.ui.setWidget(HOME_WIDGET_KEY, ["Voila · state directory conflict — run /voila doctor"]);
+      return;
+    }
+    if (error instanceof LegacyStateMigrationRequiredError) {
+      ctx.ui.setWidget(HOME_WIDGET_KEY, [
+        "Voila · legacy state migration required — run /voila migrate",
+      ]);
       return;
     }
     if (error instanceof MigrationRequiredError) {

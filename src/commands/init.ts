@@ -2,6 +2,7 @@
 
 import { deriveDisplayName } from "../domain/defaults.ts";
 import { initState, stateExists } from "../state/store.ts";
+import { LEGACY_STATE_DIR, stateDirectoryStatus } from "../state/legacy.ts";
 import type { CommandResult } from "./types.ts";
 
 /**
@@ -9,6 +10,30 @@ import type { CommandResult } from "./types.ts";
  * Refuses destructive reinitialization by default (no force option in this packet).
  */
 export async function runInit(root: string): Promise<CommandResult> {
+  // A pre-rename project must be migrated, never re-initialized alongside its own history.
+  const status = stateDirectoryStatus(root);
+  if (status.kind === "legacy") {
+    return {
+      level: "warning",
+      lines: [
+        `Refusing to initialize: legacy ${LEGACY_STATE_DIR}/ state already exists here.`,
+        "This project predates the Voila rename. Initializing would strand its history.",
+        "Run /voila migrate to inspect the transition, then /voila migrate --apply.",
+      ],
+    };
+  }
+  if (status.kind === "conflict") {
+    return {
+      level: "error",
+      lines: [
+        "Refusing to initialize: both state directories exist.",
+        `  legacy:  ${status.legacyDir}`,
+        `  current: ${status.currentDir}`,
+        "Resolve this manually before running any Voila command.",
+      ],
+    };
+  }
+
   if (stateExists(root)) {
     return {
       level: "warning",

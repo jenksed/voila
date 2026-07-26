@@ -286,3 +286,76 @@ test("the fingerprint record stores no raw diff and no absolute path", async () 
   assert.equal(serialized.includes(tmpdir()), false, "no absolute path is retained");
   assert.equal(serialized.includes(root), false);
 });
+
+test("legacy .newfang/ state is excluded from the fingerprint while it still exists", async () => {
+  const root = await tempRepo();
+  const original = await repositoryFingerprint(root);
+
+  // A pre-rename project's untracked state directory must not move the digest.
+  await mkdir(join(root, ".newfang", "receipts", "RCP-1"), { recursive: true });
+  await writeFile(join(root, ".newfang", "project.json"), '{"schemaVersion":4}\n', "utf8");
+  await writeFile(join(root, ".newfang", "events.jsonl"), '{"type":"x"}\n', "utf8");
+  await writeFile(join(root, ".newfang", "receipts", "RCP-1", "stdout.txt"), "output\n", "utf8");
+  assert.equal(
+    (await repositoryFingerprint(root)).value,
+    original.value,
+    "untracked legacy state does not change the digest",
+  );
+
+  // Tracked legacy state is excluded too, so a repo that commits its own state is unaffected.
+  git(root, ["add", "-f", ".newfang"]);
+  git(root, ["commit", "-q", "-m", "track legacy state"]);
+  const afterCommit = await repositoryFingerprint(root);
+  await writeFile(join(root, ".newfang", "events.jsonl"), '{"type":"x"}\n{"type":"y"}\n', "utf8");
+  assert.equal(
+    (await repositoryFingerprint(root)).value,
+    afterCommit.value,
+    "tracked legacy diffs are excluded",
+  );
+});
+
+test("migrating .newfang/ to .voila/ does not change the repository fingerprint", async () => {
+  const root = await tempRepo();
+  await initState(root, { displayName: "fp-demo" });
+  const { rename } = await import("node:fs/promises");
+  await rename(join(root, ".voila"), join(root, ".newfang"));
+
+  const beforeMigration = await repositoryFingerprint(root);
+  await rename(join(root, ".newfang"), join(root, ".voila"));
+  const afterMigration = await repositoryFingerprint(root);
+
+  assert.equal(
+    afterMigration.value,
+    beforeMigration.value,
+    "moving the state directory is invisible to evidence freshness",
+  );
+});
+
+test("excluding both state directories does not weaken ordinary source detection", async () => {
+  const root = await tempRepo();
+  await mkdir(join(root, ".newfang"), { recursive: true });
+  await writeFile(join(root, ".newfang", "project.json"), '{"schemaVersion":4}\n', "utf8");
+  await initState(root, { displayName: "fp-demo" });
+  const baseline = await repositoryFingerprint(root);
+
+  // Untracked source change.
+  await writeFile(join(root, "src-new.txt"), "new\n", "utf8");
+  const untracked = await repositoryFingerprint(root);
+  assert.notEqual(untracked.value, baseline.value, "untracked source still detected");
+
+  // Tracked working-tree change.
+  await writeFile(join(root, "tracked.txt"), "modified\n", "utf8");
+  const modified = await repositoryFingerprint(root);
+  assert.notEqual(modified.value, untracked.value, "tracked modification still detected");
+  assert.equal(modified.dirty, true);
+
+  // Staged change.
+  git(root, ["add", "tracked.txt"]);
+  const staged = await repositoryFingerprint(root);
+  assert.notEqual(staged.value, modified.value, "staged change still detected");
+
+  // A file named like the state directories but NOT inside them is still detected.
+  await writeFile(join(root, "voila-notes.md"), "notes\n", "utf8");
+  const sibling = await repositoryFingerprint(root);
+  assert.notEqual(sibling.value, staged.value, "a similarly named file is not excluded");
+});

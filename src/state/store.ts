@@ -44,6 +44,7 @@ import { createInitialState } from "../domain/defaults.ts";
 import { renderStatusView } from "../domain/status.ts";
 import { migrationPlan } from "../domain/migrate.ts";
 import { statePaths } from "./paths.ts";
+import { assertUsableStateDirectory } from "./legacy.ts";
 import {
   MigrationRequiredError,
   StateExistsError,
@@ -411,6 +412,9 @@ export interface RawState {
 /** Read and parse project.json without schema validation (for migration and doctor). */
 export async function readRawState(root: string): Promise<RawState> {
   const paths = statePaths(root);
+  // Single chokepoint: a legacy-only or conflicting state directory must never be operated on
+  // implicitly, so every command that reads state inherits the explicit refusal.
+  assertUsableStateDirectory(root);
   if (!existsSync(paths.projectJson)) {
     throw new StateNotFoundError(`No Voila state at ${paths.projectJson}. Run /voila init.`);
   }

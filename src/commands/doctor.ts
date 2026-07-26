@@ -5,7 +5,8 @@ import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
-import { intakePaths, statePaths } from "../state/paths.ts";
+import { VOILA_DIR, intakePaths, statePaths } from "../state/paths.ts";
+import { LEGACY_STATE_DIR, stateDirectoryStatus } from "../state/legacy.ts";
 import {
   listDraftRevisions,
   readDraft,
@@ -156,6 +157,36 @@ function stateIntegrityChecks(state: ProjectState): DoctorCheck[] {
   return checks;
 }
 
+/**
+ * Which state directory the project uses. A legacy-only tree is a FAIL (it must be migrated before
+ * anything operates on it); both directories present is a FAIL that requires a human decision.
+ */
+function stateDirectoryCheck(root: string): DoctorCheck {
+  const status = stateDirectoryStatus(root);
+  switch (status.kind) {
+    case "current":
+      return { name: "state directory", level: "pass", detail: `${VOILA_DIR}/` };
+    case "none":
+      return {
+        name: "state directory",
+        level: "warn",
+        detail: "no state directory — run /voila init",
+      };
+    case "legacy":
+      return {
+        name: "state directory",
+        level: "fail",
+        detail: `legacy ${LEGACY_STATE_DIR}/ found and no ${VOILA_DIR}/ — run /voila migrate --apply`,
+      };
+    case "conflict":
+      return {
+        name: "state directory",
+        level: "fail",
+        detail: `both ${LEGACY_STATE_DIR}/ and ${VOILA_DIR}/ exist — resolve manually; Voila will not choose`,
+      };
+  }
+}
+
 export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
   const paths = statePaths(input.root);
@@ -218,6 +249,12 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
           detail: `cannot write in ${writeTarget}`,
         },
   );
+
+  // Which state directory is in play. A legacy or conflicting tree is terminal for diagnostics:
+  // nothing below can read canonical state until a human resolves it.
+  const dirCheck = stateDirectoryCheck(input.root);
+  checks.push(dirCheck);
+  if (dirCheck.level === "fail") return checks;
 
   // State presence + schema/migration + integrity.
   let raw;
