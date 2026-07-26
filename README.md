@@ -11,6 +11,12 @@ not merely generating code.
 > See [docs/migrations/NEWFANG_TO_VOILA.md](docs/migrations/NEWFANG_TO_VOILA.md) for the transition
 > and the `.newfang/` -> `.voila/` migration path.
 
+## Picking this up cold
+
+[`docs/HANDOFF.md`](docs/HANDOFF.md) is a self-contained brief: where the project stands, the
+doctrine that is enforced by tests, the two open decisions, and the gotchas that will bite you. Read
+it before making changes after a break, or hand it to another assistant.
+
 ## Using Voila on other projects
 
 Voila lives in this repository as a project-local Pi extension, so out of the box it only loads

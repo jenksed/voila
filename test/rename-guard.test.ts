@@ -35,6 +35,7 @@ const ACCENT_DISCUSSION_ALLOWED = new Set([
   "docs/migrations/NEWFANG_TO_VOILA.md",
   "docs/migrations/VOILA_RENAME_INVENTORY.md",
   "docs/verification/PACKET_4_5_VOILA_RENAME.md",
+  "docs/HANDOFF.md",
 ]);
 
 interface AllowlistEntry {

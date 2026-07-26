@@ -218,6 +218,13 @@
       "removable": true
     },
     {
+      "path": "docs/HANDOFF.md",
+      "category": "historical-migration-doc",
+      "reason": "Handoff document. Its gotchas section must name the legacy brand to explain the rename guard, the allowlist, and why every receipt captures the old name from the legacy-migration test titles.",
+      "immutable": false,
+      "removable": true
+    },
+    {
       "path": "docs/decisions/0001-adopt-pi-as-harness-foundation.md",
       "category": "historical-evidence",
       "reason": "Dated architecture decision record; decision text is preserved, with an additive rename note appended.",
