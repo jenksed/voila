@@ -1,0 +1,545 @@
+# Instincts generated from https://github.com/jenksed/voila
+# Generated: 2026-07-26T18:40:18.906Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: voila-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: chore, fix, docs, test, style
+
+## Evidence
+
+- 15 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: make continuation ambient with a deterministic focus capsule, fix: make freshness, doctor, and readiness mean what they say
+
+---
+id: voila-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Commit Length
+
+## Action
+
+Keep commit messages concise (~47 characters)
+
+## Evidence
+
+- Average commit message length: 47 chars
+- Based on 15 commits
+
+---
+id: voila-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: voila-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: voila-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: voila-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: voila-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: voila-workflow-update-project-state-and-status
+trigger: "when doing update project state and status"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Workflow Update Project State And Status
+
+## Action
+
+Follow the update-project-state-and-status workflow:
+1. Edit .voila/project.json to update the project state or next action.
+2. Append to .voila/events.jsonl to record the event.
+3. Update .voila/views/PROJECT_STATUS.md with the new status.
+4. Optionally update .voila/briefs/PROJECT_BRIEF.md if the project brief changes.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: .voila/project.json, .voila/events.jsonl, .voila/views/PROJECT_STATUS.md
+
+---
+id: voila-workflow-add-or-update-verification-receipts
+trigger: "when doing add or update verification receipts"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Workflow Add Or Update Verification Receipts
+
+## Action
+
+Follow the add-or-update-verification-receipts workflow:
+1. Create or update .voila/receipts/RCP-XX/manifest.json with metadata.
+2. Add or update .voila/receipts/RCP-XX/stdout.txt and stderr.txt with output.
+3. Update .voila/events.jsonl and .voila/project.json to reflect the verification event.
+4. Update .voila/views/PROJECT_STATUS.md to show verification status.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: .voila/receipts/RCP-*/manifest.json, .voila/receipts/RCP-*/stdout.txt, .voila/receipts/RCP-*/stderr.txt
+
+---
+id: voila-workflow-feature-or-bugfix-with-tests
+trigger: "when doing feature or bugfix with tests"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Workflow Feature Or Bugfix With Tests
+
+## Action
+
+Follow the feature-or-bugfix-with-tests workflow:
+1. Modify or add implementation files in src/.
+2. Update or add corresponding test files in test/.
+3. Optionally update related documentation or UI files.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: src/**/*.ts, test/**/*.test.ts
+
+---
+id: voila-workflow-document-feature-or-verification
+trigger: "when doing document feature or verification"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/jenksed/voila
+---
+
+# Voila Workflow Document Feature Or Verification
+
+## Action
+
+Follow the document-feature-or-verification workflow:
+1. Add or update design docs in docs/design/ or verification docs in docs/verification/.
+2. Update README.md and other project-level docs.
+3. Update doctrine or handoff documentation as needed.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: docs/design/*.md, docs/verification/*.md, docs/product/PROJECT_STEWARD_DOCTRINE.md
+
+---
+id: voila-instinct-file-naming
+trigger: "When creating or renaming a file in the codebase"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct File Naming
+
+## Action
+
+Use camelCase for file names
+
+## Evidence
+
+- Pattern in namingConventions.files
+- src/ and test/ file names
+
+---
+id: voila-instinct-function-naming
+trigger: "When defining a function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Function Naming
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in namingConventions.functions
+- src/ function definitions
+
+---
+id: voila-instinct-class-naming
+trigger: "When defining a class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Class Naming
+
+## Action
+
+Use PascalCase for class names
+
+## Evidence
+
+- Pattern in namingConventions.classes
+- src/ class definitions
+
+---
+id: voila-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in namingConventions.constants
+- src/ constant definitions
+
+---
+id: voila-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Import Style
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- importStyle: relative
+- src/ import statements
+
+---
+id: voila-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- exportStyle: named
+- src/ export statements
+
+---
+id: voila-instinct-test-file-pattern
+trigger: "When creating a test file"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Test File Pattern
+
+## Action
+
+Name the file with a .test.ts suffix
+
+## Evidence
+
+- testing.filePattern: *.test.ts
+- test/ file names
+
+---
+id: voila-instinct-unit-test-location
+trigger: "When adding tests for implementation code"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Unit Test Location
+
+## Action
+
+Place test files in the test/ directory, separate from src/
+
+## Evidence
+
+- architecture.testLocation: separate
+- test/ folder structure
+
+---
+id: voila-instinct-unit-test-type
+trigger: "When writing tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Unit Test Type
+
+## Action
+
+Write unit tests
+
+## Evidence
+
+- testing.testTypes: unit
+- test/ file content
+
+---
+id: voila-instinct-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Commit Format
+
+## Action
+
+Use conventional commit prefixes: chore, fix, docs, test, style, feat
+
+## Evidence
+
+- commits.prefixes
+- Seen in commit examples
+
+---
+id: voila-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Commit Length
+
+## Action
+
+Keep the commit message concise (average ~47 characters)
+
+## Evidence
+
+- commits.averageLength
+- commit examples
+
+---
+id: voila-instinct-update-project-state-and-status
+trigger: "When a work item is completed, next action changes, or project status needs to be updated"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Update Project State And Status
+
+## Action
+
+Edit .voila/project.json, append to .voila/events.jsonl, update .voila/views/PROJECT_STATUS.md, and optionally update .voila/briefs/PROJECT_BRIEF.md
+
+## Evidence
+
+- workflow: update-project-state-and-status
+- commit sequences and files involved
+
+---
+id: voila-instinct-add-or-update-verification-receipts
+trigger: "When a verification or acceptance test is run and its results need to be recorded"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Add Or Update Verification Receipts
+
+## Action
+
+Create or update .voila/receipts/RCP-XX/manifest.json, stdout.txt, stderr.txt, update .voila/events.jsonl, .voila/project.json, and .voila/views/PROJECT_STATUS.md
+
+## Evidence
+
+- workflow: add-or-update-verification-receipts
+- commit sequences and files involved
+
+---
+id: voila-instinct-feature-or-bugfix-with-tests
+trigger: "When developing a new feature or fixing a bug that requires code and test changes"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Feature Or Bugfix With Tests
+
+## Action
+
+Modify or add implementation files in src/, update or add corresponding test files in test/, and optionally update related documentation or UI files
+
+## Evidence
+
+- workflow: feature-or-bugfix-with-tests
+- commit sequences and files involved
+
+---
+id: voila-instinct-document-feature-or-verification
+trigger: "When a feature is completed or verified and needs to be documented for maintainers or users"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: jenksed/voila
+---
+
+# Voila Instinct Document Feature Or Verification
+
+## Action
+
+Add or update design docs in docs/design/ or verification docs in docs/verification/, update README.md and other project-level docs, and update doctrine or handoff documentation as needed
+
+## Evidence
+
+- workflow: document-feature-or-verification
+- commit sequences and files involved
+
