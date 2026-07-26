@@ -199,11 +199,10 @@ test("concurrent updateState calls do not produce duplicate events or colliding 
   const N = 20;
   const results = await Promise.all(
     Array.from({ length: N }, (_, i) =>
-      updateState(
-        root,
-        (cur) => ({ ...cur, nextAction: `r${i}` }),
-        { type: "next_action_set", focus: `NF-${i}` },
-      ),
+      updateState(root, (cur) => ({ ...cur, nextAction: `r${i}` }), {
+        type: "next_action_set",
+        focus: `NF-${i}`,
+      }),
     ),
   );
   const revisions = results.map((s) => s.revision).sort((a, b) => a - b);
