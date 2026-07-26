@@ -4,9 +4,9 @@ Self-contained context for picking this project up cold. Written to be harness-n
 into any assistant, or read it yourself after a break.
 
 **Repo:** `git@github.com:jenksed/voila.git` · **Checkout:** `/Users/jenksed/Projects/voila`
-**Branch:** `feat/r1-ambient-continuity` · **Head at final behavioral acceptance:** `37ae7fd` · **Gate:**
-625 tests passing
-**Proof:** 10 claims: 5 current NF-9 claims, 5 older claims stale from development · **Doctor:**
+**Branch:** `feat/r1-ambient-continuity` · **Head at final completion:** `4d108fc` · **Gate:**
+626 tests passing
+**Proof:** 10 claims, 5 NF-9 required claims supported, 5 older claims stale from development · **Doctor:**
 structural health OK; development drift informational — §6
 
 > Canonical revision is deliberately **not** pinned here. It increments on every canonical write,
@@ -104,18 +104,17 @@ recap, no questions, no state-maintenance requests, no NF-2 work, and no claimed
 TTY tier also ran under a real pseudo-terminal. Transcript, scope, and limitations are in
 [docs/verification/R1_AMBIENT_CONTINUITY.md](verification/R1_AMBIENT_CONTINUITY.md).
 
-1. **Immediate action — resolve NF-9 criterion 5.** NF-9 is **not** complete. CLM-6..CLM-10 and
-   RCP-94..RCP-98 now exist, criterion 3 was corrected under DEC-19, and the automated/interactive
-   tiers pass. Criterion 5 still literally requires active workers and terminals, while R1 deliberately
-   has no such runtime and its tests require those fields to be absent. Do not call protected
-   completion until the owner authorizes a criterion correction; implementing the clause would begin
-   R2/R3 and is not allowed on this branch.
-2. **Then — deliver R1 and begin R2 after merge.** One supervised background terminal (NF-10) depends
-   on NF-9. R2–R7 remain unimplemented: there are no workers, no background processes, and no
-   automatic settlement.
+1. **Immediate action — deliver R1.** NF-9 was completed through the protected transition on
+   `4d108fc`: CLM-6..CLM-10 and RCP-99..RCP-103 cover the five criteria, criterion 5 was aligned
+   with R1 capability honesty under DEC-20, and the canonical-event concurrency defect was fixed.
+   Approval is the owner's call; Voila never pushes or opens a PR.
+2. **Then — begin R2.** One supervised background terminal (NF-10) depends on NF-9. R2–R7 remain
+   unimplemented: there are no workers, no background processes, and no automatic settlement.
 
-**NF-9 is the canonical implementation focus** and stays that way until its completion is justified.
-R1 makes *invocation* immediately useful; nothing runs between turns.
+**NF-9 was completed on `4d108fc` and is no longer the focus.** R1's full evidence trail and its
+honest limitations are recorded
+([docs/verification/R1_AMBIENT_CONTINUITY.md](verification/R1_AMBIENT_CONTINUITY.md)). R1 makes
+*invocation* immediately useful; nothing runs between turns.
 
 **What is built** (and is not being walked back): durable per-project state, planning intake with
 preserved provenance, repository orientation, work items and dependencies, claims and deterministic
@@ -137,7 +136,7 @@ NF-2 ready         intake + orientation           HELD: needs authenticated inta
 NF-3 backlog       claims/receipts/completion gate (shipped as Packet 4, dependency-blocked)
 NF-4 backlog       delivery behavior               (shipped as Phase 6, dependency-blocked)
 NF-5..NF-8 backlog
-NF-9  ready        R1 friction containment          <- FOCUS (implemented; not completed)
+NF-9  completed    R1 friction containment          (R1, completed 4d108fc)
 NF-10..NF-15       R2..R7, sequenced by dependency
 ```
 
@@ -145,7 +144,7 @@ NF-10..NF-15       R2..R7, sequenced by dependency
 the gate during the walk-through and then reverted — see §5. The realignment does **not** release
 them; NF-2's authenticated intake is still owed.
 
-10 claims (CLM-1..CLM-10), 98 receipts, 19 decisions (14 accepted).
+10 claims (CLM-1..CLM-10), 103 receipts, 20 decisions (15 accepted).
 
 ---
 

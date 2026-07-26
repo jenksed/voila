@@ -137,11 +137,10 @@ implementation**. R1 is the exception: it is implemented and its acceptance beha
 
 R1's evidence is recorded in
 [docs/verification/R1_AMBIENT_CONTINUITY.md](../verification/R1_AMBIENT_CONTINUITY.md), including what
-it does **not** establish. NF-9 itself is not complete: CLM-6..CLM-10 and current receipts now cover
-its five criteria mechanically, but criterion 5 literally requires active workers and terminals while
-R1 intentionally has no such runtime. CLM-10 records that shortfall explicitly. Protected completion
-must not be used until an owner-authorized criterion correction resolves it; building those runtimes
-would begin R2/R3.
+it does **not** establish. R1 was completed through the protected transition on `4d108fc`: criterion 5
+was aligned with R1 capability honesty under DEC-20, the canonical-event concurrency defect was
+fixed, and the five NF-9 required claims are supported by current receipts. Honest limitations remain
+visible on each claim.
 
 What R1 makes true is narrow: **invocation is immediately useful**. Nothing runs between turns. R1 is
 not background autonomy, automatic settlement, persistent execution, worker orchestration, or

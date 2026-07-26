@@ -57,10 +57,10 @@ toward **Project Steward Operational Loop v1**. Delegation and background execut
 **Not built yet:** background terminals (R2), Pi child workers (R3), automatic settlement (R4),
 fresh-session continuity (R5), quiet boundary reconciliation (R6). None of it exists today. See the
 doctrine's built/not-built table. R1 (friction containment and ambient continuity) is implemented on
-`feat/r1-ambient-continuity`, its automated and interactive tiers pass, and NF-9 remains open because
-criterion 5 literally requires active workers and terminals even though those runtimes are deliberately
-R2/R3 scope. The shortfall is recorded rather than hidden
-([docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md)).
+`feat/r1-ambient-continuity`: its automated and interactive tiers pass and NF-9 was completed through
+the protected transition with five required claims covered by current receipts. Approval bundles
+remain paused. The behavioral evidence and criterion-level limitations are recorded in
+[docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md).
 
 **What is built — Phase 0 + Packets 1–4 + Phase 6.** Voila is a runnable Pi extension:
 a thin adapter (`.pi/extensions/voila.ts`), canonical `.voila/` state with **explicit schema
@@ -77,7 +77,7 @@ report ([docs/design/FOCUS_CAPSULE.md](docs/design/FOCUS_CAPSULE.md)). Evidence 
 **content-addressed** ([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so
 committing receipts no longer invalidates them; orientation freshness follows the content it inspected,
 not git HEAD. Doctor separates structural health from expected development drift. Pinned to
-`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**625 tests**). The repo
+`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**626 tests**). The repo
 **dogfoods its own** `.voila/` state.
 
 **The boundary is explicit**: the model interprets (fallibly), Voila enforces (preservation,
