@@ -29,8 +29,9 @@ import {
   stateDirectoryStatus,
   type TreeDigest,
 } from "./legacy.ts";
-import { VOILA_DIR } from "./paths.ts";
+import { VOILA_DIR, statePaths } from "./paths.ts";
 import { StateValidationError } from "./errors.ts";
+import { writeProjectBrief } from "./intake-store.ts";
 import { readRawState, updateState, validateProjectState } from "./store.ts";
 
 export type LegacyMigrationStatus = "noop" | "inspectable" | "migrated";
@@ -193,7 +194,7 @@ export async function applyLegacyMigration(root: string): Promise<LegacyMigratio
   //    which owns its own event and view regeneration.
   let metadataUpdates: string[] = [];
   if (schemaVersion === SCHEMA_VERSION) {
-    await updateState(
+    const migrated = await updateState(
       root,
       (current) => {
         const { next, changed } = rebrandMetadata(current);
@@ -208,6 +209,11 @@ export async function applyLegacyMigration(root: string): Promise<LegacyMigratio
         immutableFileCount: before.immutableCount,
       },
     );
+    // `updateState` regenerates PROJECT_STATUS.md. The project brief is only written on demand,
+    // so a migrated project would otherwise keep a brief generated under the old name.
+    if (existsSync(statePaths(root).projectBrief)) {
+      await writeProjectBrief(root, migrated);
+    }
   }
 
   return {
