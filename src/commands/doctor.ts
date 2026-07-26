@@ -33,7 +33,15 @@ import { ID_PREFIXES } from "../domain/ids.ts";
 import { SCHEMA_VERSION } from "../domain/types.ts";
 import type { ProjectState, Sequences } from "../domain/types.ts";
 
-export type CheckLevel = "pass" | "warn" | "fail";
+/**
+ * Check severities.
+ *
+ * Doctor answers one question: is Voila structurally valid and internally consistent? `fail` and
+ * `warn` are reserved for that question. `info` exists for expected readiness drift during active
+ * development — evidence that went stale because the developer is editing files is not a structural
+ * problem, and reporting it as one is what turned Doctor into a maintenance prompt (R1 / NF-9).
+ */
+export type CheckLevel = "pass" | "info" | "warn" | "fail";
 
 export interface DoctorCheck {
   name: string;
@@ -347,14 +355,32 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   return checks;
 }
 
-const LEVEL_MARK: Record<CheckLevel, string> = { pass: "PASS", warn: "WARN", fail: "FAIL" };
+const LEVEL_MARK: Record<CheckLevel, string> = {
+  pass: "PASS",
+  info: "INFO",
+  warn: "WARN",
+  fail: "FAIL",
+};
 
 export function formatDoctor(checks: DoctorCheck[]): string[] {
   const lines = ["Voila doctor:"];
   for (const c of checks) lines.push(`  [${LEVEL_MARK[c.level]}] ${c.name}: ${c.detail}`);
+  const structural = checks.filter((c) => c.level === "fail" || c.level === "warn").length;
+  lines.push(
+    "",
+    structural === 0
+      ? "Structural health: OK — nothing here is a structural problem."
+      : `Structural health: ${structural} item(s) need attention.`,
+  );
+  if (checks.some((c) => c.level === "info")) {
+    lines.push(
+      "INFO items are expected readiness drift during development, not structural faults; evidence reconciles at the completion boundary.",
+    );
+  }
   return lines;
 }
 
+/** Informational checks never escalate the notification: they are not problems. */
 export function worstLevel(checks: DoctorCheck[]): "info" | "warning" | "error" {
   if (checks.some((c) => c.level === "fail")) return "error";
   if (checks.some((c) => c.level === "warn")) return "warning";
@@ -564,6 +590,11 @@ async function proofChecks(root: string, state: ProjectState): Promise<DoctorChe
   );
 
   // --- Freshness (read-only; the fingerprint is never persisted) ---
+  //
+  // Staleness and structural failure are different things. A stale claim means the repository moved
+  // since its receipt — during active development that is the normal case, and it reconciles at the
+  // completion boundary. A claim contradicted by a receipt that actually FAILED at the current state
+  // is a real problem and stays a warning.
   const fingerprint = await tryRepositoryFingerprint(root);
   if (fingerprint === null) {
     checks.push({
@@ -572,42 +603,70 @@ async function proofChecks(root: string, state: ProjectState): Promise<DoctorChe
       detail: "git unavailable, so no receipt can be shown as current evidence",
     });
   } else {
-    const notCurrent = state.claims
-      .map((c) => evaluateClaim(state, c, fingerprint))
-      .filter((e) => e.status === "stale" || e.status === "unsupported");
-    checks.push(
-      notCurrent.length === 0
-        ? {
-            name: "evidence freshness",
-            level: "pass",
-            detail: `${state.claims.length} claim(s): none stale or unsupported`,
-          }
-        : {
-            name: "evidence freshness",
-            level: "warn",
-            detail: notCurrent.map((e) => `${e.claimId} is ${e.status}`).join("; "),
-          },
-    );
+    const evaluations = state.claims.map((c) => evaluateClaim(state, c, fingerprint));
+    const unsupported = evaluations.filter((e) => e.status === "unsupported");
+    const stale = evaluations.filter((e) => e.status === "stale");
+    if (unsupported.length > 0) {
+      checks.push({
+        name: "evidence freshness",
+        level: "warn",
+        detail: `${unsupported.map((e) => `${e.claimId} is unsupported`).join("; ")}${
+          stale.length > 0 ? `; ${stale.length} more affected by current changes` : ""
+        }`,
+      });
+    } else if (stale.length > 0) {
+      checks.push({
+        name: "evidence reconciliation",
+        level: "info",
+        detail: `${stale.length} claim(s) affected by current development changes; reconciles at the completion boundary`,
+      });
+    } else {
+      checks.push({
+        name: "evidence freshness",
+        level: "pass",
+        detail: `${state.claims.length} claim(s): none stale or unsupported`,
+      });
+    }
   }
 
   // --- Completed work whose CURRENT proof no longer revalidates ---
+  //
+  // Split by cause. A completed item whose evidence merely went stale is expected during development
+  // and is informational; anything else (a failing receipt, a criterion that lost coverage, a
+  // dependency that regressed) is an impossible completion record and stays a warning.
   const revalidation: string[] = [];
+  const staleOnly: string[] = [];
   for (const item of state.workItems) {
     if (item.status !== "completed") continue;
     // Re-assess ignoring the "not already completed" gate, which necessarily fails for completed work.
     const assessment = assessCompletion(state, item.id, fingerprint);
     const relevant = assessment.failing.filter((g) => g.id !== "not_completed");
-    if (relevant.length > 0) {
-      revalidation.push(`${item.id}: ${relevant.map((g) => g.label).join(", ")}`);
-    }
+    if (relevant.length === 0) continue;
+    const evaluations = item.requiredClaimIds
+      .map((id) => state.claims.find((c) => c.id === id))
+      .filter((c): c is NonNullable<typeof c> => c !== undefined)
+      .map((c) => evaluateClaim(state, c, fingerprint));
+    const causedOnlyByStaleness =
+      relevant.every((g) => g.id === "claims_supported") &&
+      evaluations.length > 0 &&
+      evaluations.every((e) => e.status === "supported" || e.status === "stale");
+    if (causedOnlyByStaleness) staleOnly.push(item.id);
+    else revalidation.push(`${item.id}: ${relevant.map((g) => g.label).join(", ")}`);
+  }
+  if (staleOnly.length > 0) {
+    checks.push({
+      name: "completed work evidence",
+      level: "info",
+      detail: `${staleOnly.join(", ")}: the repository moved since verification ran, so this cannot be revalidated right now. The completion record stands; evidence reconciles at the next boundary.`,
+    });
   }
   if (revalidation.length > 0) {
     checks.push({
       name: "completed work revalidation",
       level: "warn",
-      detail: `current evidence no longer supports revalidating: ${revalidation.join("; ")}. The completion record stands; re-run verification to restore current evidence.`,
+      detail: `current evidence no longer supports revalidating: ${revalidation.join("; ")}. The completion record stands; this is not ordinary staleness — inspect it.`,
     });
-  } else if (state.workItems.some((w) => w.status === "completed")) {
+  } else if (staleOnly.length === 0 && state.workItems.some((w) => w.status === "completed")) {
     checks.push({
       name: "completed work revalidation",
       level: "pass",
@@ -782,9 +841,11 @@ async function intakeChecks(root: string, state: ProjectState): Promise<DoctorCh
 async function orientationChecks(root: string, state: ProjectState): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
   if (!state.currentOrientationId) {
+    // Not having oriented yet is a readiness fact, not a structural fault: a project can be
+    // perfectly consistent and simply un-oriented.
     checks.push({
       name: "orientation",
-      level: state.orientations.length > 0 ? "warn" : "warn",
+      level: "info",
       detail: "no current orientation recorded",
     });
     return checks;
@@ -806,17 +867,20 @@ async function orientationChecks(root: string, state: ProjectState): Promise<Doc
     });
     return checks;
   }
+  // Content drift is not corruption. A missing or invalid artifact is a FAIL above; an orientation
+  // whose inspected sources moved on is informational — re-orienting is the Steward's judgement, not
+  // maintenance the developer owes.
   checks.push(
     status.staleness.stale
       ? {
           name: "orientation freshness",
-          level: "warn",
-          detail: `${state.currentOrientationId} is stale: ${status.staleness.reasons.join("; ")}`,
+          level: "info",
+          detail: `${state.currentOrientationId} describes changed inputs: ${status.staleness.reasons.join("; ")}`,
         }
       : {
           name: "orientation freshness",
           level: "pass",
-          detail: `${state.currentOrientationId} current`,
+          detail: `${state.currentOrientationId} current${status.staleness.policyNote ? ` (${status.staleness.policyNote})` : ""}`,
         },
   );
   return checks;

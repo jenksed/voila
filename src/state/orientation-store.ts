@@ -4,6 +4,7 @@
 import { existsSync } from "node:fs";
 import { execFile } from "node:child_process";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 import { orientationPaths } from "./paths.ts";
 import { loadState, updateState } from "./store.ts";
@@ -14,6 +15,9 @@ import { ProjectOperationError } from "../domain/errors.ts";
 import type { OrientationArtifact, StalenessResult } from "../domain/orientation.ts";
 import {
   evaluateStaleness,
+  orientationStateFingerprint,
+  ORIENTATION_FRESHNESS_POLICY,
+  POLICY_INSTRUCTION_PATHS,
   renderOrientationView,
   validateOrientationArtifact,
 } from "../domain/orientation.ts";
@@ -55,20 +59,33 @@ export async function readOrientationArtifact(
   return JSON.parse(await readFile(paths.orientation, "utf8")) as OrientationArtifact;
 }
 
-/** Hash the instruction files an orientation recorded, for staleness comparison. */
-export async function currentInstructionHashes(
+export interface InspectedInstructionState {
+  /** sha-256 of each inspected instruction file that is still readable. */
+  hashes: Record<string, string>;
+  /** Inspected instruction files that could not be read — the orientation described something gone. */
+  missing: string[];
+}
+
+/** Re-read the instruction files an orientation inspected, for content-based staleness. */
+export async function inspectedInstructionState(
   root: string,
   artifact: OrientationArtifact,
-): Promise<Record<string, string>> {
-  const out: Record<string, string> = {};
+): Promise<InspectedInstructionState> {
+  const hashes: Record<string, string> = {};
+  const missing: string[] = [];
   for (const f of artifact.instructionFiles) {
     try {
-      out[f.path] = sha256(await readFile(`${root}/${f.path}`, "utf8"));
+      hashes[f.path] = sha256(await readFile(join(root, f.path), "utf8"));
     } catch {
-      // Missing file: leave unset so staleness does not fire on unreadable paths.
+      missing.push(f.path);
     }
   }
-  return out;
+  return { hashes, missing };
+}
+
+/** Which policy-declared instruction files the repository actually has right now. */
+export function presentPolicyInstructionPaths(root: string): string[] {
+  return POLICY_INSTRUCTION_PATHS.filter((path) => existsSync(join(root, path)));
 }
 
 export interface RecordOrientationResult {
@@ -81,8 +98,14 @@ export async function recordOrientation(
   root: string,
   rawArtifact: unknown,
 ): Promise<RecordOrientationResult> {
-  const artifact = validateOrientationArtifact(rawArtifact);
+  const validated = validateOrientationArtifact(rawArtifact);
   const state = await loadState(root);
+  // Freshness provenance is recorded from observed facts, never self-reported by the caller.
+  const artifact: OrientationArtifact = {
+    ...validated,
+    freshnessPolicyVersion: ORIENTATION_FRESHNESS_POLICY,
+    stateFingerprint: orientationStateFingerprint(state),
+  };
   const { id } = allocateId(state.sequences, "orientation");
   const paths = orientationPaths(root, id);
   const now = new Date().toISOString();
@@ -165,11 +188,15 @@ export async function currentOrientationStatus(
       staleness: { stale: true, reasons: ["orientation artifact missing"] },
     };
   }
+  // HEAD is read for provenance only: under the content-based policy it is never a staleness reason.
   const head = await currentHead(root);
-  const instructionHashes = await currentInstructionHashes(root, artifact);
+  const instructions = await inspectedInstructionState(root, artifact);
   const staleness = evaluateStaleness(artifact, {
     ...(head ? { head } : {}),
-    instructionHashes,
+    instructionHashes: instructions.hashes,
+    missingInstructionPaths: instructions.missing,
+    presentPolicyPaths: presentPolicyInstructionPaths(root),
+    stateFingerprint: orientationStateFingerprint(state),
     ...(opts.refreshRequested ? { refreshRequested: true } : {}),
   });
   return { record, artifact, staleness };

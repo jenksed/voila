@@ -4,8 +4,31 @@
 // Safety: orientation artifacts must not contain secrets, environment-variable values, absolute
 // private paths, or full command logs. Validation rejects absolute paths and home-dir references.
 
+import { createHash } from "node:crypto";
 import { GENERATED_BANNER } from "./status.ts";
 import { ProjectOperationError } from "./errors.ts";
+import type { ProjectState } from "./types.ts";
+
+/**
+ * Orientation freshness policy.
+ *
+ * Policy 1 (Packets 3–4) staled an orientation whenever git HEAD moved. That made ordinary Git
+ * activity — a commit touching nothing an orientation had read, a rebase, a fresh clone — into
+ * maintenance the developer had to clear. R1 replaces it: freshness follows the *inputs that
+ * materially informed the orientation*, and HEAD is kept as provenance only.
+ *
+ * Policy 2 stales an orientation when an inspected instruction file changes or disappears, when a
+ * policy-declared instruction file exists that the orientation never inspected, when the bounded
+ * canonical inputs it leaned on change, or when the artifact was recorded under a different declared
+ * policy. It never stales for branch, HEAD, staging state, or clone location.
+ */
+export const ORIENTATION_FRESHNESS_POLICY = 2;
+
+/**
+ * Instruction files an orientation is expected to inspect when the repository has them. An
+ * orientation that skipped one is incomplete, not merely old.
+ */
+export const POLICY_INSTRUCTION_PATHS: readonly string[] = ["AGENTS.md", "CLAUDE.md"];
 
 export const COMMAND_BASES = [
   "declared_in_documentation",
@@ -56,6 +79,40 @@ export interface OrientationArtifact {
   unknowns: string[];
   observedAt: string;
   provenance: string[];
+  /**
+   * Freshness policy under which this artifact was recorded. Absent on artifacts written before R1
+   * (policy 1); those stay readable and are judged by content, never re-staled by the transition.
+   * Recorded by the store, not supplied by a model.
+   */
+  freshnessPolicyVersion?: number;
+  /** Bounded digest of the canonical inputs this orientation leaned on. Absent on legacy artifacts. */
+  stateFingerprint?: string;
+}
+
+/**
+ * Digest of the bounded canonical inputs an orientation relies on: the focused item, every work
+ * item's identity and lifecycle status, and the set of accepted decisions. Those are what an
+ * orientation's "relevant current work" and constraint summaries are built from.
+ *
+ * Deliberately excluded, so ordinary Steward bookkeeping does not stale orientation: next action and
+ * its rationale, revision counters, claims, receipts, intakes, and risk status. Bounded by
+ * construction — this is a digest of identities and statuses, never of repository contents.
+ */
+export function orientationStateFingerprint(state: Readonly<ProjectState>): string {
+  const lines = [
+    "orientation-state-v2",
+    `focus:${state.focusWorkItemId ?? "none"}`,
+    ...[...state.workItems]
+      .map((w) => `work:${w.id}:${w.status}`)
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+    ...state.decisions
+      .filter((d) => d.status === "accepted")
+      .map((d) => `decision:${d.id}`)
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+  ];
+  return createHash("sha256")
+    .update(`${lines.join("\n")}\n`)
+    .digest("hex");
 }
 
 const ABSOLUTE_OR_HOME = /^(\/|~|[A-Za-z]:\\)/;
@@ -94,7 +151,13 @@ function requireSafeStrings(v: unknown, field: string): string[] {
   return v as string[];
 }
 
-/** Validate an untrusted orientation snapshot. Throws with an actionable message. */
+/**
+ * Validate an untrusted orientation snapshot. Throws with an actionable message.
+ *
+ * The result is built field by field from a fixed whitelist, so anything else a model supplies is
+ * dropped — including `freshnessPolicyVersion` and `stateFingerprint`, which are recorded by the
+ * store from observed facts and must never be self-reported.
+ */
 export function validateOrientationArtifact(raw: unknown): OrientationArtifact {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     throw new ProjectOperationError("Orientation must be an object.");
@@ -215,10 +278,19 @@ export function validateOrientationArtifact(raw: unknown): OrientationArtifact {
 }
 
 export interface StalenessInput {
-  /** Current repository HEAD, when resolvable. */
+  /**
+   * Current repository HEAD, when resolvable. Provenance only under policy 2: HEAD movement is never
+   * a staleness reason. Accepted so callers can keep reporting it.
+   */
   head?: string;
-  /** Current sha-256 of each instruction file, keyed by repository-relative path. */
+  /** Current sha-256 of each inspected instruction file, keyed by repository-relative path. */
   instructionHashes?: Record<string, string>;
+  /** Inspected instruction files that no longer exist in the working tree. */
+  missingInstructionPaths?: string[];
+  /** Policy-declared instruction files that exist in the repository right now. */
+  presentPolicyPaths?: string[];
+  /** Current digest of the bounded canonical inputs, from `orientationStateFingerprint`. */
+  stateFingerprint?: string;
   /** Explicit user refresh request. */
   refreshRequested?: boolean;
 }
@@ -226,11 +298,22 @@ export interface StalenessInput {
 export interface StalenessResult {
   stale: boolean;
   reasons: string[];
+  /**
+   * Set when the artifact predates the content-based policy. It stays readable and is judged by
+   * content; the policy transition itself never stales it.
+   */
+  policyNote?: string;
 }
 
 /**
- * Decide whether an orientation is stale. Deliberately ignores the dirty flag: a dirty worktree
- * alone does not invalidate orientation (and must not rewrite canonical state).
+ * Decide whether an orientation is stale, from the inputs that materially informed it.
+ *
+ * Stale when: an inspected instruction file changed or disappeared; a policy-declared instruction
+ * file exists that this orientation never inspected; the bounded canonical inputs changed; the
+ * artifact declares a different freshness policy; or a refresh was explicitly requested.
+ *
+ * NOT stale for: HEAD, branch, staging state, clone location, a dirty worktree, or another commit
+ * identity over identical content.
  */
 export function evaluateStaleness(
   artifact: OrientationArtifact,
@@ -238,18 +321,49 @@ export function evaluateStaleness(
 ): StalenessResult {
   const reasons: string[] = [];
   if (input.refreshRequested) reasons.push("refresh requested");
-  if (artifact.head && input.head && artifact.head !== input.head) {
-    reasons.push(`HEAD moved (${artifact.head.slice(0, 8)} -> ${input.head.slice(0, 8)})`);
+
+  // A declared policy that is not the current one is an explicit mismatch. An ABSENT policy is the
+  // one-time R1 transition: legacy artifacts are read under the content rules below, not re-staled.
+  const declaredPolicy = artifact.freshnessPolicyVersion;
+  const legacy = declaredPolicy === undefined;
+  if (!legacy && declaredPolicy !== ORIENTATION_FRESHNESS_POLICY) {
+    reasons.push(
+      `recorded under orientation freshness policy ${declaredPolicy}; current policy is ${ORIENTATION_FRESHNESS_POLICY}`,
+    );
   }
+
   if (input.instructionHashes) {
     for (const f of artifact.instructionFiles) {
       const current = input.instructionHashes[f.path];
-      if (current !== undefined && current !== f.sha256) {
-        reasons.push(`${f.path} changed`);
-      }
+      if (current !== undefined && current !== f.sha256) reasons.push(`${f.path} changed`);
     }
   }
-  return { stale: reasons.length > 0, reasons };
+  for (const path of input.missingInstructionPaths ?? []) {
+    reasons.push(`${path} no longer exists`);
+  }
+  if (input.presentPolicyPaths) {
+    const inspected = new Set(artifact.instructionFiles.map((f) => f.path));
+    for (const path of input.presentPolicyPaths) {
+      if (!inspected.has(path)) reasons.push(`${path} exists but was never inspected`);
+    }
+  }
+  if (
+    artifact.stateFingerprint !== undefined &&
+    input.stateFingerprint !== undefined &&
+    artifact.stateFingerprint !== input.stateFingerprint
+  ) {
+    reasons.push("the canonical work and decisions it relied on changed");
+  }
+
+  return {
+    stale: reasons.length > 0,
+    reasons,
+    ...(legacy
+      ? {
+          policyNote: `recorded before orientation freshness policy ${ORIENTATION_FRESHNESS_POLICY}; judged by inspected content, and HEAD movement alone no longer stales it`,
+        }
+      : {}),
+  };
 }
 
 const BASIS_LABEL: Record<CommandBasis, string> = {

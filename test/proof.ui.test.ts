@@ -19,6 +19,7 @@ import { homeViewLines, proofWarning } from "../src/ui/homeview.ts";
 import { buildFocusCapsule, CAPSULE_HARD_MAX } from "../src/context/inject.ts";
 import { buildProofOverview } from "../src/state/proof-store.ts";
 import { assessCompletion, createClaim, linkReceipt, requireClaim } from "../src/domain/proof.ts";
+import { deriveReadiness, type Readiness } from "../src/domain/readiness.ts";
 import { createInitialState } from "../src/domain/defaults.ts";
 import { createWorkItem, setFocusWorkItem } from "../src/domain/operations.ts";
 import type { ProjectState, VerificationReceiptRecord } from "../src/domain/types.ts";
@@ -138,7 +139,16 @@ function proofViewOf(state: ProjectState, fingerprint: string | null = FP): Proo
     focusReadiness: state.focusWorkItemId
       ? assessCompletion(state, state.focusWorkItemId, fingerprint)
       : null,
+    focusHold: holdOf(state, fingerprint),
   };
+}
+
+/** The same derivation open.ts performs: a hold only when every gate passes. */
+function holdOf(state: ProjectState, fingerprint: string | null): Readiness | null {
+  const item = state.workItems.find((w) => w.id === state.focusWorkItemId);
+  if (!item) return null;
+  const readiness = deriveReadiness(state, item, fingerprint);
+  return readiness.kind === "held" ? readiness : null;
 }
 
 function modelWithProof(state: ProjectState, fingerprint: string | null = FP): ConsoleModel {
@@ -583,7 +593,8 @@ test("the widget warning names the most severe proof problem first", () => {
       stale: 1,
       fingerprintAvailable: true,
     }),
-    "1 stale",
+    // Staleness reads as a quiet boundary note, not a chore: R1 stops the widget nagging.
+    "evidence reconciles at boundary",
   );
   assert.equal(
     proofWarning({

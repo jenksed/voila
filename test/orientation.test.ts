@@ -16,9 +16,20 @@ import {
 import { orientationPaths } from "../src/state/paths.ts";
 import {
   evaluateStaleness,
+  orientationStateFingerprint,
+  ORIENTATION_FRESHNESS_POLICY,
   renderOrientationView,
   validateOrientationArtifact,
 } from "../src/domain/orientation.ts";
+import { createInitialState } from "../src/domain/defaults.ts";
+import {
+  createWorkItem,
+  recordDecision,
+  setFocusWorkItem,
+  setNextAction,
+  setNextActionRationale,
+  updateWorkItem,
+} from "../src/domain/operations.ts";
 import { ProjectOperationError } from "../src/domain/errors.ts";
 
 function sha(text: string): string {
@@ -125,13 +136,150 @@ test("instruction files require a real sha-256 digest", () => {
   );
 });
 
-test("HEAD movement makes an orientation stale", () => {
-  const a = validateOrientationArtifact(artifact({ head: "a".repeat(40) }));
-  const same = evaluateStaleness(a, { head: "a".repeat(40) });
-  assert.equal(same.stale, false);
-  const moved = evaluateStaleness(a, { head: "b".repeat(40) });
-  assert.equal(moved.stale, true);
-  assert.match(moved.reasons.join(" "), /HEAD moved/);
+// --- Freshness policy 2: content, not commit identity (R1 / NF-9) ---
+
+test("HEAD movement alone does not make an orientation stale", () => {
+  const a = {
+    ...validateOrientationArtifact(artifact({ head: "a".repeat(40) })),
+    freshnessPolicyVersion: ORIENTATION_FRESHNESS_POLICY,
+  };
+  const moved = evaluateStaleness(a, {
+    head: "b".repeat(40),
+    instructionHashes: { "AGENTS.md": sha(AGENTS) },
+    presentPolicyPaths: ["AGENTS.md"],
+  });
+  assert.equal(moved.stale, false, "a commit that changed nothing it read is not staleness");
+  assert.deepEqual(moved.reasons, []);
+});
+
+test("unrelated git metadata — branch, staging, clone location — never stales orientation", () => {
+  const a = {
+    ...validateOrientationArtifact(
+      artifact({ head: "a".repeat(40), branch: "main", dirty: false }),
+    ),
+    freshnessPolicyVersion: ORIENTATION_FRESHNESS_POLICY,
+  };
+  // A different branch, a different HEAD over identical content, and a now-dirty worktree.
+  const result = evaluateStaleness(a, {
+    head: "c".repeat(40),
+    instructionHashes: { "AGENTS.md": sha(AGENTS) },
+    presentPolicyPaths: ["AGENTS.md"],
+  });
+  assert.equal(result.stale, false);
+});
+
+test("a missing inspected source makes an orientation stale", () => {
+  const a = {
+    ...validateOrientationArtifact(artifact()),
+    freshnessPolicyVersion: ORIENTATION_FRESHNESS_POLICY,
+  };
+  const result = evaluateStaleness(a, { missingInstructionPaths: ["AGENTS.md"] });
+  assert.equal(result.stale, true);
+  assert.match(result.reasons.join(" "), /AGENTS\.md no longer exists/);
+});
+
+test("a policy-declared instruction file that was never inspected makes it stale", () => {
+  const a = {
+    ...validateOrientationArtifact(artifact()),
+    freshnessPolicyVersion: ORIENTATION_FRESHNESS_POLICY,
+  };
+  const result = evaluateStaleness(a, {
+    instructionHashes: { "AGENTS.md": sha(AGENTS) },
+    presentPolicyPaths: ["AGENTS.md", "CLAUDE.md"],
+  });
+  assert.equal(result.stale, true);
+  assert.match(result.reasons.join(" "), /CLAUDE\.md exists but was never inspected/);
+});
+
+test("a change to the canonical work and decisions it relied on makes it stale", () => {
+  const a = {
+    ...validateOrientationArtifact(artifact()),
+    freshnessPolicyVersion: ORIENTATION_FRESHNESS_POLICY,
+    stateFingerprint: "f".repeat(64),
+  };
+  const unchanged = evaluateStaleness(a, { stateFingerprint: "f".repeat(64) });
+  assert.equal(unchanged.stale, false);
+  const changed = evaluateStaleness(a, { stateFingerprint: "e".repeat(64) });
+  assert.equal(changed.stale, true);
+  assert.match(changed.reasons.join(" "), /canonical work and decisions it relied on changed/);
+});
+
+test("the canonical input digest ignores bookkeeping and tracks work and accepted decisions", () => {
+  let s = createInitialState({ displayName: "d", now: "T", projectId: "p" });
+  s = createWorkItem(s, { kind: "task", title: "A", status: "ready" }, "T");
+  const base = orientationStateFingerprint(s);
+
+  // Bookkeeping churn does not move it.
+  const bookkeeping = setNextActionRationale(
+    setNextAction(s, "something else entirely"),
+    "because",
+  );
+  assert.equal(orientationStateFingerprint(bookkeeping), base, "next action is not an input");
+
+  // Focus, work-item status, and accepted decisions do.
+  assert.notEqual(orientationStateFingerprint(setFocusWorkItem(s, "NF-1")), base);
+  assert.notEqual(
+    orientationStateFingerprint(updateWorkItem(s, { id: "NF-1", status: "in_progress" }, "T")),
+    base,
+  );
+  assert.notEqual(
+    orientationStateFingerprint(
+      recordDecision(s, { title: "t", decision: "d", rationale: "r", status: "accepted" }, "T"),
+    ),
+    base,
+  );
+});
+
+test("a legacy orientation stays readable and is judged by content, not re-staled by the transition", () => {
+  // No freshnessPolicyVersion: exactly what artifacts recorded before R1 look like on disk.
+  const legacy = validateOrientationArtifact(artifact({ head: "a".repeat(40) }));
+  assert.equal(legacy.freshnessPolicyVersion, undefined);
+
+  const current = evaluateStaleness(legacy, {
+    head: "z".repeat(40),
+    instructionHashes: { "AGENTS.md": sha(AGENTS) },
+    presentPolicyPaths: ["AGENTS.md"],
+  });
+  assert.equal(current.stale, false, "the one-time policy transition is not staleness");
+  assert.match(current.policyNote ?? "", /HEAD movement alone no longer stales it/);
+
+  // Content rules still apply to it.
+  const changed = evaluateStaleness(legacy, {
+    instructionHashes: { "AGENTS.md": sha("# Different\n") },
+  });
+  assert.equal(changed.stale, true);
+  assert.match(changed.reasons.join(" "), /AGENTS\.md changed/);
+});
+
+test("an artifact declaring a different freshness policy is stale, explicitly", () => {
+  const a = { ...validateOrientationArtifact(artifact()), freshnessPolicyVersion: 1 };
+  const result = evaluateStaleness(a, { instructionHashes: { "AGENTS.md": sha(AGENTS) } });
+  assert.equal(result.stale, true);
+  assert.match(result.reasons.join(" "), /recorded under orientation freshness policy 1/);
+  assert.equal(result.policyNote, undefined, "a declared policy is not the legacy transition");
+});
+
+test("recording an orientation stamps the current policy and canonical input digest", async () => {
+  const root = await repo();
+  await recordOrientation(root, artifact({ head: await currentHead(root) }));
+  const stored = await readOrientationArtifact(root, "ORI-1");
+  assert.equal(stored.freshnessPolicyVersion, ORIENTATION_FRESHNESS_POLICY);
+  assert.equal(
+    stored.stateFingerprint,
+    orientationStateFingerprint(await loadState(root)),
+    "the digest describes the state the orientation observed",
+  );
+});
+
+test("a model cannot self-report its freshness policy or canonical digest", async () => {
+  const root = await repo();
+  await recordOrientation(
+    root,
+    artifact({ freshnessPolicyVersion: 99, stateFingerprint: "0".repeat(64) }),
+  );
+  const stored = await readOrientationArtifact(root, "ORI-1");
+  assert.equal(stored.freshnessPolicyVersion, ORIENTATION_FRESHNESS_POLICY);
+  assert.notEqual(stored.stateFingerprint, "0".repeat(64));
 });
 
 test("instruction-file change makes an orientation stale", () => {

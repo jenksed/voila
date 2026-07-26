@@ -11,6 +11,7 @@ import { blockingConflicts } from "../../domain/intake.ts";
 import { runIntakeApply, runIntakeReject } from "../../commands/intake.ts";
 import { buildProofOverview, completionReadiness } from "../../state/proof-store.ts";
 import { tryRepositoryFingerprint } from "../../state/fingerprint.ts";
+import { deriveReadiness, type Readiness } from "../../domain/readiness.ts";
 import { buildConsoleModel, toReceiptView, type ConsoleModel, type ProofView } from "./model.ts";
 import { getRuntimeContext } from "./runtime.ts";
 import { createConsoleComponent, type ConsoleComponent } from "./component.ts";
@@ -151,7 +152,23 @@ export async function buildProofViewForState(
       .reverse()
       .map((receipt) => toReceiptView(receipt, fingerprint)),
     focusReadiness: focusId ? completionReadiness(overview, focusId) : null,
+    focusHold: focusHoldFor(overview, focusId),
   };
+}
+
+/**
+ * The derived hold on the focused item, or null. A hold exists when every completion gate passes but a
+ * required claim still records an outstanding limitation — passing automated proof is not acceptance.
+ */
+function focusHoldFor(
+  overview: ReturnType<typeof buildProofOverview>,
+  focusId: string | null,
+): Readiness | null {
+  if (!focusId) return null;
+  const item = overview.state.workItems.find((w) => w.id === focusId);
+  if (!item) return null;
+  const readiness = deriveReadiness(overview.state, item, overview.fingerprint);
+  return readiness.kind === "held" ? readiness : null;
 }
 
 /** UI surface the console needs from Pi's extension context. */

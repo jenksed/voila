@@ -604,6 +604,77 @@ export function completeWorkItem(
   return { state: next, assessment };
 }
 
+// --- Verification-contract identity (grouping seam for R6) ---
+//
+// Today every verification run records one receipt for one claim, so five claims verified by the same
+// command cost five identical executions. R6 ("quiet boundary reconciliation") will run each unique
+// command once and apply the result to every claim it covers.
+//
+// This is the deterministic seam that work needs, and nothing more: a contract identity, grouping,
+// and a unique count. It executes nothing, deduplicates nothing, and rewrites no receipt. Building
+// the shared-execution artifact here would be R6, not R1.
+
+/** What makes two verification runs the same run: the program, its exact argv, and where it ran. */
+export interface VerificationContract {
+  executable: string;
+  args: readonly string[];
+  cwdRef: string;
+}
+
+/**
+ * Stable identity for a verification contract. JSON-encoded rather than concatenated so no argument
+ * boundary can collide: `["a b"]` and `["a", "b"]` are different contracts and stay different.
+ */
+export function verificationContractKey(contract: VerificationContract): string {
+  return JSON.stringify([contract.executable, [...contract.args], contract.cwdRef]);
+}
+
+export interface VerificationContractGroup extends VerificationContract {
+  key: string;
+  /** Claims this contract has produced evidence for, in canonical claim order. */
+  claimIds: string[];
+  /** Receipts recorded under this contract, in canonical receipt order. */
+  receiptIds: string[];
+}
+
+/**
+ * Group recorded receipts by verification contract. Deterministic: groups appear in first-recorded
+ * order, and the IDs inside each group keep canonical order.
+ */
+export function verificationContractGroups(
+  state: Readonly<ProjectState>,
+): VerificationContractGroup[] {
+  const groups = new Map<string, VerificationContractGroup>();
+  for (const receipt of state.receipts) {
+    const contract: VerificationContract = {
+      executable: receipt.executable,
+      args: receipt.args,
+      cwdRef: receipt.cwdRef,
+    };
+    const key = verificationContractKey(contract);
+    const existing = groups.get(key);
+    if (existing) {
+      if (!existing.claimIds.includes(receipt.claimId)) existing.claimIds.push(receipt.claimId);
+      existing.receiptIds.push(receipt.id);
+      continue;
+    }
+    groups.set(key, {
+      key,
+      executable: contract.executable,
+      args: [...contract.args],
+      cwdRef: contract.cwdRef,
+      claimIds: [receipt.claimId],
+      receiptIds: [receipt.id],
+    });
+  }
+  return [...groups.values()];
+}
+
+/** How many distinct verification commands the recorded evidence actually represents. */
+export function uniqueVerificationContractCount(state: Readonly<ProjectState>): number {
+  return verificationContractGroups(state).length;
+}
+
 /** Compact proof summary used by the ambient widget and injected context. */
 export interface ProofSummary {
   total: number;

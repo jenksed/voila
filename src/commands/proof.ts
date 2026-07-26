@@ -15,8 +15,11 @@ import {
   completeWorkItem,
   CompletionRejectedError,
   criterionCoverage,
+  verificationContractGroups,
   type ClaimEvaluationStatus,
 } from "../domain/proof.ts";
+import { deriveReadiness, readinessLine } from "../domain/readiness.ts";
+import { abbreviate } from "../domain/status.ts";
 import { ProjectOperationError } from "../domain/errors.ts";
 import { loadErrorResult } from "./loaderror.ts";
 import type { CommandResult } from "./types.ts";
@@ -175,10 +178,19 @@ export async function runProof(root: string, target?: string): Promise<CommandRe
     const item = state.workItems.find((w) => w.id === target);
     if (!item) return { level: "warning", lines: [`No work item ${target}.`] };
     const assessment = assessCompletion(state, item.id, overview.fingerprint);
+    const readiness = deriveReadiness(state, item, overview.fingerprint);
     const coverage = criterionCoverage(state, item);
     const lines = [
       `Proof for ${item.id} [${item.status}] — ${item.title}`,
-      `  completion: ${assessment.ready ? "READY" : `BLOCKED by ${assessment.failing.length} gate(s)`}`,
+      `  completion: ${readiness.label}`,
+      `              ${readiness.detail}`,
+      // A held item's outstanding acceptance is shown in full: this is the surface with room for it.
+      ...(readiness.kind === "held"
+        ? [
+            "  outstanding acceptance:",
+            ...readiness.outstanding.map((o) => `    - ${o.claimId}: ${o.limitation}`),
+          ]
+        : []),
       "  acceptance criteria:",
       ...(coverage.length > 0
         ? coverage.map(
@@ -189,7 +201,7 @@ export async function runProof(root: string, target?: string): Promise<CommandRe
       "  gates:",
       ...assessment.gates.map((g) => `    [${g.passed ? "pass" : "FAIL"}] ${g.label}: ${g.detail}`),
     ];
-    return { level: assessment.ready ? "info" : "warning", lines, state };
+    return { level: readiness.kind === "ready" ? "info" : "warning", lines, state };
   }
 
   const s = overview.summary;
@@ -213,11 +225,23 @@ export async function runProof(root: string, target?: string): Promise<CommandRe
   if (gated.length > 0) {
     lines.push("Work items with proof requirements:");
     for (const w of gated) {
-      const a = assessCompletion(state, w.id, overview.fingerprint);
+      lines.push(`  ${readinessLine(w, deriveReadiness(state, w, overview.fingerprint))}`);
+    }
+  }
+  // Verification-contract grouping: the seam R6 will use to run each unique command once. Voila still
+  // executes one command per verification run today; this only reports what the grouping is.
+  const contracts = verificationContractGroups(state);
+  if (contracts.length > 0) {
+    lines.push(
+      `Verification contracts: ${contracts.length} unique across ${state.receipts.length} recorded execution(s)`,
+    );
+    for (const group of contracts.slice(0, 5)) {
+      const command = abbreviate(`${group.executable} ${group.args.join(" ")}`, 80);
       lines.push(
-        `  ${w.id} — ${a.ready ? "READY to complete" : `${a.failing.length} gate(s) failing`}`,
+        `  ${command} (cwd ${group.cwdRef}) — ${group.receiptIds.length} execution(s), serves ${group.claimIds.length} claim(s): ${group.claimIds.join(", ")}`,
       );
     }
+    if (contracts.length > 5) lines.push(`  …and ${contracts.length - 5} more`);
   }
   lines.push("", "Detail: /voila proof <NF-n|CLM-n|RCP-n> · /voila claims · /voila complete NF-n");
   return { level: s.unsupported > 0 ? "warning" : "info", lines, state };

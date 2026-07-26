@@ -14,6 +14,7 @@ import type {
   CompletionAssessment,
   ProofSummary,
 } from "../../domain/proof.ts";
+import type { Readiness } from "../../domain/readiness.ts";
 
 export interface RuntimeContext {
   branch?: string;
@@ -80,6 +81,12 @@ export interface ProofView {
   receipts: ReceiptView[];
   /** Completion readiness of the focused item, when one is focused. */
   focusReadiness: CompletionAssessment | null;
+  /**
+   * Derived hold on the focused item: every gate passes, but a required claim still records what its
+   * evidence does not establish. Null when there is no hold. Passing gates alone must never render as
+   * "ready to complete" (R1 / NF-9).
+   */
+  focusHold: Readiness | null;
 }
 
 export interface ConsoleInput {
@@ -161,6 +168,7 @@ export function emptyProofView(): ProofView {
     claims: [],
     receipts: [],
     focusReadiness: null,
+    focusHold: null,
   };
 }
 

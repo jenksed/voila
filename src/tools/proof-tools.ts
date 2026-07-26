@@ -34,6 +34,7 @@ import {
   type CreateClaimInput,
   type UpdateClaimInput,
 } from "../domain/proof.ts";
+import { deriveReadiness } from "../domain/readiness.ts";
 import { CONFIDENCES } from "../domain/types.ts";
 
 function text(line: string, details?: unknown): VoilaToolResult {
@@ -402,12 +403,19 @@ export function proofTools(): VoilaTool[] {
             lines.push(`Work item not found: ${p.workItemId}.`);
           } else {
             const assessment = assessCompletion(overview.state, item.id, overview.fingerprint);
+            const readiness = deriveReadiness(overview.state, item, overview.fingerprint);
             const coverage = criterionCoverage(overview.state, item);
             details.workItem = { id: item.id, status: item.status, title: item.title };
             details.coverage = coverage;
             details.assessment = assessment;
+            details.readiness = readiness;
             lines.push(
-              `${item.id} [${item.status}] — completion ${assessment.ready ? "READY" : `BLOCKED by ${assessment.failing.length} gate(s)`}:`,
+              `${item.id} [${item.status}] — completion ${readiness.label}: ${readiness.detail}`,
+              // Passing every gate is not acceptance while a required claim still records what its
+              // evidence does not establish. Say so here, where the model reads it.
+              ...(readiness.kind === "held"
+                ? readiness.outstanding.map((o) => `  outstanding: ${o.claimId}: ${o.limitation}`)
+                : []),
               ...assessment.gates.map(
                 (g) => `  [${g.passed ? "pass" : "FAIL"}] ${g.label}: ${g.detail}`,
               ),
