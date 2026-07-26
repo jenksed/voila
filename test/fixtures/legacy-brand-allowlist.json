@@ -283,7 +283,7 @@
     {
       "path": "docs/product/PRODUCT_DIRECTION.md",
       "category": "historical-evidence",
-      "reason": "Authored v0.1 product direction preserved verbatim per CLAUDE.md; re-authoring under the Voila name is separate, explicit work.",
+      "reason": "Authored v0.1 product direction; the body is preserved verbatim per CLAUDE.md and is prefixed only by a status banner recording that ADR-0009 superseded it as the operational statement. Re-authoring the body under the Voila name is still separate, explicit work.",
       "immutable": true,
       "removable": true
     },

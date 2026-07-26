@@ -6,25 +6,45 @@ as `CLAUDE.md`, but must not duplicate or contradict this one.
 
 ## Repository purpose and current phase
 
-Voila is a personal development operating system built on the Pi coding-agent harness. See
-[docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) for the canonical product
-statement.
+Voila is a **project-aware agentic development environment** built on the Pi coding-agent harness.
+Its Project Steward keeps models, agents, tools, terminals, and handoffs aligned with durable project
+intent, coordinates their work, preserves continuity, and quietly assembles the evidence needed to
+justify delivery.
 
-Phase 0 (research/architecture) is complete. Through **Packet 3** the repository has a runnable Pi
-extension (`.pi/extensions/voila.ts` + modular `src/`) with canonical `.voila/` state (schema v3),
-a compact project-operations layer, a Steward Console, and the first daily-use workflow: planning
-intake with preserved sources and provenance, repository orientation, a Project Steward skill, and
-automatic context injection. Build only what the accepted plan phase calls for; do not add features
-outside the current packet's scope. The next phase is **claims, verification receipts, and the
-protected completion transition** — Voila cannot yet mark work complete.
+The authoritative operational product statement is
+[docs/product/PROJECT_STEWARD_DOCTRINE.md](docs/product/PROJECT_STEWARD_DOCTRINE.md).
+[docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) is the preserved v0.1 authored
+source; where the two disagree, the doctrine wins.
+
+**Current position.** Phase 0 and Packets 1–4 plus Phase 6 are complete: a runnable Pi extension
+(`.pi/extensions/voila.ts` + modular `src/`), canonical `.voila/` state with explicit schema
+migration, a project-operations layer, a Steward Console, planning intake with preserved provenance,
+repository orientation, the proof engine (claims, receipts, freshness, protected completion), and a
+delivery engine. Phase 7's self-hosting gate returned GO on capability, HOLD on backlog closure.
+
+**Current phase: R0 complete, R1 next.** As of 2026-07-26,
+[ADR-0009](docs/decisions/0009-project-steward-operational-realignment.md) superseded Phases 5–8 of
+the old plan. The active roadmap is
+[docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md): R1 friction
+containment, R2 one background terminal, R3 one bounded Pi child worker, R4 automatic settlement,
+R5 fresh-session continuity, R6 quiet boundary reconciliation, R7 uncoached dogfood acceptance. The
+milestone is **Project Steward Operational Loop v1**.
+
+Build only what the accepted R-packet calls for. Do **not** begin approval bundles, broad model
+routing, arbitrary workflow scripting, remote execution, or release automation before R7 passes.
+Delegation and background execution are no longer optional, but **they do not exist yet** — do not
+describe them, in any document or skill, as though they do.
 
 ## Core doctrine
 
-These four principles govern how work is done, both on Voila and by Voila once it exists.
+These five principles govern how work is done, both on Voila and by Voila once it exists.
 
-1. **Delegate work, never ownership.** A primary steward retains accountability for intent,
+1. **Delegate work, retain the thread.** A primary steward retains accountability for intent,
    accepted decisions, current state, delegation, integration, evidence, risks, completion claims,
    and the next justified action. Specialists and models may change; accountability does not move.
+   It also retains the *thread*: what is being attempted, which worker or process owns each task,
+   what actually happened, what came back, and what should happen next. The developer is not the
+   scheduler, the message bus, or the state repair mechanism.
 2. **Evidence before completion.** Changing files does not prove work is done. Meaningful work
    normally requires tests, behavior demonstrations, relevant docs, explicit risks and limits,
    reproducible verification receipts, and appropriate Git delivery boundaries.
@@ -34,6 +54,13 @@ These four principles govern how work is done, both on Voila and by Voila once i
    effects, and approval boundaries.
 4. **Progressive rigor.** Match ceremony to the work. Rigor levels: Research, Sketch, Build,
    Harden, Release. A quick personal utility must not carry release-grade overhead.
+5. **No managing the manager.** Every capability must help the Steward use AI to complete accepted
+   work with *less* developer coordination. A capability fails this gate if it makes the developer
+   manage routine state freshness, understand internal schemas, route every task by hand, check
+   whether workers settled, carry results between models, repeatedly say "continue", repair normal
+   execution state, approve reversible in-plan work, or operate evidence infrastructure during
+   ordinary development. This applies retroactively: a shipped capability that fails it is a defect,
+   not a feature to defend.
 
 ## How to work in this repository
 

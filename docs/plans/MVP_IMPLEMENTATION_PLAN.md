@@ -1,5 +1,41 @@
 # MVP Implementation Plan
 
+> ## Status: partially superseded — retained as history
+>
+> **This document no longer describes what gets built next.** As of 2026-07-26, Phases 5–8 below are
+> superseded by [PROJECT_REALIGNMENT_PLAN.md](PROJECT_REALIGNMENT_PLAN.md), established by
+> [ADR-0009](../decisions/0009-project-steward-operational-realignment.md) / DEC-18. The doctrine that
+> now governs is [PROJECT_STEWARD_DOCTRINE.md](../product/PROJECT_STEWARD_DOCTRINE.md).
+>
+> **What was completed under this plan.** Phase 0 (bootstrap audit), Phase 1 (environment and
+> skeleton extension), Phase 2 (durable ledger and backlog), Phase 3 (intake, orientation, next
+> action), Phase 4 (claims, evidence, verification, completion gate), and Phase 6 (delivery
+> behaviors). Phase 7's gate check ran and returned GO on capability, HOLD on backlog closure. These
+> phases delivered real, tested, evidenced capability and are not being walked back.
+>
+> **Why the rest is superseded.** This plan optimized for proving that work was *justified* and
+> deferred the capabilities that let AI actually *perform and coordinate* the work. Phase 5 states
+> that delegation is "NOT a self-hosting prerequisite," which placed the product's central execution
+> capability outside the critical path while Phase 8's approval-bundles subsystem sat on top of it.
+> The result was a system the developer had to operate: refreshing claims, interpreting stale
+> evidence, re-running identical verification, reconciling Proof against Doctor, and repeatedly
+> saying "continue."
+>
+> **What is now promoted from deferred to product-critical.** Child-agent delegation, background
+> terminals, worker inspection and takeover, and automatic settlement and integration. The global
+> non-goals list below explicitly deferred background terminals and multi-agent orchestration; that
+> classification no longer holds for the first three items and for single-worker delegation.
+> Sandboxing, remote execution, cost accounting, and arbitrary workflow scripting remain deferred.
+>
+> **What is paused.** Phase 8 (`voila-approval-bundles` self-hosting) is paused, not cancelled. It
+> resumes only after the operational loop passes uncoached acceptance (R7).
+>
+> **Where the new roadmap lives.** [PROJECT_REALIGNMENT_PLAN.md](PROJECT_REALIGNMENT_PLAN.md) §5
+> defines the R-sequence (R0–R7) toward **Project Steward Operational Loop v1**.
+>
+> Phases 0–4, 6, and 7 below remain the accurate record of how the foundation was built and gated.
+> Read Phases 5 and 8 as superseded intent.
+
 ## Summary
 
 A phased plan from an installed Pi to a self-hosted approval subsystem. Each phase produces something
@@ -14,6 +50,11 @@ Multi-agent orchestration at scale, background terminals, sandboxing, remote/lon
 model-routing engine, cost/budget accounting, PR automation beyond a delivery summary, theme,
 packaging/distribution, and any reuse of reference-repo code. These are deferred or rejected per the
 capability matrix.
+
+> **Partially superseded by ADR-0009.** Background terminals are now R2 and single-worker delegation
+> is now R3 — both product-critical. Multi-agent orchestration *at scale* remains a non-goal
+> (concurrency begins at one), as do sandboxing, remote execution, the model-routing engine, cost
+> accounting, PR automation, theme, packaging, and reference-code reuse.
 
 ## Phase 0 — Bootstrap audit and plans (this repository) — DONE
 
@@ -95,6 +136,13 @@ capability matrix.
 
 ## Phase 5 — One bounded delegation (prototype; NOT a self-hosting prerequisite)
 
+> **SUPERSEDED by ADR-0009.** Delegation is no longer an optional prototype and no longer sequenced
+> after the evidence system. It is product-critical and is now R3 in
+> [PROJECT_REALIGNMENT_PLAN.md](PROJECT_REALIGNMENT_PLAN.md), preceded by R2 (one background
+> terminal) and followed by R4 (automatic settlement and integration). The "delegation is optional,
+> direct execution is a first-class path" framing below is exactly the classification the
+> realignment reverses.
+
 - **Objective**: Prototype delegating one bounded specialist task and integrating the result under
   the Steward. **Delegation is not required for the first self-hosting transition** (see the
   self-hosting gate); direct Steward execution is a first-class path.
@@ -141,6 +189,11 @@ capability matrix.
 - **Output**: an explicit go/no-go for self-hosting.
 
 ## Phase 8 — Build `voila-approval-bundles` under Voila (self-hosted delivery)
+
+> **PAUSED by ADR-0009**, not cancelled. This project resumes only after the Project Steward
+> Operational Loop passes uncoached dogfood acceptance (R7). The reasoning: self-hosting a subsystem
+> on a Steward that still needs to be coached through its own workflow would prove the subsystem, not
+> the product.
 
 - **Objective**: Use Voila to design, build, verify, and deliver the approval subsystem.
 - **Tasks**: per [SELF_HOSTING_ACCEPTANCE_PROJECT.md](SELF_HOSTING_ACCEPTANCE_PROJECT.md) — ingest the

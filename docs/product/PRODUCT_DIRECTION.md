@@ -1,5 +1,36 @@
 # NewFang Product Direction v0.1
 
+> ## Status: historical authored source — superseded as the operational statement
+>
+> **The authoritative operational product statement is now
+> [PROJECT_STEWARD_DOCTRINE.md](PROJECT_STEWARD_DOCTRINE.md)**, established 2026-07-26 by
+> [ADR-0009](../decisions/0009-project-steward-operational-realignment.md) / DEC-18 from
+> [PROJECT_REALIGNMENT_PLAN.md](../plans/PROJECT_REALIGNMENT_PLAN.md).
+>
+> The v0.1 body below is the **authored source, preserved verbatim** under the working name the
+> product carried at the time. It is retained because it is the origin of the product's vocabulary,
+> role model, principles, and lifecycle — most of which still hold. Nothing below has been rewritten;
+> this banner is the only addition.
+>
+> **What the doctrine changes:**
+>
+> - Voila is a **project-aware agentic development environment**, and its Project Steward is an
+>   **active AI team lead** — not a bookkeeper that happens to sit near a coding agent.
+> - **Durable state serves AI execution.** §13's backlog and ledger are the navigation spine for
+>   delegated work, not the daily surface.
+> - **Proof serves completion and delivery boundaries.** §14's claims, receipts, and gates become a
+>   quiet boundary service; they are not a maintenance obligation during ordinary development.
+> - **Reference-style execution visibility is a first-class direction.** §18–§20's background
+>   execution, parallelism, active steering, and activity visibility move from aspiration to the
+>   product-critical path (R2–R4).
+> - **The developer must not operate routine Steward bookkeeping.** This is enforced as the
+>   **No Managing the Manager gate**.
+> - §15 (approval bundles) is **paused**. §27's proposed phases are superseded by the R-sequence.
+> - The operative doctrine phrasing is **"delegate work, retain the thread"** (§5.1 read it as
+>   "delegate work, never ownership" — the accountability claim stands, the coordination claim is new).
+>
+> Where this document and the doctrine disagree, **the doctrine wins**.
+
 **Status:** Direction locked; ready for technical discovery
 **Product owner:** Joshua Jenks
 **Foundation:** Pi coding-agent harness

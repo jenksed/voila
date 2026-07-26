@@ -17,13 +17,41 @@ test("repository loads its own dogfooded v4 canonical state", async () => {
   assert.equal(state.schemaVersion, 4);
   assert.equal(state.phase, "build");
   assert.ok(state.workItems.length >= 7);
-  assert.equal(state.focusWorkItemId, "NF-2");
+  // DEC-18 (ADR-0009) moved the active priority to the Project Steward operational loop, so focus
+  // moved from NF-2 to NF-9 (R1). This is a deliberate direction change under owner direction, not
+  // drift. NF-2 is still held and still owed its authenticated intake — asserted below, which is
+  // where that invariant belongs.
+  assert.equal(state.focusWorkItemId, "NF-9");
   assert.ok(state.nextActionRationale && state.nextActionRationale.length > 0);
   assert.ok(state.decisions.filter((d) => d.status === "accepted").length >= 6);
   assert.ok(state.risks.length >= 4);
   // The focused item is neither completed nor cancelled.
   const focus = state.workItems.find((w) => w.id === state.focusWorkItemId);
   assert.ok(focus && focus.status !== "completed" && focus.status !== "cancelled");
+});
+
+test("the realignment is recorded in canonical state and the R-sequence is sequenced", async () => {
+  const state = await loadState(process.cwd());
+
+  // DEC-18 must exist and be accepted: canonical state, not only documents, carries the direction.
+  const dec18 = state.decisions.find((d) => d.id === "DEC-18");
+  assert.ok(dec18, "DEC-18 records the operational realignment");
+  assert.equal(dec18.status, "accepted");
+
+  // R1..R7 exist as work items and form a dependency chain, so no later R-packet can be picked up
+  // before its predecessor. NF-9 (R1) is the only one that is startable.
+  const chain = ["NF-9", "NF-10", "NF-11", "NF-12", "NF-13", "NF-14", "NF-15"];
+  for (const [i, id] of chain.entries()) {
+    const item = state.workItems.find((w) => w.id === id);
+    assert.ok(item, `${id} exists for R${i + 1}`);
+    assert.notEqual(item.status, "completed", `${id} is unbuilt; nothing here may claim otherwise`);
+    assert.ok(item.acceptanceCriteria.length > 0, `${id} states how it will be judged`);
+    if (i === 0) {
+      assert.deepEqual(item.dependsOn, [], "R1 has no predecessor in the R-sequence");
+    } else {
+      assert.deepEqual(item.dependsOn, [chain[i - 1]], `${id} depends on ${chain[i - 1]}`);
+    }
+  }
 });
 
 test("dogfooded state stays honest: completed set is exactly NF-1; NF-2..NF-4 remain held", async () => {

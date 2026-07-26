@@ -4,19 +4,25 @@ Self-contained context for picking this project up cold. Written to be harness-n
 into any assistant, or read it yourself after a break.
 
 **Repo:** `git@github.com:jenksed/voila.git` · **Checkout:** `/Users/jenksed/Projects/voila`
-**Head at writing:** `a3ed25f` · **Canonical revision:** 123 · **Gate:** 580 tests passing, CI green
+**Head at writing:** `0d07e1b` (main) · **Gate:** 587 tests passing
 
 ---
 
 ## 1. What Voila is
 
-A personal development operating system built on the **Pi** coding-agent harness. It owns the path
-from intent to verified, delivered result: preserve the planning source, hold durable project truth,
-require evidence before completion, propose a delivery a human approves.
+A **project-aware agentic development environment** built on the **Pi** coding-agent harness. Its
+Project Steward keeps models, agents, tools, terminals, and handoffs aligned with durable project
+intent, coordinates their work, preserves continuity, and quietly assembles the evidence needed to
+justify delivery.
 
-The boundary that defines it: **the model interprets (fallibly); Voila enforces** (preservation,
-schemas, provenance, gating, persistence). Nothing enters canonical truth without the user accepting
-it.
+Two boundaries define it:
+
+- **The model interprets (fallibly); Voila enforces** (preservation, schemas, provenance, gating,
+  persistence). Nothing enters canonical truth without the user accepting it.
+- **The Steward coordinates; the developer does not.** Delegate work, retain the thread. If a
+  capability makes the developer manage routine bookkeeping, that is a defect — see the
+  **No Managing the Manager gate** in
+  [`docs/product/PROJECT_STEWARD_DOCTRINE.md`](product/PROJECT_STEWARD_DOCTRINE.md).
 
 It is a Pi **extension**, not a standalone CLI. There is no `voila` binary.
 
@@ -49,27 +55,53 @@ Read [`AGENTS.md`](../AGENTS.md) first — it holds the operating doctrine and t
 
 ## 3. Where the project actually is
 
-**Phase 7 self-hosting gate: GO on capability, HOLD on backlog closure.**
-Full record: [`docs/verification/PHASE_7_SELF_HOSTING_GATE.md`](verification/PHASE_7_SELF_HOSTING_GATE.md).
+**The roadmap was reset on 2026-07-26.** Phases 5–8 of
+[`MVP_IMPLEMENTATION_PLAN.md`](plans/MVP_IMPLEMENTATION_PLAN.md) are superseded by
+[`ADR-0009`](decisions/0009-project-steward-operational-realignment.md) / DEC-18. Read these three,
+in order, before doing anything:
 
-All eight gate capabilities are implemented and evidenced: planning intake, durable state, visible
-next action, claims and evidence, reproducible verification, state-transition blocking, delivery
-summary, commit suggestion. (Delegation is explicitly *not* a gate capability.)
+1. [`docs/product/PROJECT_STEWARD_DOCTRINE.md`](product/PROJECT_STEWARD_DOCTRINE.md) — what Voila is
+   for and how the Steward must behave. Authoritative.
+2. [`docs/plans/PROJECT_REALIGNMENT_PLAN.md`](plans/PROJECT_REALIGNMENT_PLAN.md) — the R0–R7 roadmap.
+3. [`ADR-0009`](decisions/0009-project-steward-operational-realignment.md) — what changed and why.
+
+**Why it was reset.** The foundation is strong and the daily experience was wrong: the developer had
+become responsible for operating Voila — refreshing claims, interpreting stale evidence, re-running
+identical verification, reconciling Proof against Doctor, and repeatedly saying "continue." The
+system got excellent at recording whether work was *justified* and stayed weak at using AI to
+*perform and coordinate* it. Delegation, background terminals, worker visibility, and automatic
+settlement had all been classified as optional. They are now the critical path.
+
+**Next: R1 — friction containment and ambient continuity.** Its acceptance gate is behavioral: in a
+fresh Pi session the user says `Continue.` and the Steward identifies the correct work and begins
+useful action without asking for a recap. If `Continue` still produces a status report, R1 failed.
+
+**What is built** (and is not being walked back): durable per-project state, planning intake with
+preserved provenance, repository orientation, work items and dependencies, claims and deterministic
+receipts, the protected completion transition, the delivery engine, the Steward Console, the ambient
+widget, 30 tools. Phase 7's gate returned GO on capability, HOLD on backlog closure.
+
+**What is not built:** everything in R1–R7. No delegation, no background processes, no automatic
+settlement, no fresh-session continuity, no quiet boundary reconciliation. The doctrine document
+carries an explicit built/not-built table. Do not describe any of it as present.
 
 Backlog:
 
 ```text
-NF-1 in_progress   project-operations layer        (shipped as Packet 2)
-NF-2 ready         intake + orientation            (shipped as Packet 3)  <- FOCUS
-NF-3 backlog       claims/receipts/completion gate (shipped as Packet 4)
-NF-4 backlog       delivery behavior               (shipped as Phase 6)
+NF-1 completed     project-operations layer        (released by DEC-17)
+NF-2 ready         intake + orientation           HELD: needs authenticated intake (§5A)
+NF-3 backlog       claims/receipts/completion gate (shipped as Packet 4, dependency-blocked)
+NF-4 backlog       delivery behavior               (shipped as Phase 6, dependency-blocked)
 NF-5..NF-8 backlog
+NF-9  ready        R1 friction containment          <- FOCUS
+NF-10..NF-15       R2..R7, sequenced by dependency
 ```
 
-**NF-1..NF-4 are code-complete but deliberately not marked complete.** They were completed through
-the gate during the walk-through and then reverted — see §5.
+**NF-2..NF-4 are code-complete but deliberately not marked complete.** They were completed through
+the gate during the walk-through and then reverted — see §5. The realignment does **not** release
+them; NF-2's authenticated intake is still owed.
 
-5 claims (CLM-1..CLM-5), 28 receipts, 16 decisions.
+5 claims (CLM-1..CLM-5), 68 receipts, 18 decisions.
 
 ---
 
@@ -89,11 +121,20 @@ These are enforced by tests. Breaking them is not a style disagreement.
    renumbered. Keep allocating `NF-n`; there is no `VOI-n`.
 6. **The product name is plain ASCII `Voila`.** `Voilà`/`voilà` are prohibited everywhere.
 
+Two more are doctrine but **not** test-enforced — they constrain judgment, not syntax:
+
+7. **No managing the manager.** A capability that makes the developer manage routine state freshness,
+   route tasks by hand, chase worker status, carry results between models, repeatedly say "continue",
+   or operate evidence infrastructure during ordinary development is a **defect**. This applies to
+   already-shipped capability.
+8. **Never claim capability that does not exist.** R1–R7 are not built. The Steward skill's "do not
+   spawn subagents" instruction is current fact, not permanent doctrine.
+
 ---
 
-## 5. The two open items
+## 5. The one open item
 
-### A. Interactive tier (blocks NF-1 and NF-2) — needs a human at a terminal
+### A. Interactive tier (blocks NF-2) — needs a human at a terminal
 
 Attested so far in a real TTY: extension load, ambient widget, `/voila status`, `/voila doctor`,
 `/voila deliver`, and the full Steward Console (`/voila home` — tabs, Work, Attention, Proof,
@@ -109,29 +150,30 @@ exactly what NF-2's acceptance criteria require.
 
 This tier has found **three real defects** that no automated check caught. It is not ceremony.
 
-### B. Fingerprint design decision — needs the owner's call
+### B. Fingerprint design decision — RESOLVED, shipped
 
-**Problem.** The repository fingerprint is `(gitHead, tracked diff, staged diff, untracked hashes)`.
-Commit your work and `gitHead` moves while the diffs empty — a *different* fingerprint for
-*identical file content*. So evidence goes stale on every commit, including the commit that records
-the receipts. Claims are almost never green at a pushed branch tip.
+This was open in the previous revision of this handoff. It is now decided and implemented:
+[`ADR-0008`](decisions/0008-fingerprint-v2-content-addressed.md) made the fingerprint
+content-addressed over effective working-tree content. `gitHead` is retained as non-authoritative
+diagnostic metadata and is **not** in the digest.
 
-**Proposal.** Make the fingerprint content-addressed: hash the working-tree content of tracked plus
-untracked-non-ignored files, and drop `gitHead`. Evidence then survives a commit that changes no
-content, which is the correct semantics — evidence is about the code, not which commit it sits on.
+Verified in practice: two commits moved `gitHead` from `e2835bd` to `30cd164` and the merge to `main`
+moved it again, while the digest held at `2bdac21f2540a62f…` throughout — the same value carried by
+all five current receipts. Evidence now survives a commit that changes no content, so a branch can
+land evidence-backed at its tip. The one-time migration cost was paid: RCP-64..68 are the first v2
+receipt set.
 
-**Cost.** All 28 existing receipts carry old-format fingerprints, so every claim goes stale once
-until re-verified (one command). It changes what "evidence is current" means, so it wants an ADR.
-
-**Status:** undecided. Not implemented. Do not implement without the owner's sign-off.
+Keep this in mind when reading older records: v1 receipts carry no `fingerprintAlgorithm` field and
+are recognized as v1 by its absence.
 
 ---
 
 ## 6. Gotchas that will bite you
 
-**Uncommitted receipts right now.** The tree intentionally has ~9 untracked `.voila/receipts/RCP-2x/`
-plus modified `.voila/project.json`, `events.jsonl`, `views/PROJECT_STATUS.md`. They are uncommitted
-so Proof shows `5 supported`. Committing them stales all 5 (see §5B). Either is fine — just know why.
+**Receipts are committed now, and that is safe.** The old advice here was to leave receipts
+uncommitted so Proof would show `5 supported`, because committing staled them. ADR-0008 removed that
+trap: `.voila/` is excluded from the digest and `gitHead` is not in it, so recording and committing
+evidence no longer invalidates it. Commit receipts normally.
 
 **The rename guard fails in both directions.** `test/rename-guard.test.ts` fails if an unlisted file
 contains `NewFang`/`newfang`/etc., **and** if an allowlisted path no longer does. Adding a file that
@@ -179,7 +221,10 @@ headlessly — but nothing about the running TUI can be claimed.
 | Document | Why |
 | --- | --- |
 | [`AGENTS.md`](../AGENTS.md) | Operating doctrine. Read first. |
-| [`docs/plans/MVP_IMPLEMENTATION_PLAN.md`](plans/MVP_IMPLEMENTATION_PLAN.md) | Phases 0–8 and their gates |
+| [`docs/product/PROJECT_STEWARD_DOCTRINE.md`](product/PROJECT_STEWARD_DOCTRINE.md) | **Authoritative** product statement and the No Managing the Manager gate |
+| [`docs/plans/PROJECT_REALIGNMENT_PLAN.md`](plans/PROJECT_REALIGNMENT_PLAN.md) | **The active roadmap** — R0–R7 |
+| [`docs/decisions/0009-project-steward-operational-realignment.md`](decisions/0009-project-steward-operational-realignment.md) | What the realignment changed, and why |
+| [`docs/plans/MVP_IMPLEMENTATION_PLAN.md`](plans/MVP_IMPLEMENTATION_PLAN.md) | Phases 0–8. **Phases 5–8 superseded**; retained as history |
 | [`docs/verification/PHASE_7_SELF_HOSTING_GATE.md`](verification/PHASE_7_SELF_HOSTING_GATE.md) | Current status, the reversal, all three defects |
 | [`docs/design/PROOF_ENGINE.md`](design/PROOF_ENGINE.md) | Claims, receipts, freshness, protected completion |
 | [`docs/design/DELIVERY_ENGINE.md`](design/DELIVERY_ENGINE.md) | Delivery summary, commit suggestion, the boundary |
