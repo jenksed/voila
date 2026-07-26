@@ -12,7 +12,7 @@ Design: [`docs/design/DELIVERY_INSPECTOR.md`](../design/DELIVERY_INSPECTOR.md).
 | 2. Real-repository integration (temporary git repos) | **PASS** — 13 tests, included in tier 1 |
 | 3. No-mutation proof (byte-identical porcelain + untouched index) | **PASS** — included in tier 1 |
 | 4. Pi integration | **NOT APPLICABLE** — Packet 5A registers no tool, command, or UI |
-| 5. GitHub CI | **PENDING** — branch pushed; recorded when Actions completes |
+| 5. GitHub CI | **NOT RUN** — the branch is pushed, but the workflow triggers only on `pull_request` and pushes to `main`, and no PR is open yet |
 
 No pending tier is claimed as passed. The inspector has **no callers inside the extension**, so no
 daily-use readiness is claimed.
