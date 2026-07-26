@@ -79,6 +79,20 @@ function r2aDefinition(overrides: Partial<OperationDefinition> = {}): OperationD
   } as OperationDefinition;
 }
 
+/** Build a minimal allow admission for tests. */
+function allowAdmission(
+  overrides: Partial<import("../src/domain/types.ts").OperationAdmission> = {},
+): import("../src/domain/types.ts").OperationAdmission {
+  return {
+    result: "allow",
+    ruleId: "ADMIT.OPERATIONS.ALLOW_NEW",
+    policyVersion: 1,
+    authorityReference: { kind: "decision", id: "DEC-22" },
+    decidedAt: NOW,
+    ...overrides,
+  };
+}
+
 test("R2A_STATE_STORE_OPERATION is the only accepted operation; it has the expected argv", () => {
   assert.equal(R2A_STATE_STORE_OPERATION.id, "r2a.state-store-tests");
   assert.equal(R2A_STATE_STORE_OPERATION.version, 1);
@@ -92,6 +106,15 @@ test("R2A_STATE_STORE_OPERATION is the only accepted operation; it has the expec
     "test/state.store.test.ts",
   ]);
   assert.equal(R2A_STATE_STORE_OPERATION.workingDirectory, "repository_root");
+  assert.deepEqual(R2A_STATE_STORE_OPERATION.effectProfile, [
+    "local_read",
+    "bounded_temporary_write",
+  ]);
+  assert.equal(R2A_STATE_STORE_OPERATION.authorityRequirement, "accepted_project_operation");
+  assert.deepEqual(R2A_STATE_STORE_OPERATION.authoritySourceRef, {
+    kind: "decision",
+    id: "DEC-22",
+  });
   assert.equal(R2A_STATE_STORE_OPERATION.riskClassification.riskClass, "safe_and_expected");
   assert.equal(R2A_STATE_STORE_OPERATION.successContract.exitCode, 0);
   assert.equal(R2A_STATE_STORE_OPERATION.timeoutContract.totalMs, 120_000);
@@ -112,12 +135,20 @@ test("definition fingerprint is stable across re-registration and ignores timest
   assert.equal(definitionFingerprint(a), definitionFingerprint(b));
 });
 
-test("definition fingerprint changes when argv or executable changes", () => {
+test("definition fingerprint binds ordered argv, effects, authority, and executable", () => {
   const base = r2aDefinition();
   const withExtraArg = r2aDefinition({ args: [...base.args, "--extra"] });
+  const withReorderedArgv = r2aDefinition({ args: [...base.args].reverse() });
   const withDifferentExec = r2aDefinition({ executable: "node" });
+  const withDifferentEffects = r2aDefinition({ effectProfile: ["local_read"] });
+  const withDifferentAuthority = r2aDefinition({
+    authoritySourceRef: { kind: "decision", id: "DEC-999" },
+  });
   assert.notEqual(definitionFingerprint(base), definitionFingerprint(withExtraArg));
+  assert.notEqual(definitionFingerprint(base), definitionFingerprint(withReorderedArgv));
   assert.notEqual(definitionFingerprint(base), definitionFingerprint(withDifferentExec));
+  assert.notEqual(definitionFingerprint(base), definitionFingerprint(withDifferentEffects));
+  assert.notEqual(definitionFingerprint(base), definitionFingerprint(withDifferentAuthority));
 });
 
 test("validateDefinition rejects shell metacharacters in the executable", () => {
@@ -133,22 +164,47 @@ test("validateDefinition rejects shell metacharacters in the executable", () => 
   );
 });
 
-test("validateDefinition rejects shell metacharacters in any arg", () => {
-  assert.throws(
-    () =>
-      validateDefinition({
-        ...R2A_STATE_STORE_OPERATION,
-        args: [...R2A_STATE_STORE_OPERATION.args, "rm -rf /"],
-        createdAt: NOW,
-        updatedAt: NOW,
-      }),
-    /shell metacharacters/,
+test("validateDefinition treats shell syntax inside argv as literal data", () => {
+  const def = validateDefinition({
+    ...R2A_STATE_STORE_OPERATION,
+    args: [...R2A_STATE_STORE_OPERATION.args, "rm -rf /"],
+    createdAt: NOW,
+    updatedAt: NOW,
+  });
+  assert.equal(def.args.at(-1), "rm -rf /");
+  assert.notEqual(
+    definitionFingerprint(def),
+    definitionFingerprint(r2aDefinition()),
+    "argv substitution changes the accepted-definition fingerprint",
   );
 });
 
 test("validateDefinition accepts the canonical R2A operation", () => {
   const def = validateDefinition({ ...R2A_STATE_STORE_OPERATION, createdAt: NOW, updatedAt: NOW });
   assert.equal(def.id, "r2a.state-store-tests");
+});
+
+test("validateDefinition rejects unknown effects and missing authority provenance", () => {
+  assert.throws(
+    () =>
+      validateDefinition({
+        ...R2A_STATE_STORE_OPERATION,
+        effectProfile: ["invented_effect"],
+        createdAt: NOW,
+        updatedAt: NOW,
+      }),
+    /unknown effect/,
+  );
+  assert.throws(
+    () =>
+      validateDefinition({
+        ...R2A_STATE_STORE_OPERATION,
+        authoritySourceRef: undefined,
+        createdAt: NOW,
+        updatedAt: NOW,
+      }),
+    /authority source reference/,
+  );
 });
 
 test("validateDefinition rejects operations that are not 'finite'", () => {
@@ -239,6 +295,7 @@ test("createQueuedRun allocates RUN-1 and stamps a starting fingerprint", () => 
       repositoryRoot: "/abs/repo",
       worktreeIdentity: "/abs/repo",
       startingFingerprint: "a".repeat(64),
+      admission: allowAdmission(),
     },
     NOW,
   );
@@ -261,6 +318,7 @@ test("updateRun rejects illegal lifecycle transitions", () => {
       repositoryRoot: "/abs/repo",
       worktreeIdentity: "/abs/repo",
       startingFingerprint: "a".repeat(64),
+      admission: allowAdmission(),
     },
     NOW,
   );
@@ -284,6 +342,7 @@ test("updateRun allows queued -> starting -> running -> passed", () => {
       repositoryRoot: "/abs/repo",
       worktreeIdentity: "/abs/repo",
       startingFingerprint: "a".repeat(64),
+      admission: allowAdmission(),
     },
     NOW,
   );
@@ -314,6 +373,7 @@ test("updateRun forbids transitions from a final state", () => {
       repositoryRoot: "/abs/repo",
       worktreeIdentity: "/abs/repo",
       startingFingerprint: "a".repeat(64),
+      admission: allowAdmission(),
     },
     NOW,
   );
@@ -356,6 +416,7 @@ test("runsEquivalent is true for two active runs that share definition, project,
       redactedSecrets: false,
     },
     deliveryState: "created",
+    admission: allowAdmission(),
   };
   const dup = { ...base, id: "RUN-2" };
   assert.equal(runsEquivalent(base, dup), true);
@@ -375,6 +436,7 @@ test("activeRun returns the only active run; latestSettlement returns the most r
       repositoryRoot: "/abs/repo",
       worktreeIdentity: "/abs/repo",
       startingFingerprint: "a".repeat(64),
+      admission: allowAdmission(),
     },
     NOW,
   );
@@ -411,6 +473,7 @@ test("summarizeRun returns duration and lifecycle state for an active run", () =
       repositoryRoot: "/abs/repo",
       worktreeIdentity: "/abs/repo",
       startingFingerprint: "a".repeat(64),
+      admission: allowAdmission(),
     },
     new Date(start).toISOString(),
   );
@@ -438,6 +501,7 @@ test("summarizeRun marks settled runs as pending acknowledgement until the paren
       repositoryRoot: "/abs/repo",
       worktreeIdentity: "/abs/repo",
       startingFingerprint: "a".repeat(64),
+      admission: allowAdmission(),
     },
     NOW,
   );
@@ -469,6 +533,7 @@ test("findActiveRun returns the named active run when runId matches", () => {
       repositoryRoot: "/abs/repo",
       worktreeIdentity: "/abs/repo",
       startingFingerprint: "a".repeat(64),
+      admission: allowAdmission(),
     },
     NOW,
   );

@@ -16,6 +16,7 @@ import type {
   OperationRedactionPolicy,
   OperationRiskClassification,
   OperationRun,
+  OperationAdmission,
   OperationRunOwnership,
   OperationSuccessContract,
   OperationTimeoutContract,
@@ -24,6 +25,8 @@ import type {
   WorkingDirectoryPolicy,
 } from "./types.ts";
 import {
+  AUTHORITY_REQUIREMENTS,
+  OPERATION_EFFECTS,
   OPERATION_FINAL_STATES,
   OPERATION_LIFECYCLE_STATES,
   OPERATION_TRANSITIONS,
@@ -102,6 +105,9 @@ export const R2A_STATE_STORE_OPERATION: Readonly<
   args: ["exec", "--", "node", "--test", "test/state.store.test.ts"],
   workingDirectory: "repository_root",
   environmentPolicy: { kind: "inherit" },
+  effectProfile: ["local_read", "bounded_temporary_write"],
+  authorityRequirement: "accepted_project_operation",
+  authoritySourceRef: { kind: "decision", id: "DEC-22" },
   riskClassification: RISK_CLASSIFICATION,
   successContract: SUCCESS_CONTRACT,
   timeoutContract: R2A_DEFAULT_TIMEOUTS,
@@ -128,19 +134,21 @@ export function assertTransition(from: OperationLifecycleState, to: OperationLif
 
 /** Compute the stable fingerprint of an operation definition content. */
 export function definitionFingerprint(definition: OperationDefinition): string {
-  // The fingerprint hashes only the load-bearing content: identity, executable, args, working
-  // directory, environment policy, risk class, timeouts, cancellation contract, output policy, and
-  // redaction policy. Timestamps are excluded so an `updatedAt` rewrite does not invalidate the
-  // fingerprint; the store proves freshness separately through receipts.
+  // Hash every load-bearing authorization and execution field. Argument order is significant;
+  // effect-profile order is not. Timestamps are excluded so an `updatedAt` rewrite does not
+  // invalidate the fingerprint.
   const canonical = {
     id: definition.id,
     version: definition.version,
     purpose: definition.purpose,
     kind: definition.kind,
     executable: definition.executable,
-    args: [...definition.args].sort(),
+    args: [...definition.args],
     workingDirectory: definition.workingDirectory,
     environmentPolicy: definition.environmentPolicy,
+    effectProfile: [...definition.effectProfile].sort(),
+    authorityRequirement: definition.authorityRequirement,
+    authoritySourceRef: definition.authoritySourceRef,
     riskClassification: definition.riskClassification,
     successContract: definition.successContract,
     timeoutContract: definition.timeoutContract,
@@ -188,10 +196,8 @@ export function validateDefinition(input: unknown): OperationDefinition {
     throw new ProjectOperationError("Operation definition args must be an array of strings.");
   }
   for (const arg of o.args) {
-    if (SHELL_METACHARS.test(arg)) {
-      throw new ProjectOperationError(
-        `Refusing operation arg "${arg}" because it contains shell metacharacters. Pass executable plus argv only.`,
-      );
+    if (arg.includes("\0")) {
+      throw new ProjectOperationError("Operation definition args must not contain NUL bytes.");
     }
   }
   if (!isWorkingDirectory(o.workingDirectory)) {
@@ -200,6 +206,8 @@ export function validateDefinition(input: unknown): OperationDefinition {
     );
   }
   validateEnvironmentPolicy(o.environmentPolicy);
+  validateEffectProfile(o.effectProfile);
+  validateAuthorityRequirement(o.authorityRequirement, o.authoritySourceRef);
   validateRiskClassification(o.riskClassification);
   validateSuccessContract(o.successContract);
   validateTimeoutContract(o.timeoutContract);
@@ -228,6 +236,41 @@ function validateEnvironmentPolicy(v: unknown): asserts v is OperationEnvironmen
     if (!Array.isArray(e.recordedVariableNames) || !e.recordedVariableNames.every(isString)) {
       throw new ProjectOperationError("recordedVariableNames must be an array of strings.");
     }
+  }
+}
+
+function validateEffectProfile(v: unknown): void {
+  if (!Array.isArray(v) || !v.every((effect) => isOperationEffect(effect))) {
+    throw new ProjectOperationError(
+      "Operation definition effectProfile contains an unknown effect.",
+    );
+  }
+}
+
+function isOperationEffect(v: unknown): boolean {
+  return typeof v === "string" && (OPERATION_EFFECTS as readonly string[]).includes(v);
+}
+
+function validateAuthorityRequirement(requirement: unknown, source: unknown): void {
+  if (
+    typeof requirement !== "string" ||
+    !(AUTHORITY_REQUIREMENTS as readonly string[]).includes(requirement)
+  ) {
+    throw new ProjectOperationError(
+      `Operation definition has an unknown authority requirement: ${String(requirement)}.`,
+    );
+  }
+  if (requirement === "not_authorized" && source === undefined) return;
+  if (typeof source !== "object" || source === null) {
+    throw new ProjectOperationError("Operation definition requires an authority source reference.");
+  }
+  const ref = source as Record<string, unknown>;
+  if (
+    (ref.kind !== "decision" && ref.kind !== "operation_definition") ||
+    typeof ref.id !== "string" ||
+    ref.id.length === 0
+  ) {
+    throw new ProjectOperationError("Operation definition authority source reference is invalid.");
   }
 }
 
@@ -375,6 +418,7 @@ export interface CreateRunInput {
   repositoryRoot: string;
   worktreeIdentity: string;
   startingFingerprint: string;
+  admission: OperationAdmission;
 }
 
 export function createQueuedRun(
@@ -403,6 +447,7 @@ export function createQueuedRun(
       redactedSecrets: false,
     },
     deliveryState: "created",
+    admission: input.admission,
   };
   return {
     state: { ...state, sequences, operationRuns: [...state.operationRuns, run] },
@@ -416,6 +461,7 @@ export interface UpdateRunPatch {
   startedAt?: string;
   settledAt?: string;
   processIdentity?: OperationProcessIdentity;
+  processGroupCleaned?: boolean;
   exitCode?: number;
   terminatingSignal?: string;
   settlementReason?: OperationFinalState;
@@ -443,6 +489,9 @@ export function updateRun(
     ...(patch.startedAt !== undefined ? { startedAt: patch.startedAt } : {}),
     ...(patch.settledAt !== undefined ? { settledAt: patch.settledAt } : {}),
     ...(patch.processIdentity !== undefined ? { processIdentity: patch.processIdentity } : {}),
+    ...(patch.processGroupCleaned !== undefined
+      ? { processGroupCleaned: patch.processGroupCleaned }
+      : {}),
     ...(patch.exitCode !== undefined ? { exitCode: patch.exitCode } : {}),
     ...(patch.terminatingSignal !== undefined
       ? { terminatingSignal: patch.terminatingSignal }

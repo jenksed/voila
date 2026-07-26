@@ -22,9 +22,9 @@ migration, a project-operations layer, a Steward Console, planning intake with p
 repository orientation, the proof engine (claims, receipts, freshness, protected completion), and a
 delivery engine. Phase 7's self-hosting gate returned GO on capability, HOLD on backlog closure.
 
-**Current phase: R0 merged, R1 implemented (NF-9 not yet complete), R2 next.** As of 2026-07-26,
-[ADR-0009](docs/decisions/0009-project-steward-operational-realignment.md) superseded Phases 5–8 of
-the old plan. The active roadmap is
+**Current phase: R0, R1, and bounded R2A capability accepted; R2B not started.** As of
+2026-07-26, [ADR-0009](docs/decisions/0009-project-steward-operational-realignment.md) superseded
+Phases 5–8 of the old plan. The active roadmap is
 [docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md): R1 friction
 containment, R2 one background terminal, R3 one bounded Pi child worker, R4 automatic settlement,
 R5 fresh-session continuity, R6 quiet boundary reconciliation, R7 uncoached dogfood acceptance. The
@@ -32,12 +32,11 @@ milestone is **Project Steward Operational Loop v1**.
 
 Build only what the accepted R-packet calls for. Do **not** begin approval bundles, broad model
 routing, arbitrary workflow scripting, remote execution, or release automation before R7 passes.
-Delegation and background execution are no longer optional, but **they do not exist yet** — do not
-describe them, in any document or skill, as though they do. R1's ambient continuity **does** exist
-(focus capsule, action-oriented `Continue.`, content-based orientation freshness, quiet development
-staleness, honest held readiness, verification-grouping seam); its evidence and limitations are in
-[docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md). R1's ambient continuity **does** exist
-(focus capsule, action-oriented `Continue.`, content-based orientation freshness, quiet development
+General background terminals and delegation do not exist yet. R2A contains only one explicit finite
+operation and must not be described as a service, watcher, PTY, worker, or arbitrary command
+facility; its gate and parent-Steward acceptance passed on 2026-07-26, with evidence in
+[docs/verification/R2A_FINITE_OPERATION.md](docs/verification/R2A_FINITE_OPERATION.md). R1's ambient continuity **does** exist (focus
+capsule, action-oriented `Continue.`, content-based orientation freshness, quiet development
 staleness, honest held readiness, verification-grouping seam); its evidence and limitations are in
 [docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md).
 

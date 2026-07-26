@@ -18,10 +18,10 @@ test("repository loads its own dogfooded canonical state", async () => {
   assert.equal(state.schemaVersion, SCHEMA_VERSION);
   assert.equal(state.phase, "build");
   assert.ok(state.workItems.length >= 7);
-  // R1 (NF-9) was completed through the protected transition. Canonical focus is empty and the next
-  // action points at R2 planning. NF-2 is still held and still owed its authenticated intake —
-  // asserted below, which is where that invariant belongs.
-  assert.equal(state.focusWorkItemId, null);
+  // R1 (NF-9) and bounded R2A (NF-16) completed through protected transitions. R2A delivery is the
+  // next action. NF-2 is still held and still owed its authenticated intake — asserted below, which
+  // is where that invariant belongs.
+  assert.equal(state.focusWorkItemId, null, "protected completion cleared the R2A focus");
   assert.ok(state.nextActionRationale && state.nextActionRationale.length > 0);
   assert.ok(state.decisions.filter((d) => d.status === "accepted").length >= 6);
   assert.ok(state.risks.length >= 4);
@@ -35,8 +35,9 @@ test("the realignment is recorded in canonical state and the R-sequence is seque
   assert.ok(dec18, "DEC-18 records the operational realignment");
   assert.equal(dec18.status, "accepted");
 
-  // R1..R7 exist as work items and form a dependency chain. R1 (NF-9) is completed; R2..R7
-  // remain uncompleted, so no later R-packet can be picked up before its predecessor.
+  // R1..R7 exist as work items and form a dependency chain. R1 (NF-9) is completed; R2..R7 remain
+  // uncompleted. The broader R2 item additionally waits for its bounded R2A slice (NF-16), rather
+  // than making NF-16 depend on completion of all broader R2 work.
   const chain = ["NF-9", "NF-10", "NF-11", "NF-12", "NF-13", "NF-14", "NF-15"];
   for (const [i, id] of chain.entries()) {
     const item = state.workItems.find((w) => w.id === id);
@@ -50,13 +51,18 @@ test("the realignment is recorded in canonical state and the R-sequence is seque
         "completed",
         `${id} is unbuilt; nothing here may claim otherwise`,
       );
-      assert.deepEqual(item.dependsOn, [chain[i - 1]], `${id} depends on ${chain[i - 1]}`);
+      const expectedDependencies = id === "NF-10" ? ["NF-9", "NF-16"] : [chain[i - 1]];
+      assert.deepEqual(
+        item.dependsOn,
+        expectedDependencies,
+        `${id} carries the accepted R-sequence dependencies`,
+      );
     }
     assert.ok(item.acceptanceCriteria.length > 0, `${id} states how it will be judged`);
   }
 });
 
-test("dogfooded state stays honest: completed set is exactly {NF-1, NF-9}; NF-2..NF-4 remain held", async () => {
+test("dogfooded state includes only protected completions; NF-2..NF-4 remain held", async () => {
   const state = await loadState(process.cwd());
   const completed = state.workItems
     .filter((w) => w.status === "completed")
@@ -64,8 +70,8 @@ test("dogfooded state stays honest: completed set is exactly {NF-1, NF-9}; NF-2.
     .sort();
   assert.deepEqual(
     completed,
-    ["NF-1", "NF-9"],
-    "only NF-1 and NF-9 have satisfied every completion gate; NF-2..NF-4 remain held",
+    ["NF-1", "NF-16", "NF-17", "NF-9"],
+    "only NF-1, NF-9, bounded R2A NF-16, and counter-repair NF-17 completed through the gate",
   );
 
   const nf1 = state.workItems.find((w) => w.id === "NF-1");

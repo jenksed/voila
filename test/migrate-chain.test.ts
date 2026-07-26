@@ -25,7 +25,7 @@ async function seed(raw: unknown): Promise<string> {
   return root;
 }
 
-test("valid v2 inspection reports the chained 2 -> 3 -> 4 -> 5 migration without writing", async () => {
+test("valid v2 inspection reports the chained 2 -> 3 -> 4 -> 5 -> 6 migration without writing", async () => {
   const root = await seed(V2_FIXTURE);
   const before = await readFile(statePaths(root).projectJson, "utf8");
   const report = await runMigration(root, { apply: false });
@@ -36,6 +36,7 @@ test("valid v2 inspection reports the chained 2 -> 3 -> 4 -> 5 migration without
     { from: 2, to: 3 },
     { from: 3, to: 4 },
     { from: 4, to: 5 },
+    { from: 5, to: 6 },
   ]);
   assert.ok(report.additions.some((a) => a.name === "intakes"));
   assert.ok(report.additions.some((a) => a.name === "orientations"));
@@ -122,6 +123,7 @@ test("v1 migrates through the full chain to the current version", async () => {
     { from: 2, to: 3 },
     { from: 3, to: 4 },
     { from: 4, to: 5 },
+    { from: 5, to: 6 },
   ]);
   await runMigration(root, { apply: true });
   const migrated = await loadState(root);

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { voilaTools, type VoilaTool } from "../src/tools/index.ts";
-import { initState, loadState } from "../src/state/store.ts";
+import { initState, loadState, updateState } from "../src/state/store.ts";
 
 async function initedRoot(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "voila-tools-"));
@@ -49,6 +49,7 @@ test("expected tool surface is registered with schemas", () => {
     "voila_record_orientation",
     "voila_record_risk",
     "voila_reject_intake",
+    "voila_repair_state_counters",
     "voila_request_intake_revision",
     "voila_require_claim",
     "voila_run_verification",
@@ -87,6 +88,24 @@ test("create/update/list work-item tools mutate canonical state", async () => {
   const list = toolByName("voila_list_work_items");
   const listed = await run(list, { status: "ready" }, root);
   assert.match(listed.content[0]?.text ?? "", /NF-1/);
+});
+
+test("counter repair advances drift through an explicit canonical transition", async () => {
+  const root = await initedRoot();
+  await run(
+    toolByName("voila_record_decision"),
+    { title: "d", decision: "x", rationale: "y", status: "accepted" },
+    root,
+  );
+  await updateState(root, (cur) => ({
+    ...cur,
+    sequences: { ...cur.sequences, decision: 1 },
+  }));
+  assert.equal((await loadState(root)).sequences.decision, 1);
+
+  const result = await run(toolByName("voila_repair_state_counters"), {}, root);
+  assert.match(result.content[0]?.text ?? "", /decision 1->2/);
+  assert.equal((await loadState(root)).sequences.decision, 2);
 });
 
 test("tools cannot mark a work item completed", async () => {

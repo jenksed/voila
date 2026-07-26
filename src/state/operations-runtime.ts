@@ -15,17 +15,25 @@
 
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
-import { realpath } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import {
   activeRun,
   createQueuedRun,
   updateRun,
   isFinalState,
-  definitionFingerprint as dfFingerprint,
 } from "../domain/operations-runtime.ts";
+import {
+  acceptedOperationAuthorityReferences,
+  evaluateOperationAdmission,
+  explainAdmission,
+  operationStructuralHealth,
+  type AuthorizedOperationStart,
+  type OperationAdmissionEvaluation,
+} from "../domain/operation-admission.ts";
 import type {
+  OperationAdmission,
+  OperationAdmissionResult,
   OperationDefinition,
   OperationLifecycleState,
   OperationOutputSummary,
@@ -33,11 +41,13 @@ import type {
   OperationRedactionPolicy,
   OperationRun,
 } from "../domain/types.ts";
+import { POLICY_VERSION } from "../domain/types.ts";
 import { loadState, updateState } from "./store.ts";
 import { statePaths } from "./paths.ts";
 import { repositoryFingerprint } from "./fingerprint.ts";
 import { sha256 } from "./source.ts";
 import { VoilaStateError } from "./errors.ts";
+import { resolveRepositoryPath } from "./path-boundary.ts";
 
 export { definitionFingerprint, validateDefinition } from "../domain/operations-runtime.ts";
 
@@ -56,16 +66,19 @@ interface StartOk {
   kind: "ok";
   run: OperationRun;
   reused: boolean;
+  admission: OperationAdmission;
 }
 interface StartRejection {
   kind: "rejection";
-  reason: "definition_not_found" | "wrong_project" | "wrong_worktree" | "platform_unsupported";
+  reason: OperationAdmissionResult | "platform_unsupported";
   message: string;
+  admission?: OperationAdmission;
 }
 interface StartCapacity {
   kind: "capacity_occupied";
   activeRun: OperationRun;
   message: string;
+  admission: OperationAdmission;
 }
 export type StartOutcome = StartOk | StartRejection | StartCapacity;
 
@@ -89,6 +102,18 @@ interface ActiveMemory {
 
 interface RedactionSet {
   exactValues: string[];
+}
+
+const supervisors = new Map<string, FiniteOperationSupervisor>();
+
+/** One in-memory supervisor per repository root inside the controlling Pi/Node process. */
+export function operationSupervisor(root: string): FiniteOperationSupervisor {
+  const key = resolve(root);
+  const existing = supervisors.get(key);
+  if (existing) return existing;
+  const created = new FiniteOperationSupervisor(key);
+  supervisors.set(key, created);
+  return created;
 }
 
 export class FiniteOperationSupervisor {
@@ -115,17 +140,63 @@ export class FiniteOperationSupervisor {
     droppedBytes: number;
     redactionCount: number;
     redactedSecrets: boolean;
+    readTruncated: boolean;
   } | null> {
     const mem = this.active.get(runId);
-    if (!mem) return null;
+    let stdout: string;
+    let stderr: string;
+    let stdoutTruncated: boolean;
+    let stderrTruncated: boolean;
+    let droppedBytes: number;
+    let redactionCount: number;
+    let redactedSecrets: boolean;
+
+    if (mem) {
+      stdout = mem.stdout.text;
+      stderr = mem.stderr.text;
+      stdoutTruncated = mem.stdout.truncated;
+      stderrTruncated = mem.stderr.truncated;
+      droppedBytes = mem.stdout.droppedBytes + mem.stderr.droppedBytes;
+      redactionCount = mem.redactionCount;
+      redactedSecrets = mem.redactedSecrets;
+    } else {
+      const state = await loadState(this.root);
+      const run = state.operationRuns.find((candidate) => candidate.id === runId);
+      if (!run?.outputArtifactRef) return null;
+      const artifact = join(this.root, ".voila", run.outputArtifactRef);
+      try {
+        const [storedStdout, storedStderr, manifestBytes] = await Promise.all([
+          readFile(join(artifact, "stdout.txt"), "utf8"),
+          readFile(join(artifact, "stderr.txt"), "utf8"),
+          readFile(join(artifact, "manifest.json"), "utf8"),
+        ]);
+        const manifest = JSON.parse(manifestBytes) as {
+          stdoutTruncated?: boolean;
+          stderrTruncated?: boolean;
+        };
+        stdout = storedStdout;
+        stderr = storedStderr;
+        stdoutTruncated = manifest.stdoutTruncated ?? run.outputSummary.truncated;
+        stderrTruncated = manifest.stderrTruncated ?? run.outputSummary.truncated;
+        droppedBytes = run.outputSummary.droppedBytes;
+        redactionCount = run.outputSummary.redactionCount;
+        redactedSecrets = run.outputSummary.redactedSecrets;
+      } catch {
+        return null;
+      }
+    }
+
+    const exposedStdout = boundedOutputTail(stream === "stderr" ? "" : stdout);
+    const exposedStderr = boundedOutputTail(stream === "stdout" ? "" : stderr);
     return {
-      stdout: stream === "stderr" ? "" : mem.stdout.text,
-      stderr: stream === "stdout" ? "" : mem.stderr.text,
-      stdoutTruncated: mem.stdout.truncated,
-      stderrTruncated: mem.stderr.truncated,
-      droppedBytes: mem.stdout.droppedBytes + mem.stderr.droppedBytes,
-      redactionCount: mem.redactionCount,
-      redactedSecrets: mem.redactedSecrets,
+      stdout: exposedStdout.text,
+      stderr: exposedStderr.text,
+      stdoutTruncated,
+      stderrTruncated,
+      droppedBytes,
+      redactionCount,
+      redactedSecrets,
+      readTruncated: exposedStdout.truncated || exposedStderr.truncated,
     };
   }
 
@@ -167,22 +238,6 @@ export class FiniteOperationSupervisor {
     definitionId: string,
     ownership: { requester: string; owner: string; workItemId?: string },
   ): Promise<StartOutcome> {
-    const state = await loadState(this.root);
-    const definition = state.operationDefinitions.find((d) => d.id === definitionId);
-    if (!definition) {
-      return {
-        kind: "rejection",
-        reason: "definition_not_found",
-        message: `No accepted operation with id "${definitionId}". Register it first.`,
-      };
-    }
-    if (!state.projectId) {
-      return {
-        kind: "rejection",
-        reason: "wrong_project",
-        message: "Canonical state has no projectId.",
-      };
-    }
     if (!POSIX_PLATFORMS.has(process.platform)) {
       return {
         kind: "rejection",
@@ -191,61 +246,131 @@ export class FiniteOperationSupervisor {
       };
     }
 
-    const existing = activeRun(state);
-    if (existing) {
-      const fp = await fingerprintSafe(this.root);
-      if (
-        existing.definitionFingerprint === dfFingerprint(definition) &&
-        existing.projectId === state.projectId &&
-        existing.repositoryRoot === resolve(this.root) &&
-        existing.startingFingerprint === fp
-      ) {
-        const mem = this.active.get(existing.id);
-        return { kind: "ok", run: mem?.run ?? existing, reused: true };
+    const startingFingerprint = await fingerprintSafe(this.root);
+    const pathBoundary = await resolveRepositoryPath(this.root, ".", {
+      mustExist: "directory",
+      label: "Operation working directory",
+    });
+    const repositoryRoot = pathBoundary.repositoryRoot;
+    const worktreeIdentity = pathBoundary.worktreeIdentity;
+    const decidedAt = new Date().toISOString();
+    let evaluation: OperationAdmissionEvaluation | undefined;
+    let reservedRunId: string | undefined;
+
+    const next = await updateState(
+      this.root,
+      (cur) => {
+        const definition = cur.operationDefinitions.find((item) => item.id === definitionId);
+        evaluation = evaluateOperationAdmission(
+          {
+            policyVersion: POLICY_VERSION,
+            definition,
+            canonicalProjectId: cur.projectId,
+            requestProjectId: cur.projectId,
+            canonicalRepositoryRoot: repositoryRoot,
+            requestRepositoryRoot: repositoryRoot,
+            canonicalWorktreeIdentity: worktreeIdentity,
+            requestWorktreeIdentity: worktreeIdentity,
+            activeWorkItemId: cur.focusWorkItemId,
+            activeRun: activeRun(cur),
+            retry: { intent: "initial", remainingAutomaticRetries: 0 },
+            structuralHealth: operationStructuralHealth(cur),
+            authorityReferences: acceptedOperationAuthorityReferences(cur),
+            startingFingerprint,
+            decidedAt,
+          },
+          { operationId: definitionId },
+        );
+
+        if (evaluation.decision.result !== "allow" || !evaluation.authorizedStart) return cur;
+        const queued = createQueuedRun(
+          cur,
+          {
+            definition: evaluation.authorizedStart.definition,
+            ownership: { ...ownership },
+            projectId: evaluation.authorizedStart.projectId,
+            repositoryRoot: evaluation.authorizedStart.repositoryRoot,
+            worktreeIdentity: evaluation.authorizedStart.worktreeIdentity,
+            startingFingerprint: evaluation.authorizedStart.startingFingerprint,
+            admission: evaluation.decision,
+          },
+          decidedAt,
+        );
+        reservedRunId = queued.run.id;
+        return updateRun(queued.state, queued.run.id, { lifecycleState: "starting" }).state;
+      },
+      () => ({
+        type:
+          evaluation?.decision.result === "allow"
+            ? "operation_run_reserved"
+            : "operation_admission_evaluated",
+        definitionId,
+        admissionResult: evaluation?.decision.result ?? "deny_structural_integrity",
+        admissionRuleId:
+          evaluation?.decision.ruleId ?? "ADMIT.OPERATIONS.DENY_STRUCTURAL_INTEGRITY",
+        ...(reservedRunId ? { runId: reservedRunId } : {}),
+        ...(evaluation?.decision.existingRunId
+          ? { existingRunId: evaluation.decision.existingRunId }
+          : {}),
+      }),
+    );
+
+    if (!evaluation) {
+      throw new OperationRejectedError("Operation admission did not produce a decision.");
+    }
+    const decision = evaluation.decision;
+    if (decision.result === "reuse_existing" && decision.existingRunId) {
+      const existing = next.operationRuns.find((run) => run.id === decision.existingRunId);
+      if (!existing) {
+        throw new OperationRejectedError(
+          `Admission selected missing existing run ${decision.existingRunId}.`,
+        );
       }
+      const mem = this.active.get(existing.id);
+      return { kind: "ok", run: mem?.run ?? existing, reused: true, admission: decision };
+    }
+    if (decision.result === "deny_capacity") {
+      const existing = decision.explanationData?.activeRunId;
+      const run =
+        typeof existing === "string"
+          ? next.operationRuns.find((candidate) => candidate.id === existing)
+          : undefined;
+      if (!run) throw new OperationRejectedError("Capacity denial did not identify an active run.");
       return {
         kind: "capacity_occupied",
-        activeRun: existing,
-        message: `A different operation (${existing.definitionId}) is already active in this project root. Wait for it to settle or cancel it; new operations are not queued.`,
+        activeRun: run,
+        message: explainAdmission(decision),
+        admission: decision,
+      };
+    }
+    if (decision.result !== "allow" || !evaluation.authorizedStart || !reservedRunId) {
+      return {
+        kind: "rejection",
+        reason: decision.result,
+        message: explainAdmission(decision),
+        admission: decision,
       };
     }
 
-    return await this.spawnFresh(definition, ownership);
+    const initial = next.operationRuns.find((run) => run.id === reservedRunId);
+    if (!initial) {
+      throw new OperationRejectedError(`Reserved operation run not found: ${reservedRunId}.`);
+    }
+    return await this.spawnAuthorized(initial, evaluation.authorizedStart);
   }
 
-  private async spawnFresh(
-    definition: OperationDefinition,
-    ownership: { requester: string; owner: string; workItemId?: string },
+  private async spawnAuthorized(
+    initial: OperationRun,
+    authorized: AuthorizedOperationStart,
   ): Promise<StartOk> {
-    const startingFingerprint = await fingerprintSafe(this.root);
-    const worktreeIdentity = await worktreeRealpath(this.root);
-
-    const allocated = await updateState(
-      this.root,
-      (cur) =>
-        createQueuedRun(
-          cur,
-          {
-            definition,
-            ownership: { ...ownership },
-            projectId: cur.projectId,
-            repositoryRoot: resolve(this.root),
-            worktreeIdentity,
-            startingFingerprint,
-          },
-          new Date().toISOString(),
-        ).state,
-      (next) => {
-        const run = next.operationRuns[next.operationRuns.length - 1]!;
-        return { type: "operation_run_created", runId: run.id, definitionId: definition.id };
-      },
-    );
-    const initial = allocated.operationRuns[allocated.operationRuns.length - 1]!;
-
-    const mem = await this.executeAndObserve(initial.id, initial, definition);
+    const mem = await this.executeAndObserve(initial.id, initial, authorized.definition);
     this.active.set(initial.id, mem);
-
-    return { kind: "ok", run: mem.run, reused: false };
+    return {
+      kind: "ok",
+      run: mem.run,
+      reused: false,
+      admission: authorized.admission,
+    };
   }
 
   private async executeAndObserve(
@@ -253,11 +378,6 @@ export class FiniteOperationSupervisor {
     initial: OperationRun,
     definition: OperationDefinition,
   ): Promise<ActiveMemory> {
-    await updateState(
-      this.root,
-      (cur) => updateRun(cur, runId, { lifecycleState: "starting" }).state,
-    );
-
     const redactionSecrets = collectRedactionValues(definition.redactionPolicy);
     const cwd = resolve(this.root);
     const child = spawn(definition.executable, [...definition.args], {
@@ -268,6 +388,20 @@ export class FiniteOperationSupervisor {
       detached: true,
       env: process.env,
     });
+
+    // Attach guards before the first awaited canonical write. `spawn()` reports ENOENT and similar
+    // startup failures asynchronously, and an unhandled early `error` event would escape the
+    // supervisor before its settlement boundary exists.
+    let earlyError: Error | undefined;
+    let earlyClose: { code: number | null; signal: NodeJS.Signals | null } | undefined;
+    const captureEarlyError = (error: Error): void => {
+      earlyError = error;
+    };
+    const captureEarlyClose = (code: number | null, signal: NodeJS.Signals | null): void => {
+      earlyClose = { code, signal };
+    };
+    child.on("error", captureEarlyError);
+    child.on("close", captureEarlyClose);
 
     const processIdentity: OperationProcessIdentity = {
       pid: child.pid ?? 0,
@@ -318,18 +452,18 @@ export class FiniteOperationSupervisor {
 
     const totalTimer = setTimeout(() => {
       state.reason = "timed_out";
-      try {
-        child.kill(definition.cancellationContract.gracefulSignal);
-      } catch {
-        /* ignored */
-      }
+      signalOwnedProcessGroup(
+        child,
+        processIdentity,
+        definition.cancellationContract.gracefulSignal,
+      );
       // After graceful elapses, escalate.
       setTimeout(() => {
-        try {
-          child.kill(definition.cancellationContract.escalationSignal);
-        } catch {
-          /* ignored */
-        }
+        signalOwnedProcessGroup(
+          child,
+          processIdentity,
+          definition.cancellationContract.escalationSignal,
+        );
       }, definition.timeoutContract.gracefulMs).unref();
     }, definition.timeoutContract.totalMs);
     // Unref the total timer so a long-running test that never settles does not keep the event
@@ -351,6 +485,15 @@ export class FiniteOperationSupervisor {
         finalSignal = sig;
         supervisorError = errMsg;
         const settledAt = new Date().toISOString();
+        const endingFingerprint = await fingerprintSafe(this.root);
+        const processGroupCleaned = await waitForOwnedProcessGroupEmpty(
+          processIdentity,
+          definition.timeoutContract.forcedMs,
+        );
+        const settledReason =
+          !processGroupCleaned && (reason === "cancelled" || reason === "timed_out")
+            ? "supervisor_error"
+            : reason;
         const summary: OperationOutputSummary = {
           truncated: stdout.truncated || stderr.truncated,
           droppedBytes: stdout.droppedBytes + stderr.droppedBytes,
@@ -361,15 +504,18 @@ export class FiniteOperationSupervisor {
           this.root,
           (cur) =>
             updateRun(cur, runId, {
-              lifecycleState: reason,
+              lifecycleState: settledReason,
               settledAt,
               ...(code !== null ? { exitCode: code } : {}),
               ...(sig ? { terminatingSignal: sig } : errMsg ? { terminatingSignal: errMsg } : {}),
-              ...(isFinalState(reason) ? { settlementReason: reason } : {}),
+              ...(isFinalState(settledReason) ? { settlementReason: settledReason } : {}),
+              endingFingerprint,
+              changedDuringRun: endingFingerprint !== initial.startingFingerprint,
+              processGroupCleaned,
               outputSummary: summary,
             }).state,
         );
-        await this.persistOutput(runId, definition, summary, stdout.text, stderr.text);
+        await this.persistOutput(runId, definition, summary, stdout, stderr);
         await updateState(
           this.root,
           (cur) => updateRun(cur, runId, { deliveryState: "delivered" }).state,
@@ -380,7 +526,7 @@ export class FiniteOperationSupervisor {
         resolve(final);
       };
 
-      child.on("close", (code, sig) => {
+      const onClose = (code: number | null, sig: NodeJS.Signals | null): void => {
         let reason: OperationLifecycleState;
         if (state.reason === "timed_out") reason = "timed_out";
         else if (state.reason === "cancelled") reason = "cancelled";
@@ -388,27 +534,33 @@ export class FiniteOperationSupervisor {
         else if (code !== null) reason = "failed";
         else reason = "supervisor_error";
         void finalize(reason, code, sig);
-      });
+      };
+      const onError = (error: Error): void => {
+        void finalize("supervisor_error", null, null, error.message);
+      };
 
-      child.on("error", (err) => {
-        void finalize("supervisor_error", null, null, err.message);
-      });
+      child.on("close", onClose);
+      child.on("error", onError);
+      child.off("close", captureEarlyClose);
+      child.off("error", captureEarlyError);
+      if (earlyError) onError(earlyError);
+      else if (earlyClose) onClose(earlyClose.code, earlyClose.signal);
     });
 
     const cancelFn = async (): Promise<OperationRun> => {
       if (state.settled) return settled;
       state.reason = "cancelled";
-      try {
-        child.kill(definition.cancellationContract.gracefulSignal);
-      } catch {
-        /* ignored */
-      }
+      signalOwnedProcessGroup(
+        child,
+        processIdentity,
+        definition.cancellationContract.gracefulSignal,
+      );
       setTimeout(() => {
-        try {
-          child.kill(definition.cancellationContract.escalationSignal);
-        } catch {
-          /* ignored */
-        }
+        signalOwnedProcessGroup(
+          child,
+          processIdentity,
+          definition.cancellationContract.escalationSignal,
+        );
       }, definition.timeoutContract.gracefulMs).unref();
       return settled;
     };
@@ -428,12 +580,12 @@ export class FiniteOperationSupervisor {
     runId: string,
     definition: OperationDefinition,
     summary: OperationOutputSummary,
-    stdoutText: string,
-    stderrText: string,
+    stdout: StreamState,
+    stderr: StreamState,
   ): Promise<void> {
     const policy = definition.outputPolicy;
-    const stdoutCapped = capString(stdoutText, policy.maxDurableBytes);
-    const stderrCapped = capString(stderrText, policy.maxDurableBytes);
+    const stdoutCapped = capString(stdout.text, policy.maxDurableBytes);
+    const stderrCapped = capString(stderr.text, policy.maxDurableBytes);
     const stdoutSha = sha256(stdoutCapped.text);
     const stderrSha = sha256(stderrCapped.text);
     const paths = statePaths(this.root);
@@ -449,6 +601,8 @@ export class FiniteOperationSupervisor {
             runId,
             definitionId: definition.id,
             truncated: summary.truncated,
+            stdoutTruncated: stdout.truncated || stdoutCapped.truncated,
+            stderrTruncated: stderr.truncated || stderrCapped.truncated,
             droppedBytes: summary.droppedBytes,
             redactionCount: summary.redactionCount,
             redactedSecrets: summary.redactedSecrets,
@@ -482,20 +636,51 @@ export class FiniteOperationSupervisor {
   }
 }
 
+function signalOwnedProcessGroup(
+  child: ReturnType<typeof spawn>,
+  identity: OperationProcessIdentity,
+  signal: NodeJS.Signals,
+): void {
+  try {
+    if (identity.processGroupOwned && identity.processGroupId > 0) {
+      process.kill(-identity.processGroupId, signal);
+      return;
+    }
+    child.kill(signal);
+  } catch {
+    // Exit and cancellation race. Settlement remains idempotent and inspects group liveness.
+  }
+}
+
+function ownedProcessGroupIsEmpty(identity: OperationProcessIdentity): boolean {
+  if (!identity.processGroupOwned || identity.processGroupId <= 0) return false;
+  try {
+    process.kill(-identity.processGroupId, 0);
+    return false;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "ESRCH";
+  }
+}
+
+async function waitForOwnedProcessGroupEmpty(
+  identity: OperationProcessIdentity,
+  timeoutMs: number,
+): Promise<boolean> {
+  if (!identity.processGroupOwned || identity.processGroupId <= 0) return false;
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() <= deadline) {
+    if (ownedProcessGroupIsEmpty(identity)) return true;
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
+  }
+  return ownedProcessGroupIsEmpty(identity);
+}
+
 async function fingerprintSafe(root: string): Promise<string> {
   try {
     const fp = await repositoryFingerprint(root);
     return fp.value;
   } catch {
     return "0".repeat(64);
-  }
-}
-
-async function worktreeRealpath(root: string): Promise<string> {
-  try {
-    return await realpath(resolve(root));
-  } catch {
-    return resolve(root);
   }
 }
 
@@ -547,7 +732,20 @@ function pushTail(state: StreamState, text: string, max: number): void {
   }
 }
 
+const MODEL_OUTPUT_TAIL_BYTES = 32 * 1024;
+
+function boundedOutputTail(text: string): { text: string; truncated: boolean } {
+  if (Buffer.byteLength(text, "utf8") <= MODEL_OUTPUT_TAIL_BYTES) {
+    return { text, truncated: false };
+  }
+  let start = Math.max(0, text.length - MODEL_OUTPUT_TAIL_BYTES);
+  while (Buffer.byteLength(text.slice(start), "utf8") > MODEL_OUTPUT_TAIL_BYTES) start++;
+  return { text: text.slice(start), truncated: true };
+}
+
 function capString(text: string, max: number): { text: string; truncated: boolean } {
-  if (text.length <= max) return { text, truncated: false };
-  return { text: text.slice(0, max), truncated: true };
+  if (Buffer.byteLength(text, "utf8") <= max) return { text, truncated: false };
+  let start = Math.max(0, text.length - max);
+  while (Buffer.byteLength(text.slice(start), "utf8") > max) start++;
+  return { text: text.slice(start), truncated: true };
 }

@@ -14,7 +14,13 @@ import { loadState, readRawState } from "../src/state/store.ts";
 import { statePaths } from "../src/state/paths.ts";
 import { MigrationRequiredError, StateValidationError } from "../src/state/errors.ts";
 import { renderStatusView } from "../src/domain/status.ts";
-import { migrationPlan, migrateV3ToV4, migrateV4ToV5 } from "../src/domain/migrate.ts";
+import {
+  migrationPlan,
+  migrateV3ToV4,
+  migrateV4ToV5,
+  migrateV5ToV6,
+  validateProjectStateV5,
+} from "../src/domain/migrate.ts";
 import { validateProjectStateV3 } from "../src/domain/schema-v3.ts";
 import { validateProjectStateV4 } from "../src/domain/schema-v4.ts";
 import { V4_FIXTURE } from "./helpers.ts";
@@ -30,11 +36,11 @@ async function seed(raw: unknown): Promise<string> {
   return root;
 }
 
-test("the current schema version is 5", () => {
-  assert.equal(SCHEMA_VERSION, 5);
+test("the current schema version is 6", () => {
+  assert.equal(SCHEMA_VERSION, 6);
 });
 
-test("v3 inspection reports the chained 3 -> 4 -> 5 migration without writing", async () => {
+test("v3 inspection reports the chained 3 -> 4 -> 5 -> 6 migration without writing", async () => {
   const root = await seed(V3_FIXTURE);
   const before = await readFile(statePaths(root).projectJson, "utf8");
   const report = await runMigration(root, { apply: false });
@@ -44,6 +50,7 @@ test("v3 inspection reports the chained 3 -> 4 -> 5 migration without writing", 
   assert.deepEqual(report.steps, [
     { from: 3, to: 4 },
     { from: 4, to: 5 },
+    { from: 5, to: 6 },
   ]);
   assert.ok(report.additions.some((a) => a.name === "claims"));
   assert.ok(report.additions.some((a) => a.name === "receipts"));
@@ -59,23 +66,23 @@ test("loading v3 reports migration required (never silent)", async () => {
   await assert.rejects(() => loadState(root), MigrationRequiredError);
 });
 
-test("migrationPlan chains every supported source version to v5", () => {
-  assert.deepEqual(migrationPlan(5)?.steps, []);
-  assert.deepEqual(migrationPlan(4)?.steps, [{ from: 4, to: 5 }]);
+test("migrationPlan chains every supported source version to v6", () => {
+  assert.deepEqual(migrationPlan(SCHEMA_VERSION)?.steps, []);
+  assert.deepEqual(migrationPlan(5)?.steps, [{ from: 5, to: 6 }]);
+  assert.deepEqual(migrationPlan(4)?.steps, [
+    { from: 4, to: 5 },
+    { from: 5, to: 6 },
+  ]);
   assert.deepEqual(migrationPlan(3)?.steps, [
     { from: 3, to: 4 },
     { from: 4, to: 5 },
+    { from: 5, to: 6 },
   ]);
   assert.deepEqual(migrationPlan(2)?.steps, [
     { from: 2, to: 3 },
     { from: 3, to: 4 },
     { from: 4, to: 5 },
-  ]);
-  assert.deepEqual(migrationPlan(1)?.steps, [
-    { from: 1, to: 2 },
-    { from: 2, to: 3 },
-    { from: 3, to: 4 },
-    { from: 4, to: 5 },
+    { from: 5, to: 6 },
   ]);
   assert.equal(migrationPlan(0), null);
   assert.deepEqual(migrationPlan(SCHEMA_VERSION)?.steps, []);
@@ -83,7 +90,7 @@ test("migrationPlan chains every supported source version to v5", () => {
   assert.equal(migrationPlan(SCHEMA_VERSION + 1), null);
 });
 
-test("v3 -> v5 preserves everything and defaults requiredClaimIds to empty", async () => {
+test("v3 -> v6 preserves everything and defaults requiredClaimIds to empty", async () => {
   const root = await seed(V3_FIXTURE);
   const report = await runMigration(root, { apply: true });
   assert.equal(report.status, "migrated");
@@ -211,13 +218,14 @@ test("the integrated Packet 3 state is genuinely v3 and carries the real history
   assert.equal(INTEGRATED_V3.currentIntakeId, "INT-8");
 });
 
-test("the integrated v3 state migrates to v5 and keeps every intake and review record", async () => {
+test("the integrated v3 state migrates to v6 and keeps every intake and review record", async () => {
   const root = await seed(INTEGRATED_V3);
   const report = await runMigration(root, { apply: true });
   assert.equal(report.status, "migrated");
   assert.deepEqual(report.steps, [
     { from: 3, to: 4 },
     { from: 4, to: 5 },
+    { from: 5, to: 6 },
   ]);
 
   const v4 = await loadState(root);
@@ -322,33 +330,162 @@ test("migrateV3ToV4 keeps an already-present requiredClaimIds array", () => {
 
 // --- v4 -> v5 migration (R2A operation supervision) ---
 
-test("v4 -> v5 migration initializes operation fields without inventing definitions or runs", () => {
+test("v4 -> v5 -> v6 migration initializes operation fields without inventing authority", () => {
   const v4 = validateProjectStateV4(V4_FIXTURE);
   const v5 = migrateV4ToV5(v4);
-  assert.equal(v5.schemaVersion, SCHEMA_VERSION);
-  assert.deepEqual(v5.operationDefinitions, []);
-  assert.deepEqual(v5.operationRuns, []);
-  assert.equal(v5.sequences.operationDefinition, 1);
-  assert.equal(v5.sequences.operationRun, 1);
+  const v6 = migrateV5ToV6(validateProjectStateV5(v5));
+  assert.equal(v6.schemaVersion, SCHEMA_VERSION);
+  assert.deepEqual(v6.operationDefinitions, []);
+  assert.deepEqual(v6.operationRuns, []);
+  assert.equal(v6.sequences.operationDefinition, 1);
+  assert.equal(v6.sequences.operationRun, 1);
   // All v4 fields survive.
   assert.deepEqual(
-    v5.workItems.map((w) => w.id),
+    (v6.workItems as Array<{ id: string }>).map((w) => w.id),
     ["NF-1", "NF-2"],
   );
   assert.deepEqual(
-    v5.decisions.map((d) => d.id),
+    (v6.decisions as Array<{ id: string }>).map((d) => d.id),
     ["DEC-1"],
   );
-  assert.equal(v5.claims.length, 0);
-  assert.equal(v5.receipts.length, 0);
+  assert.equal(v6.claims.length, 0);
+  assert.equal(v6.receipts.length, 0);
 });
 
-test("migrationPlan reports the v4 -> v5 step with the expected additions", () => {
+test("migrationPlan reports the v4 -> v5 -> v6 steps with the expected additions", () => {
   const plan = migrationPlan(4);
   assert.ok(plan, "a plan must exist for v4");
-  assert.deepEqual(plan?.steps, [{ from: 4, to: 5 }]);
+  assert.deepEqual(plan?.steps, [
+    { from: 4, to: 5 },
+    { from: 5, to: 6 },
+  ]);
   const names = plan?.additions.map((a) => a.name) ?? [];
   assert.ok(names.includes("operationDefinitions"));
   assert.ok(names.includes("operationRuns"));
   assert.ok(names.includes("sequences.operationDefinition / sequences.operationRun"));
+});
+
+test("v5 -> v6 migration adds effect profile, authority, and admission without inventing authority", () => {
+  const v5raw = {
+    ...JSON.parse(JSON.stringify(V4_FIXTURE)),
+    schemaVersion: 5,
+    operationDefinitions: [
+      {
+        id: "r2a.state-store-tests",
+        version: 1,
+        purpose: "test",
+        kind: "finite",
+        executable: "mise",
+        args: ["exec", "--", "node", "--test", "test/state.store.test.ts"],
+        workingDirectory: "repository_root",
+        environmentPolicy: { kind: "inherit" },
+        riskClassification: { riskClass: "safe_and_expected" },
+        successContract: { exitCode: 0, description: "exit 0" },
+        timeoutContract: {
+          startupMs: 10_000,
+          totalMs: 120_000,
+          gracefulMs: 5_000,
+          forcedMs: 5_000,
+        },
+        cancellationContract: { gracefulSignal: "SIGTERM", escalationSignal: "SIGKILL" },
+        outputPolicy: {
+          maxChunkBytes: 16384,
+          maxInMemoryTailBytes: 262144,
+          maxDurableBytes: 1048576,
+        },
+        redactionPolicy: {
+          secretVariableNames: ["TOKEN"],
+          redactAuthorizationHeaders: true,
+          skipShortValues: true,
+          minSecretLength: 6,
+        },
+        createdAt: "2026-07-26T00:00:00.000Z",
+        updatedAt: "2026-07-26T00:00:00.000Z",
+      },
+      {
+        id: "rogue.legacy",
+        version: 1,
+        purpose: "test",
+        kind: "finite",
+        executable: "sh",
+        args: ["-c", "echo"],
+        workingDirectory: "repository_root",
+        environmentPolicy: { kind: "inherit" },
+        riskClassification: { riskClass: "safe_and_expected" },
+        successContract: { exitCode: 0, description: "exit 0" },
+        timeoutContract: {
+          startupMs: 10_000,
+          totalMs: 120_000,
+          gracefulMs: 5_000,
+          forcedMs: 5_000,
+        },
+        cancellationContract: { gracefulSignal: "SIGTERM", escalationSignal: "SIGKILL" },
+        outputPolicy: {
+          maxChunkBytes: 16384,
+          maxInMemoryTailBytes: 262144,
+          maxDurableBytes: 1048576,
+        },
+        redactionPolicy: {
+          secretVariableNames: ["TOKEN"],
+          redactAuthorizationHeaders: true,
+          skipShortValues: true,
+          minSecretLength: 6,
+        },
+        createdAt: "2026-07-26T00:00:00.000Z",
+        updatedAt: "2026-07-26T00:00:00.000Z",
+      },
+    ],
+    operationRuns: [],
+  };
+  const v6 = migrateV5ToV6(v5raw);
+  const defs = v6.operationDefinitions;
+  const r2a = defs.find((d) => d.id === "r2a.state-store-tests")!;
+  assert.deepEqual(r2a.effectProfile, ["local_read", "bounded_temporary_write"]);
+  assert.equal(r2a.authorityRequirement, "accepted_project_operation");
+  assert.deepEqual(r2a.authoritySourceRef, { kind: "decision", id: "DEC-22" });
+  const rogue = defs.find((d) => d.id === "rogue.legacy")!;
+  assert.equal(rogue.authorityRequirement, "not_authorized");
+  assert.equal(rogue.effectProfile.length, 0);
+});
+
+test("v5 -> v6 migration preserves legacy admission and repairs the abandoned cwdRef draft", () => {
+  const v5raw = {
+    ...JSON.parse(JSON.stringify(V4_FIXTURE)),
+    schemaVersion: 5,
+    operationDefinitions: [],
+    operationRuns: [
+      {
+        id: "RUN-1",
+        definitionId: "r2a.state-store-tests",
+        definitionVersion: 1,
+        definitionFingerprint: "f".repeat(64),
+        projectId: "test-project",
+        cwdRef: ".",
+        worktreeIdentity: "/abs/repo",
+        ownership: { requester: "test", owner: "steward" },
+        startingFingerprint: "a".repeat(64),
+        changedDuringRun: false,
+        lifecycleState: "passed",
+        createdAt: "2026-07-26T00:00:00.000Z",
+        settledAt: "2026-07-26T00:00:01.000Z",
+        exitCode: 0,
+        settlementReason: "passed",
+        outputSummary: {
+          truncated: false,
+          droppedBytes: 0,
+          redactionCount: 0,
+          redactedSecrets: false,
+        },
+        deliveryState: "delivered",
+      },
+    ],
+  };
+  const v6 = migrateV5ToV6(v5raw);
+  const run = v6.operationRuns[0]!;
+  assert.equal(run.repositoryRoot, "/abs/repo");
+  assert.equal(run.admission.result, "allow");
+  assert.equal(run.admission.ruleId, "ADMIT.OPERATIONS.MIGRATION_LEGACY");
+  assert.equal(run.admission.policyVersion, 1);
+  assert.ok(run.admission.legacy);
+  assert.equal(run.admission.legacy?.reason, "pre_policy_kernel");
 });

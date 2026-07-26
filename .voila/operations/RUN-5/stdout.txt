@@ -1,0 +1,100 @@
+TAP version 13
+# Subtest: initState creates current-schema canonical state with empty collections
+ok 1 - initState creates current-schema canonical state with empty collections
+  ---
+  duration_ms: 7.762458
+  type: 'test'
+  ...
+# Subtest: initState refuses to overwrite existing state
+ok 2 - initState refuses to overwrite existing state
+  ---
+  duration_ms: 2.42275
+  type: 'test'
+  ...
+# Subtest: loadState round-trips persisted current-schema state
+ok 3 - loadState round-trips persisted current-schema state
+  ---
+  duration_ms: 2.899833
+  type: 'test'
+  ...
+# Subtest: loadState throws StateNotFoundError when uninitialized
+ok 4 - loadState throws StateNotFoundError when uninitialized
+  ---
+  duration_ms: 0.479625
+  type: 'test'
+  ...
+# Subtest: loading v1 reports migration required (never silent)
+ok 5 - loading v1 reports migration required (never silent)
+  ---
+  duration_ms: 1.093083
+  type: 'test'
+  ...
+# Subtest: unknown schema version is rejected
+ok 6 - unknown schema version is rejected
+  ---
+  duration_ms: 1.224917
+  type: 'test'
+  ...
+# Subtest: malformed JSON yields StateValidationError
+ok 7 - malformed JSON yields StateValidationError
+  ---
+  duration_ms: 1.394458
+  type: 'test'
+  ...
+# Subtest: validateProjectState rejects invalid collections and duplicate IDs
+ok 8 - validateProjectState rejects invalid collections and duplicate IDs
+  ---
+  duration_ms: 2.567542
+  type: 'test'
+  ...
+# Subtest: updateState (immutable reducer) increments revision and persists
+ok 9 - updateState (immutable reducer) increments revision and persists
+  ---
+  duration_ms: 3.417417
+  type: 'test'
+  ...
+# Subtest: rejected update leaves canonical and prior state untouched
+ok 10 - rejected update leaves canonical and prior state untouched
+  ---
+  duration_ms: 3.228209
+  type: 'test'
+  ...
+# Subtest: reducer input is frozen: mutating it throws and does not write
+ok 11 - reducer input is frozen: mutating it throws and does not write
+  ---
+  duration_ms: 2.581292
+  type: 'test'
+  ...
+# Subtest: appendEvent appends JSON lines
+ok 12 - appendEvent appends JSON lines
+  ---
+  duration_ms: 2.710833
+  type: 'test'
+  ...
+# Subtest: generated view matches renderStatusView and is marked generated
+ok 13 - generated view matches renderStatusView and is marked generated
+  ---
+  duration_ms: 2.041958
+  type: 'test'
+  ...
+# Subtest: no temporary files remain after atomic writes
+ok 14 - no temporary files remain after atomic writes
+  ---
+  duration_ms: 2.955875
+  type: 'test'
+  ...
+# Subtest: concurrent updateState calls do not produce duplicate events or colliding revisions
+ok 15 - concurrent updateState calls do not produce duplicate events or colliding revisions
+  ---
+  duration_ms: 20.144292
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 158.91775

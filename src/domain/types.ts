@@ -1,13 +1,20 @@
-// Canonical Voila project-state types (schema version 4). Pure domain — no Pi, no I/O.
+// Canonical Voila project-state types (schema version 6). Pure domain — no Pi, no I/O.
 
 /**
  * Current schema version. Earlier versions are migrated explicitly and never silently:
  * v1 (Packet 1) -> v2 (Packet 2 operations) -> v3 (Packet 3 intake + orientation) ->
  * v4 (Packet 4 claims + verification receipts + protected completion) ->
- * v5 (R2A finite-operation supervision: operation definitions, runs, lifecycle).
- * See migrate.ts.
+ * v5 (R2A finite-operation supervision: operation definitions, runs, lifecycle) ->
+ * v6 (R2A authority pivot: effect profile, authority requirement, admission record,
+ *     typed policy version). See migrate.ts.
  */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
+
+/**
+ * Independent of schema. The R2A admission kernel reads `POLICY_VERSION` directly.
+ * Schema v6 does not imply policy version 6.
+ */
+export const POLICY_VERSION = 1;
 
 export const PHASES = ["research", "sketch", "build", "harden", "release"] as const;
 export type Phase = (typeof PHASES)[number];
@@ -358,6 +365,37 @@ export interface OperationRedactionPolicy {
   minSecretLength: number;
 }
 
+/** Closed effect-profile vocabulary (R2A). Effects declared on the operation definition. */
+export const OPERATION_EFFECTS = [
+  "local_read",
+  "bounded_temporary_write",
+  "repository_source_write",
+  "canonical_state_write",
+  "local_process_control",
+  "network_read",
+  "network_write",
+  "external_state_mutation",
+  "privileged_effect",
+  "unknown_effect",
+] as const;
+export type OperationEffect = (typeof OPERATION_EFFECTS)[number];
+
+/** Closed authority-requirement vocabulary (R2A). Resolved before execution. */
+export const AUTHORITY_REQUIREMENTS = [
+  "accepted_project_operation",
+  "explicit_single_use_owner_authority",
+  "read_only_project_access",
+  "internal_supported_state_transition",
+  "not_authorized",
+] as const;
+export type AuthorityRequirement = (typeof AUTHORITY_REQUIREMENTS)[number];
+
+/** Reference to the canonical decision or operation definition that authorizes this run. */
+export interface AuthorityReference {
+  kind: "decision" | "operation_definition";
+  id: string;
+}
+
 /**
  * Accepted operation definition. One definition describes what MAY be executed; an instance of it
  * is a run. Definitions are explicitly accepted; the supervisor never invents operations.
@@ -371,6 +409,12 @@ export interface OperationDefinition {
   args: string[];
   workingDirectory: WorkingDirectoryPolicy;
   environmentPolicy: OperationEnvironmentPolicy;
+  /** Closed vocabulary; declared once on the definition. Never inferred from argv. */
+  effectProfile: OperationEffect[];
+  /** Authority requirement; resolved before execution against canonical sources. */
+  authorityRequirement: AuthorityRequirement;
+  /** Reference granting authority; absent only when authorityRequirement is not_authorized. */
+  authoritySourceRef?: AuthorityReference;
   riskClassification: OperationRiskClassification;
   successContract: OperationSuccessContract;
   timeoutContract: OperationTimeoutContract;
@@ -419,6 +463,40 @@ export interface OperationProcessIdentity {
 export const OPERATION_DELIVERY_STATES = ["created", "delivered", "acknowledged"] as const;
 export type OperationDeliveryState = (typeof OPERATION_DELIVERY_STATES)[number];
 
+/** Closed admission result vocabulary (R2A admission kernel). */
+export const OPERATION_ADMISSION_RESULTS = [
+  "allow",
+  "reuse_existing",
+  "deny_unknown_operation",
+  "deny_invalid_definition",
+  "deny_wrong_project",
+  "deny_wrong_worktree",
+  "deny_capacity",
+  "deny_retry_budget",
+  "deny_missing_authority",
+  "deny_structural_integrity",
+] as const;
+export type OperationAdmissionResult = (typeof OPERATION_ADMISSION_RESULTS)[number];
+
+/** One immutable admission decision attached to an operation run. */
+export interface OperationAdmission {
+  result: OperationAdmissionResult;
+  /** Stable rule identifier (for example "ADMIT.OPERATIONS.EQUIVALENT_REUSE"). */
+  ruleId: string;
+  /** Policy version active when this admission was evaluated. */
+  policyVersion: number;
+  /** Authority reference recorded when the request was admitted or reused. */
+  authorityReference?: AuthorityReference;
+  /** Existing run returned by `reuse_existing`; absent for every other result. */
+  existingRunId?: string;
+  /** Stable structured explanation data. Human text is derived from the rule ID. */
+  explanationData?: Record<string, string | number | boolean>;
+  /** ISO timestamp when the admission was evaluated. */
+  decidedAt: string;
+  /** Provenance for legacy runs whose admission was never re-evaluated by the policy kernel. */
+  legacy?: { reason: "pre_policy_kernel"; note: string };
+}
+
 /** Canonical metadata for one operation run. Output content lives under .voila/operations/. */
 export interface OperationRun {
   id: string; // e.g. "RUN-1"
@@ -427,6 +505,7 @@ export interface OperationRun {
   /** Stable identifier for the operation definition content. */
   definitionFingerprint: string;
   projectId: string;
+  /** Absolute repository root resolved internally from the active project, never model-supplied. */
   repositoryRoot: string;
   /** Stable worktree identity (realpath of the repository root at start). */
   worktreeIdentity: string;
@@ -445,6 +524,8 @@ export interface OperationRun {
   /** When the canonical settlement was recorded. */
   settledAt?: string;
   processIdentity?: OperationProcessIdentity;
+  /** True only when the owned process group was observed empty at settlement. */
+  processGroupCleaned?: boolean;
   /** Final exit code for `passed`/`failed`. Absent when the run did not reach the OS exit. */
   exitCode?: number;
   /** Terminating signal for `cancelled`/`timed_out`/`supervisor_error`. */
@@ -456,6 +537,10 @@ export interface OperationRun {
   outputArtifactRef?: string;
   /** Whether the parent Steward has already received the settlement. */
   deliveryState: OperationDeliveryState;
+  /** Immutable record of the admission decision that authorized this run. */
+  admission: OperationAdmission;
+  /** When the runtime that owned this run exited unexpectedly (legacy / stale / orphaned). */
+  runtimeLostAt?: string;
 }
 
 /** The authoritative current-state snapshot persisted to `.voila/project.json`. */

@@ -37,10 +37,13 @@ import {
   INTAKE_SOURCE_TYPES,
   INTAKE_STATUSES,
   LIKELIHOODS,
-  OPERATION_LIFECYCLE_STATES,
-  OPERATION_FINAL_STATES,
-  OPERATION_RISK_CLASSES,
+  AUTHORITY_REQUIREMENTS,
+  OPERATION_ADMISSION_RESULTS,
   OPERATION_DELIVERY_STATES,
+  OPERATION_EFFECTS,
+  OPERATION_FINAL_STATES,
+  OPERATION_LIFECYCLE_STATES,
+  OPERATION_RISK_CLASSES,
   ORIENTATION_STATUSES,
   PHASES,
   RECEIPT_RESULTS,
@@ -276,6 +279,18 @@ function validateOrientation(raw: unknown, i: number, problems: string[]): void 
   validateTimestamps(o, p, problems);
 }
 
+function validateAuthorityReference(raw: unknown, path: string, problems: string[]): void {
+  if (typeof raw !== "object" || raw === null) {
+    problems.push(path);
+    return;
+  }
+  const ref = raw as Record<string, unknown>;
+  if (!inEnum(ref.kind, ["decision", "operation_definition"])) {
+    problems.push(`${path}.kind`);
+  }
+  if (!isNonEmptyString(ref.id)) problems.push(`${path}.id`);
+}
+
 function validateOperationDefinition(raw: unknown, i: number, problems: string[]): void {
   const p = `operationDefinitions[${i}]`;
   if (typeof raw !== "object" || raw === null) {
@@ -298,6 +313,22 @@ function validateOperationDefinition(raw: unknown, i: number, problems: string[]
     if (!inEnum(e.kind, ["inherit", "isolate"])) problems.push(`${p}.environmentPolicy.kind`);
     if (e.recordedVariableNames !== undefined && !isStringArray(e.recordedVariableNames))
       problems.push(`${p}.environmentPolicy.recordedVariableNames`);
+  }
+  if (
+    !Array.isArray(o.effectProfile) ||
+    !o.effectProfile.every((effect) => inEnum(effect, OPERATION_EFFECTS))
+  ) {
+    problems.push(`${p}.effectProfile`);
+  }
+  if (!inEnum(o.authorityRequirement, AUTHORITY_REQUIREMENTS)) {
+    problems.push(`${p}.authorityRequirement`);
+  }
+  if (o.authorityRequirement === "not_authorized") {
+    if (o.authoritySourceRef !== undefined) {
+      validateAuthorityReference(o.authoritySourceRef, `${p}.authoritySourceRef`, problems);
+    }
+  } else {
+    validateAuthorityReference(o.authoritySourceRef, `${p}.authoritySourceRef`, problems);
   }
   const risk = o.riskClassification;
   if (typeof risk !== "object" || risk === null) {
@@ -445,6 +476,9 @@ function validateOperationRun(raw: unknown, i: number, problems: string[]): void
       if (typeof pp.platform !== "string") problems.push(`${p}.processIdentity.platform`);
     }
   }
+  if (o.processGroupCleaned !== undefined && typeof o.processGroupCleaned !== "boolean") {
+    problems.push(`${p}.processGroupCleaned`);
+  }
   if (o.exitCode !== undefined && (!Number.isInteger(o.exitCode) || (o.exitCode as number) < 0))
     problems.push(`${p}.exitCode`);
   if (o.terminatingSignal !== undefined && typeof o.terminatingSignal !== "string")
@@ -469,6 +503,57 @@ function validateOperationRun(raw: unknown, i: number, problems: string[]): void
   if (o.outputArtifactRef !== undefined && typeof o.outputArtifactRef !== "string")
     problems.push(`${p}.outputArtifactRef`);
   if (!inEnum(o.deliveryState, OPERATION_DELIVERY_STATES)) problems.push(`${p}.deliveryState`);
+  const admission = o.admission;
+  if (typeof admission !== "object" || admission === null) {
+    problems.push(`${p}.admission`);
+  } else {
+    const a = admission as Record<string, unknown>;
+    if (!inEnum(a.result, OPERATION_ADMISSION_RESULTS)) problems.push(`${p}.admission.result`);
+    if (!isNonEmptyString(a.ruleId)) problems.push(`${p}.admission.ruleId`);
+    if (
+      typeof a.policyVersion !== "number" ||
+      !Number.isInteger(a.policyVersion) ||
+      a.policyVersion < 1
+    ) {
+      problems.push(`${p}.admission.policyVersion`);
+    }
+    if (!isNonEmptyString(a.decidedAt)) problems.push(`${p}.admission.decidedAt`);
+    if (a.authorityReference !== undefined) {
+      validateAuthorityReference(
+        a.authorityReference,
+        `${p}.admission.authorityReference`,
+        problems,
+      );
+    }
+    if (a.existingRunId !== undefined && !isNonEmptyString(a.existingRunId)) {
+      problems.push(`${p}.admission.existingRunId`);
+    }
+    if (a.explanationData !== undefined) {
+      if (
+        typeof a.explanationData !== "object" ||
+        a.explanationData === null ||
+        Array.isArray(a.explanationData) ||
+        !Object.values(a.explanationData as Record<string, unknown>).every(
+          (value) =>
+            typeof value === "string" || typeof value === "number" || typeof value === "boolean",
+        )
+      ) {
+        problems.push(`${p}.admission.explanationData`);
+      }
+    }
+    if (a.legacy !== undefined) {
+      if (typeof a.legacy !== "object" || a.legacy === null) {
+        problems.push(`${p}.admission.legacy`);
+      } else {
+        const legacy = a.legacy as Record<string, unknown>;
+        if (legacy.reason !== "pre_policy_kernel") problems.push(`${p}.admission.legacy.reason`);
+        if (!isNonEmptyString(legacy.note)) problems.push(`${p}.admission.legacy.note`);
+      }
+    }
+  }
+  if (o.runtimeLostAt !== undefined && !isNonEmptyString(o.runtimeLostAt)) {
+    problems.push(`${p}.runtimeLostAt`);
+  }
 }
 
 function validateSequences(raw: unknown, problems: string[]): void {

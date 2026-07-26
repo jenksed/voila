@@ -42,6 +42,7 @@ import {
   updateWorkItem,
 } from "../domain/operations.ts";
 import { workItemLabel } from "../domain/status.ts";
+import { repairSequenceCounters, type SequenceCounterRepair } from "../domain/ids.ts";
 import { intakeTools } from "./intake-tools.ts";
 import { proofTools } from "./proof-tools.ts";
 import { deliveryTools } from "./delivery-tools.ts";
@@ -405,6 +406,44 @@ export function voilaTools(): VoilaTool[] {
           id: input.id,
         });
         return text(`Updated ${input.id}`, { risk: state.risks.find((r) => r.id === input.id) });
+      },
+    },
+
+    {
+      name: "voila_repair_state_counters",
+      label: "Repair State Counters",
+      description:
+        "Explicitly advance any canonical ID sequence that no longer exceeds its used IDs. Changes no entity IDs or other project truth.",
+      promptSnippet: "Repair drifted Voila ID counters through a supported canonical transition",
+      promptGuidelines: [
+        "Use voila_repair_state_counters only when structural diagnostics identify an ID-counter inconsistency; never edit .voila/ directly.",
+      ],
+      parameters: Type.Object({}, { additionalProperties: false }),
+      async execute(_id, _params, _signal, _onUpdate, ctx) {
+        let repairs: SequenceCounterRepair[] = [];
+        await updateState(
+          ctx.cwd,
+          (cur) => {
+            const result = repairSequenceCounters(cur);
+            repairs = result.repairs;
+            return result.state;
+          },
+          () => ({
+            type: "state_counters_repaired",
+            repairs: repairs.map((repair) => ({
+              key: repair.key,
+              from: repair.from,
+              to: repair.to,
+            })),
+          }),
+        );
+        if (repairs.length === 0) return text("State counters already consistent.", { repairs });
+        return text(
+          `Repaired ${repairs.length} state counter(s): ${repairs
+            .map((repair) => `${repair.key} ${repair.from}->${repair.to}`)
+            .join(", ")}.`,
+          { repairs },
+        );
       },
     },
 

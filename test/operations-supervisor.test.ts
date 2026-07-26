@@ -4,8 +4,10 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -14,6 +16,10 @@ import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import type { OperationDefinition } from "../src/domain/types.ts";
 import { ensureR2ARegistry } from "../src/state/operations-registry.ts";
 import { FiniteOperationSupervisor } from "../src/state/operations-runtime.ts";
+import { recordDecision } from "../src/domain/operations.ts";
+
+const NOW = "2026-07-26T22:30:00.000Z";
+const execFileAsync = promisify(execFile);
 
 interface EnvBackup {
   key: string;
@@ -38,8 +44,8 @@ function restoreEnv(backups: EnvBackup[]): void {
 async function initedRoot(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "voila-ops-"));
   await initState(root, { displayName: "ops-fixture" });
-  // Seed a minimal repo so the fingerprint function has something to look at.
-  await mkdir(join(root, ".git"), { recursive: true });
+  // Seed a real minimal git worktree so start/end fingerprints exercise repository content.
+  await execFileAsync("git", ["init", "-q", root]);
   return root;
 }
 
@@ -58,6 +64,9 @@ function definitionFixture(overrides: Partial<OperationDefinition> = {}): Operat
     args: ["-e", "process.stdout.write('ok\\n')"],
     workingDirectory: "repository_root",
     environmentPolicy: { kind: "inherit" },
+    effectProfile: ["local_read", "bounded_temporary_write"],
+    authorityRequirement: "accepted_project_operation",
+    authoritySourceRef: { kind: "decision", id: "DEC-22" },
     riskClassification: {
       riskClass: "safe_and_expected",
       impact: "none",
@@ -96,12 +105,16 @@ function definitionFixture(overrides: Partial<OperationDefinition> = {}): Operat
 
 async function register(root: string, def: OperationDefinition): Promise<void> {
   const { updateState } = await import("../src/state/store.ts");
+  const accepted = {
+    ...def,
+    authoritySourceRef: { kind: "operation_definition" as const, id: def.id },
+  };
   await updateState(
     root,
     (cur) => {
       return {
         ...cur,
-        operationDefinitions: [...cur.operationDefinitions, def],
+        operationDefinitions: [...cur.operationDefinitions, accepted],
         sequences: { ...cur.sequences, operationDefinition: cur.sequences.operationDefinition + 1 },
       };
     },
@@ -171,6 +184,59 @@ test("passing operation produces exactly one passed settlement", async () => {
   assert.equal(final.settlementReason, "passed");
   assert.equal(final.exitCode, 0);
   assert.equal(final.deliveryState, "delivered");
+  assert.equal(final.processGroupCleaned, true);
+  assert.match(final.endingFingerprint ?? "", /^[a-f0-9]{64}$/);
+  assert.equal(final.changedDuringRun, false);
+
+  await supervisor.acknowledge(outcome.run.id);
+  const durable = await new FiniteOperationSupervisor(root).readOutput(outcome.run.id, "both");
+  assert.ok(durable);
+  assert.match(durable!.stdout, /ok/);
+});
+
+test("repository content changes during execution are recorded against start and end fingerprints", async () => {
+  const root = await initedRoot();
+  await seedRepo(root);
+  const def = definitionFixture({ args: ["-e", "setTimeout(()=>{}, 400)"] });
+  await register(root, def);
+
+  const supervisor = new FiniteOperationSupervisor(root);
+  const outcome = await supervisor.start(def.id, { requester: "test", owner: "steward" });
+  assert.equal(outcome.kind, "ok");
+  await writeFile(join(root, "README.md"), "# changed while running\n", "utf8");
+  let final = outcome.run;
+  for (let i = 0; i < 200; i++) {
+    final = (await supervisor.inspect(outcome.run.id))!;
+    if (final.deliveryState === "delivered") break;
+    await new Promise((r) => setTimeout(r, 25));
+  }
+  assert.equal(final.lifecycleState, "passed");
+  assert.equal(final.changedDuringRun, true);
+  assert.notEqual(final.endingFingerprint, final.startingFingerprint);
+});
+
+test("startup failure preserves one supervisor_error run and performs no retry", async () => {
+  const root = await initedRoot();
+  await seedRepo(root);
+  const def = definitionFixture({
+    executable: "definitely-missing-voila-executable",
+    args: [],
+  });
+  await register(root, def);
+
+  const supervisor = new FiniteOperationSupervisor(root);
+  const outcome = await supervisor.start(def.id, { requester: "test", owner: "steward" });
+  assert.equal(outcome.kind, "ok");
+  let final = outcome.run;
+  for (let i = 0; i < 200; i++) {
+    final = (await supervisor.inspect(outcome.run.id))!;
+    if (final.deliveryState === "delivered") break;
+    await new Promise((r) => setTimeout(r, 25));
+  }
+  assert.equal(final.lifecycleState, "supervisor_error");
+  assert.equal(final.settlementReason, "supervisor_error");
+  const { loadState } = await import("../src/state/store.ts");
+  assert.equal((await loadState(root)).operationRuns.length, 1);
 });
 
 test("nonzero-exit operation produces exactly one failed settlement", async () => {
@@ -228,9 +294,11 @@ test("equivalent active request reuses the run without spawning a second process
   const supervisor = new FiniteOperationSupervisor(root);
   const first = await supervisor.start(def.id, { requester: "test", owner: "steward" });
   assert.equal(first.kind, "ok");
+  assert.equal(first.admission.result, "allow");
   const second = await supervisor.start(def.id, { requester: "test", owner: "steward" });
   assert.equal(second.kind, "ok");
   assert.equal(second.reused, true);
+  assert.equal(second.admission.result, "reuse_existing");
   assert.equal(second.run.id, first.run.id);
   // Let the natural close settle the run.
   let final = first.run;
@@ -239,6 +307,34 @@ test("equivalent active request reuses the run without spawning a second process
     if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
+});
+
+test("parallel equivalent starts atomically reserve one run and reuse it while starting", async () => {
+  const root = await initedRoot();
+  await seedRepo(root);
+  const def = definitionFixture({ args: ["-e", "setTimeout(()=>{}, 500)"] });
+  await register(root, def);
+
+  const a = new FiniteOperationSupervisor(root);
+  const b = new FiniteOperationSupervisor(root);
+  const [first, second] = await Promise.all([
+    a.start(def.id, { requester: "a", owner: "steward" }),
+    b.start(def.id, { requester: "b", owner: "steward" }),
+  ]);
+  assert.equal(first.kind, "ok");
+  assert.equal(second.kind, "ok");
+  assert.equal(first.run.id, second.run.id);
+  assert.deepEqual([first.admission.result, second.admission.result].sort(), [
+    "allow",
+    "reuse_existing",
+  ]);
+
+  const { loadState } = await import("../src/state/store.ts");
+  const state = await loadState(root);
+  assert.equal(state.operationRuns.length, 1);
+
+  const owner = first.reused ? b : a;
+  await owner.cancel(first.run.id);
 });
 
 test("different operation is rejected at capacity without queueing", async () => {
@@ -267,7 +363,7 @@ test("stdout and stderr stay attributed and are redacted when a secret is emitte
     const def = definitionFixture({
       args: [
         "-e",
-        "process.stdout.write('hello ' + process.env.TOKEN + '\\n'); process.stderr.write('Authorization: Bearer abcdefghijk\\n');",
+        "process.stdout.write('hello ' + process.env.TOKEN + '\\n'); process.stderr.write('Authorization: Bearer abcdefghijk\\nhttps://user:password@example.com/path\\n');",
       ],
     });
     await register(root, def);
@@ -287,7 +383,9 @@ test("stdout and stderr stay attributed and are redacted when a secret is emitte
     assert.equal(stdout!.stdout.includes("supersecret-value-12345"), false);
     assert.match(stdout!.stdout, /<redacted>/);
     assert.equal(stderr!.stderr.includes("Bearer abcdefghijk"), false);
+    assert.equal(stderr!.stderr.includes("user:password"), false);
     assert.match(stderr!.stderr, /<redacted>/);
+    assert.match(stderr!.stderr, /<redacted>@example\.com/);
     assert.equal(final.outputSummary.redactedSecrets, true);
     assert.ok(final.outputSummary.redactionCount >= 2);
   } finally {
@@ -371,6 +469,7 @@ test("cancellation produces a cancelled settlement", async () => {
   const settled = await supervisor.cancel(outcome.run.id);
   assert.equal(settled.lifecycleState, "cancelled");
   assert.equal(settled.settlementReason, "cancelled");
+  assert.equal(settled.processGroupCleaned, true);
 });
 
 test("no duplicate settlement under racing close + cancel", async () => {
@@ -428,15 +527,53 @@ test("output containing instruction-like text is preserved verbatim and labelled
   assert.ok(stdout!.stdout.includes("Ignore previous instructions"));
 });
 
-test("start rejects an unknown definition id without spawning", async () => {
+test("start rejects an unknown definition id without creating a run or process", async () => {
   const root = await initedRoot();
   await seedRepo(root);
   const supervisor = new FiniteOperationSupervisor(root);
   const outcome = await supervisor.start("does.not.exist", { requester: "test", owner: "steward" });
   assert.equal(outcome.kind, "rejection");
   if (outcome.kind === "rejection") {
-    assert.equal(outcome.reason, "definition_not_found");
+    assert.equal(outcome.reason, "deny_unknown_operation");
+    assert.equal(outcome.admission?.result, "deny_unknown_operation");
   }
+  const { loadState } = await import("../src/state/store.ts");
+  assert.equal((await loadState(root)).operationRuns.length, 0);
+});
+
+test("canonical structural-health failure denies start before a run is reserved", async () => {
+  const root = await initedRoot();
+  await seedRepo(root);
+  const def = definitionFixture();
+  await register(root, def);
+  const { updateState, loadState } = await import("../src/state/store.ts");
+  await updateState(root, (cur) => {
+    const withDecision = recordDecision(
+      cur,
+      {
+        title: "fixture decision",
+        decision: "fixture",
+        rationale: "exercise structural admission",
+        status: "accepted",
+      },
+      NOW,
+    );
+    return {
+      ...withDecision,
+      sequences: { ...withDecision.sequences, decision: 1 },
+    };
+  });
+
+  const outcome = await new FiniteOperationSupervisor(root).start(def.id, {
+    requester: "test",
+    owner: "steward",
+  });
+  assert.equal(outcome.kind, "rejection");
+  if (outcome.kind === "rejection") {
+    assert.equal(outcome.reason, "deny_structural_integrity");
+    assert.equal(outcome.admission?.explanationData?.firstProblem, "sequence.decision");
+  }
+  assert.equal((await loadState(root)).operationRuns.length, 0);
 });
 
 test(

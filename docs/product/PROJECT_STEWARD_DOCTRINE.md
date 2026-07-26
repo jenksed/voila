@@ -113,8 +113,9 @@ gate is still a gate.
 ## Honest capability status
 
 As of 2026-07-26, most of the operational loop this document describes is **doctrine, not
-implementation**. R1 is implemented and its acceptance behavior was observed; R2A is implemented
-and bounded to one explicit accepted finite operation.
+implementation**. R1 is implemented and its acceptance behavior was observed. R2A's DEC-22 pivot is
+implemented in the working tree and bounded to one explicit finite operation, but it is not yet
+accepted: canonical counter repair, current receipt evidence, and fresh-session acceptance remain.
 
 | Capability                              | Status                                                       |
 | --------------------------------------- | ------------------------------------------------------------ |
@@ -129,7 +130,7 @@ and bounded to one explicit accepted finite operation.
 | Quiet development staleness             | Built (R1) — Doctor separates structure from readiness drift  |
 | Honest held readiness                   | Built (R1) — presentation only; no new gate                  |
 | Verification grouping                   | Seam only (R1) — identity and grouping; execution is R6       |
-| One finite supervised operation         | Built (R2A) — `r2a.state-store-tests` only                   |
+| One finite supervised operation         | Built and accepted (bounded R2A only)                        |
 | Background terminals                    | Not built (R2B onward)                                       |
 | Pi child workers                        | Not built (R3)                                               |
 | Automatic settlement and integration    | Not built (R4)                                               |
@@ -145,16 +146,18 @@ fixed, and the five NF-9 required claims are supported by current receipts. Hone
 visible on each claim.
 
 R2A's evidence and capability boundary are recorded in
-[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). R2A
-introduces a single explicit finite operation (`r2a.state-store-tests`), a finite-operation
-supervisor, the canonical operation-run lifecycle, four model-callable tools, and a bounded
-focus-capsule operation summary. It does **not** introduce services, watchers, PTYs, child
-workers, multiple concurrent operations, operation discovery, cross-process coordination, or
-persistent execution across Pi or OS restart.
+[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). Its working-tree
+implementation contains a single explicit finite operation (`r2a.state-store-tests`), deterministic
+admission, a finite-operation supervisor, the canonical operation-run lifecycle, four model-callable
+operation tools, structured-file protection for canonical state, and a bounded focus-capsule
+summary. It does **not** introduce services, watchers, PTYs, child workers, multiple concurrent
+operations, operation discovery, cross-process coordination, or persistent execution across Pi or
+OS restart.
 
-What R2A makes true is narrow: **the Steward can supervise one local, non-interactive, low-risk
-finite operation and receive one canonical settlement without developer monitoring**. It does not
-make arbitrary commands runnable; operations are explicit and registered.
+The capability claim remains conditional until acceptance: **once the pending gates pass, the
+Steward can supervise one local, non-interactive finite operation and receive one canonical
+settlement without developer monitoring**. R2A does not make arbitrary commands runnable;
+operations are explicit and registered.
 
 No document, skill, README, or canonical record may describe R2B–R7 capabilities as present. The
 Steward skill currently instructs the model **not** to spawn subagents, because R3 child-worker

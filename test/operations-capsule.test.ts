@@ -6,7 +6,7 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { initState } from "../src/state/store.ts";
+import { initState, updateState } from "../src/state/store.ts";
 import { ensureR2ARegistry } from "../src/state/operations-registry.ts";
 import { assembleContext } from "../src/context/assemble.ts";
 import { FiniteOperationSupervisor } from "../src/state/operations-runtime.ts";
@@ -21,6 +21,25 @@ async function initedRoot(): Promise<string> {
 
 import { mkdir } from "node:fs/promises";
 
+async function grantR2AAuthority(root: string): Promise<void> {
+  await updateState(root, (cur) => ({
+    ...cur,
+    sequences: { ...cur.sequences, decision: 23 },
+    decisions: [
+      ...cur.decisions,
+      {
+        id: "DEC-22",
+        title: "R2A fixture authority",
+        decision: "Authorize the accepted fixture operation.",
+        rationale: "Exercise the canonical authority boundary.",
+        status: "accepted",
+        createdAt: "2026-07-26T22:30:00.000Z",
+        updatedAt: "2026-07-26T22:30:00.000Z",
+      },
+    ],
+  }));
+}
+
 test("capsule omits operation lines when no run has been recorded", async () => {
   const root = await initedRoot();
   const capsule = await assembleContext(root, { continuation: false });
@@ -31,11 +50,11 @@ test("capsule omits operation lines when no run has been recorded", async () => 
 test("capsule includes one bounded active operation line while a run is in flight", async () => {
   const root = await initedRoot();
   await ensureR2ARegistry(root);
+  await grantR2AAuthority(root);
   const supervisor = new FiniteOperationSupervisor(root);
   // Use a long-running definition so the run is still active when we read the capsule.
   // The accepted operation's executable is `mise`, so we keep the `exec --` separator to ensure
   // mise forwards the rest of the argv to node rather than parsing it as its own options.
-  const { updateState } = await import("../src/state/store.ts");
   await updateState(
     root,
     (cur) => ({
@@ -91,6 +110,7 @@ test(
   async () => {
     const root = await initedRoot();
     await ensureR2ARegistry(root);
+    await grantR2AAuthority(root);
     const supervisor = new FiniteOperationSupervisor(root);
     const outcome = await supervisor.start("r2a.state-store-tests", {
       requester: "capsule-test",

@@ -359,27 +359,29 @@ If `Continue` still produces primarily a status report rather than useful action
 ### Planning foundation
 
 The R2 packet is planned first by [R2-0 — Operational Risk and Authority Envelope](R2_0_OPERATIONAL_RISK_AND_AUTHORITY_ENVELOPE.md).
-R2-0 fixes the risk classes, authority boundaries, response sequence, and first Gherkin scenarios
-the R2 implementation must respect. R2A is the first finite demonstration packet; it is now
-implemented on `feat/r2a-finite-operation` and its capability boundary is recorded in
-[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). No further
-R2 runtime behavior is built. R2B and later packets remain unimplemented.
+R2-0 establishes the authority boundary and response sequence; DEC-22 corrects its broad risk
+categories into separate effect, authority, admission, outcome, and recovery concepts. R2A is the
+first finite demonstration packet. Its DEC-22 pivot, full verification, and real parent-Steward
+acceptance passed on 2026-07-26 as recorded in
+[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). No further R2
+runtime behavior is built. R2B and later packets remain unimplemented.
 
 ### Objective
 
 Allow the Steward to launch and supervise one long-running local process without blocking the parent
 conversation.
 
-### R2A status (first vertical slice — implemented)
+### R2A status (first vertical slice — bounded capability accepted)
 
-R2A ships one explicit finite operation: `r2a.state-store-tests` v1, executable `mise` with argv
-`["exec","--","node","--test","test/state.store.test.ts"]`, working directory `repository_root`, risk
-class `safe_and_expected`. The supervisor owns the process group on POSIX platforms, captures bounded
-redacted output, enforces the operation's own time budgets, and records exactly one canonical
-settlement. The four model-callable tools are `voila_start_operation`, `voila_get_operation`,
-`voila_read_operation_output`, and `voila_cancel_operation`. The focus capsule surfaces one
-bounded active or settled operation line; it does not inject output or imply services, watchers,
-workers, or multiple terminals.
+R2A defines one explicit finite operation: `r2a.state-store-tests` v1, executable `mise` with argv
+`["exec","--","node","--test","test/state.store.test.ts"]`, working directory `repository_root`,
+effects `{local_read, bounded_temporary_write}`, and authority `accepted_project_operation` sourced
+from DEC-22. The working tree contains the pure deterministic admission kernel, atomic in-process
+reservation, POSIX process supervision, bounded redacted output, exactly-once canonical settlement,
+four model-callable operation tools, structured-file protection for `.voila/`, and a bounded capsule
+summary. The supported NF-17 repair restored structural health, the protected full gate passed, and
+RUN-5 was delivered automatically to the parent on the next turn and acknowledged exactly once.
+This accepts R2A only; it does not complete the broader NF-10 scope.
 
 The remaining R2 plan items (full process list, the `wait` tool, watcher-style commands,
 long-running development servers, persistent services) remain R2B onward and are not built.
