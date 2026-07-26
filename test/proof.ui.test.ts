@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { renderConsole, plainStyler } from "../src/ui/steward-console/render.ts";
+import { renderConsole, plainStyler, MIN_CONSOLE_WIDTH } from "../src/ui/steward-console/render.ts";
 import { INITIAL_UI, type ConsoleUiState } from "../src/ui/steward-console/navigation.ts";
 import {
   buildConsoleModel,
@@ -281,6 +281,35 @@ test("no console line overflows at narrow widths, including the 20-column floor"
       }
     }
   }
+});
+
+// D6, reproduced in a real PTY: resizing the terminal below the 20-column floor made the console
+// clamp its content UP to 20 and emit 20-wide lines into a narrower terminal, which then wrapped
+// every one of them (29 overflowing lines at 19 columns, 52 at 15). Measured threshold: clean at
+// 20 and 21, overflowing at 19 and below. The console must never render wider than the terminal.
+test("below the floor the console fits the real width instead of clamping up to it", () => {
+  const model = modelWithProof(fourStateProject());
+  for (let width = 1; width < MIN_CONSOLE_WIDTH; width++) {
+    for (const view of CONSOLE_VIEWS) {
+      for (const detailOpen of [false, true]) {
+        const lines = render(model, ui({ view, detailOpen }), width);
+        const over = lines.filter((l) => Array.from(l).length > width);
+        assert.deepEqual(over, [], `clamped above the terminal width at ${width} (${view})`);
+      }
+    }
+  }
+});
+
+test("the too-narrow notice states the requirement and stays within the width", () => {
+  const model = modelWithProof(fourStateProject());
+  const lines = render(model, ui({ view: "proof" }), 19);
+  assert.ok(lines.length > 0, "something is rendered rather than a blank screen");
+  assert.ok(lines.every((l) => Array.from(l).length <= 19));
+  const text = lines.join(" ");
+  assert.match(text, /NewFang/, "the notice identifies itself");
+  assert.match(text, /20/, "it names the width it needs");
+  // A zero-width terminal renders nothing rather than throwing.
+  assert.deepEqual(render(model, ui({ view: "proof" }), 0), []);
 });
 
 test("the claim-detail label is truncated rather than overflowing the floor width", () => {

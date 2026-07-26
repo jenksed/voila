@@ -663,6 +663,26 @@ function statusScreen(model: ConsoleModel, width: number, st: Styler): string[] 
   ];
 }
 
+/**
+ * Narrowest width the console lays out for. Below this the layout is not merely cramped, it is
+ * unusable, so the console says so instead of rendering.
+ */
+export const MIN_CONSOLE_WIDTH = 20;
+
+/**
+ * Below MIN_CONSOLE_WIDTH the console cannot lay out, but it must still not emit lines wider than
+ * the terminal: clamping content up to the floor makes the terminal wrap every line, which looks
+ * like corruption rather than a narrow window. Render a notice sized to the ACTUAL width instead.
+ */
+function tooNarrowScreen(width: number, st: Styler): string[] {
+  if (width <= 0) return [];
+  return [
+    st.fg("warning", truncate("NewFang", width)),
+    st.fg("muted", truncate(`needs ${MIN_CONSOLE_WIDTH} cols`, width)),
+    st.fg("muted", truncate("widen · q quit", width)),
+  ];
+}
+
 /** Render the whole console to width-correct lines. */
 export function renderConsole(
   model: ConsoleModel,
@@ -670,7 +690,11 @@ export function renderConsole(
   width: number,
   st: Styler = plainStyler,
 ): string[] {
-  const w = Math.max(20, Math.floor(width));
+  const requested = Math.floor(width);
+  // Never render wider than the terminal actually is.
+  if (requested < MIN_CONSOLE_WIDTH) return tooNarrowScreen(requested, st);
+
+  const w = requested;
   if (model.status !== "ok") return statusScreen(model, w, st);
 
   const lines: string[] = [];

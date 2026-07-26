@@ -19,7 +19,7 @@ suite is never mistaken for an interactive or authenticated check.
 | Tier                                          | Status      | Evidence                                                                        |
 | --------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
 | 0. Rebase and reconciliation                  | **PASS**    | `866e0d6` → `d397dfc` onto `3169878`; 6 conflicts resolved field-by-field       |
-| 1. Automated tests                            | **PASS**    | 385/385 via `mise exec -- npm run verify` (main baseline 206)                   |
+| 1. Automated tests                            | **PASS**    | 387/387 via `mise exec -- npm run verify` (main baseline 206)                   |
 | 1b. Migration against the integrated v3 state | **PASS**    | 7 tests over the real schema-v3 `project.json` from `3169878`                   |
 | 2. Pi registration (non-model)                | **PASS**    | 28 tools registered; asserted by tests and observed over RPC                    |
 | 3. Structured execution                       | **PASS**    | `/newfang verify CLM-2 -- mise exec -- npm run verify`, no shell, explicit argv |
@@ -27,7 +27,7 @@ suite is never mistaken for an interactive or authenticated check.
 | 5. Failing receipt                            | **PASS**    | honest `failed` receipt (exit 3) in a bounded fixture repository                |
 | 6. Stale-evidence demonstration               | **PASS**    | performed on this repository; fingerprint returns exactly                       |
 | 7. Protected-completion fixture               | **PASS**    | rejection preserves canonical bytes; success is fully gated                     |
-| 8. Interactive Proof view (TUI)               | **PARTIAL** | 18/19 items PASS; D5 fixed; label overflow fixed; **D6 OPEN** — unclassified    |
+| 8. Interactive Proof view (TUI)               | **PARTIAL** | 18/19 PASS; D5 and D6 both fixed and machine-verified; D6 awaits re-attestation |
 | 9. Authenticated model use                    | **PENDING** | requires `/login`; the agent must not authenticate                              |
 | 10. GitHub CI                                 | **PASS**    | run 30177880494 on PR #4 — `verify` job green                                   |
 | 11. Doctor                                    | **PASS**    | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed                |
@@ -37,37 +37,40 @@ Steward skill never loaded) is fixed, regression-tested, and re-attested. **D6**
 minimized terminal width) is **open**: Joshua corrected an initial pass on that item. A first
 reproduction attempt reported "no overflow" — that result was a false negative from a malformed
 probe and has been **retracted**; see the correction under D6. The corrected sweep confirms a real
-renderer overflow below 27 columns — now **fixed** — but at Joshua's actual 111-column window the
-renderer was already clean, so that defect is **not** the wrap he reported and D6 remains
-unclassified. Eighteen of nineteen items pass; rendered values were cross-checked against the domain,
-so what renders is accurate.
+renderer overflow below 27 columns, now fixed. **D6 was then reproduced directly** by driving the
+real Pi TUI inside a sized pseudo-terminal: below 20 columns the console clamped its layout up to the
+20-column floor and emitted lines wider than the terminal. It is classified as a NewFang content-line
+overflow from `renderConsole`, is fixed, and is re-verified in the same PTY harness — but it still
+needs Joshua to re-attest at the previously failing width. Eighteen of nineteen items pass; rendered
+values were cross-checked against the domain, so what renders is accurate.
 
 Tier 9 (authenticated model use) remains **not claimed**. It is the same human gate outstanding
 since Packet 2.5, is not a Packet 4R acceptance gate, and requires credentials Claude must not
 handle.
 
-**Sixteen of seventeen acceptance gates are met. Gate 14 is not**, because the interactive
-Proof view does not pass in full while D6 is open — so gate 17 (merge) is deliberately not taken.
+**Sixteen of seventeen acceptance gates are met. Gate 14 is not**: D5 and D6 are both fixed and
+machine-verified, but the interactive tier is human-attested by definition and D6's fix has not been
+re-attested in Joshua's terminal. Gate 17 (merge) is deliberately not taken.
 
-| #   | Gate                                                  | Result                                                           |
-| --- | ----------------------------------------------------- | ---------------------------------------------------------------- |
-| 1   | Packet 3 closure history intact                       | PASS — 36/36 artifacts and 48 events byte-identical              |
-| 2   | INT-8 revision 3 remains accepted                     | PASS — canonical and `reviews.jsonl`, before and after migration |
-| 3   | D2 and D3 remain fixed                                | PASS                                                             |
-| 4   | D1 and D4 remain open and unchanged                   | PASS                                                             |
-| 5   | Schema v3 migrates correctly to v4                    | PASS — 7 tests over the real integrated v3 state                 |
-| 6   | Claims cover exact acceptance criteria                | PASS — exact-match enforced; doctor agrees                       |
-| 7   | Structured verification creates immutable receipts    | PASS — RCP-3, RCP-4                                              |
-| 8   | Passing, failing, timeout, stale represented honestly | PASS                                                             |
-| 9   | Receipt creation does not invalidate itself           | PASS — same fingerprint across RCP-3/RCP-4                       |
-| 10  | Protected completion cannot be bypassed               | PASS — 11 gates; generic paths refuse                            |
-| 11  | Rejected completion preserves canonical bytes         | PASS — byte-identical                                            |
-| 12  | Existing intake and orientation workflows still pass  | PASS — all Packet 3 suites, unchanged counts                     |
-| 13  | Complete automated gate passes                        | PASS — 385/385                                                   |
-| 14  | Interactive Proof view passes                         | **NOT MET** — 18/19 items; D6 narrow-width overflow open         |
-| 15  | Doctor passes                                         | PASS — 22 PASS, 2 honest WARN, 0 FAIL                            |
-| 16  | GitHub CI passes                                      | PASS                                                             |
-| 17  | PR merged with a merge commit                         | **NOT TAKEN** — blocked on gate 14                               |
+| #   | Gate                                                  | Result                                                                         |
+| --- | ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 1   | Packet 3 closure history intact                       | PASS — 36/36 artifacts and 48 events byte-identical                            |
+| 2   | INT-8 revision 3 remains accepted                     | PASS — canonical and `reviews.jsonl`, before and after migration               |
+| 3   | D2 and D3 remain fixed                                | PASS                                                                           |
+| 4   | D1 and D4 remain open and unchanged                   | PASS                                                                           |
+| 5   | Schema v3 migrates correctly to v4                    | PASS — 7 tests over the real integrated v3 state                               |
+| 6   | Claims cover exact acceptance criteria                | PASS — exact-match enforced; doctor agrees                                     |
+| 7   | Structured verification creates immutable receipts    | PASS — RCP-3, RCP-4                                                            |
+| 8   | Passing, failing, timeout, stale represented honestly | PASS                                                                           |
+| 9   | Receipt creation does not invalidate itself           | PASS — same fingerprint across RCP-3/RCP-4                                     |
+| 10  | Protected completion cannot be bypassed               | PASS — 11 gates; generic paths refuse                                          |
+| 11  | Rejected completion preserves canonical bytes         | PASS — byte-identical                                                          |
+| 12  | Existing intake and orientation workflows still pass  | PASS — all Packet 3 suites, unchanged counts                                   |
+| 13  | Complete automated gate passes                        | PASS — 387/387                                                                 |
+| 14  | Interactive Proof view passes                         | **NOT MET** — D6 fixed and PTY-verified; needs Joshua to re-attest at ≤19 cols |
+| 15  | Doctor passes                                         | PASS — 22 PASS, 2 honest WARN, 0 FAIL                                          |
+| 16  | GitHub CI passes                                      | PASS                                                                           |
+| 17  | PR merged with a merge commit                         | **NOT TAKEN** — blocked on gate 14                                             |
 
 ## Tier 0 — Rebase and reconciliation
 
@@ -135,7 +138,7 @@ the backups directory stays empty until `--apply`.
 mise exec -- npm run verify          (rebased branch)
   → tsc --noEmit          clean
   → prettier --check      clean
-  → node --test           tests 385 · pass 385 · fail 0
+  → node --test           tests 387 · pass 387 · fail 0
 ```
 
 Counts across the reconciliation:
@@ -497,16 +500,225 @@ the documented by-design consequence of `HEAD` participating in the fingerprint,
 Joshua confirmed the remaining eight items in a real terminal
 (`mise exec -- npm run pi`, then `/newfang home`):
 
-| Item                                                                                  | Result                         |
-| ------------------------------------------------------------------------------------- | ------------------------------ |
-| `j`/`k` move the selection across claims, then receipts, then the completion-gate row | **PASS**                       |
-| `Enter` opens claim detail (coverage + limitations) and closes with `Esc`             | **PASS**                       |
-| `Enter` on a receipt shows metadata and an artifact pointer only — no stdout dump     | **PASS**                       |
-| `Enter` on the completion-gate row lists every failing gate readably                  | **PASS**                       |
-| Below 80 columns nothing overflows or is clipped mid-word                             | **FAIL** — defect **D6**, open |
-| Packet 3 intake review UI: `u` opens the Understanding Check; `a` / `v` / `x` offered | **PASS**                       |
-| `?` help lists the four-view order and the `a` / `v` / `x` keys; `r` reloads          | **PASS**                       |
-| `q` exits cleanly                                                                     | **PASS**                       |
+| Item                                                                                  | Result                                                       |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `j`/`k` move the selection across claims, then receipts, then the completion-gate row | **PASS**                                                     |
+| `Enter` opens claim detail (coverage + limitations) and closes with `Esc`             | **PASS**                                                     |
+| `Enter` on a receipt shows metadata and an artifact pointer only — no stdout dump     | **PASS**                                                     |
+| `Enter` on the completion-gate row lists every failing gate readably                  | **PASS**                                                     |
+| Below 80 columns nothing overflows or is clipped mid-word                             | **FAIL** → defect **D6**, now fixed; awaiting re-attestation |
+| Packet 3 intake review UI: `u` opens the Understanding Check; `a` / `v` / `x` offered | **PASS**                                                     |
+| `?` help lists the four-view order and the `a` / `v` / `x` keys; `r` reloads          | **PASS**                                                     |
+| `q` exits cleanly                                                                     | **PASS**                                                     |
+
+**Tier 8 remains PARTIAL**: eighteen of nineteen items attested PASS, with one real defect found and
+fixed (**D5**) and one still open (**D6**, narrow-width overflow).
+
+### D6 — overflow at minimized terminal width (OPEN)
+
+Joshua initially reported the sub-80-column item as passing, then corrected it: minimizing the
+terminal width produces visible overflow. The correction is taken at face value and the item is
+recorded as **FAIL**, not smoothed into a pass.
+
+#### Correction: the first reproduction attempt was invalid
+
+An earlier revision of this section reported "0 overflowing combinations" across widths 20–120 and
+concluded the renderer was not at fault. **That result was wrong and is retracted.** The probe built
+its view model with `buildConsoleModel({ state, fingerprint })`, but `ConsoleInput` has no
+`fingerprint` field and requires `status`. The model therefore fell through to the error path, and
+every "clean" width was measuring a six-line _"NewFang state problem"_ screen — not the console. The
+finding was a false negative produced by a malformed probe.
+
+The probe now builds the model through `buildModelForRoot()`, the same function the TUI uses, and
+asserts `model.status === "ok"` before measuring.
+
+#### Corrected measurements
+
+Over the real canonical state, all four views, every selection index, and every combination of
+`detailOpen` and `helpOpen` — **1728 combinations** at widths 20, 30, 40, 50, 55, 59, 60, 70, 80,
+100, 120, 160:
+
+```text
+combinations: 1728 · exceeding width: 3 · exceptions: 0
+
+overflowing cases (all at width 20, claim detail open, 7 columns over):
+  width 20 view=proof selection=0 detail=true   max 27
+  width 20 view=proof selection=1 detail=true   max 27
+  width 20 view=focus selection=1 detail=true   max 27
+
+the offending line, in every case:
+  OVER [27] "covers acceptance criteria:"
+```
+
+So there **is** a genuine renderer-side overflow: the detail-view label `covers acceptance criteria:`
+is emitted at its natural 27-character length without truncation, and overflows any width below 27.
+It is a NewFang **content line** originating from `renderConsole`.
+
+#### Second correction: sub-20-column results were not defects
+
+A wider sweep initially reported the header line overflowing at widths 10–19 as well. That is **not**
+a defect and is retracted: `renderConsole` clamps with `Math.max(20, …)`, so it deliberately refuses
+to render below a 20-column floor and emits 20-column lines. Measuring those against the _requested_
+width counted the floor as overflow. Only one real defect remains.
+
+#### Fix (authorized as a separate narrow item)
+
+The claim-detail block pushed fixed labels without sizing them. `covers acceptance criteria:` (27
+chars) overflowed from the 20-column floor through width 26. All three literal labels in that block
+are now passed through the same `truncate()` every other line uses — `known limitations:` and
+`  - (none recorded)` fit at 20 only by luck and were one character from the same bug.
+
+No layout logic changed: no new width arithmetic, no `-2` allowances, no change to `layoutClass`,
+`columnWidths`, or the 20-column floor.
+
+Verification after the fix, over the **real** canonical state, widths 20–200, all four views, every
+selection index, every `detailOpen`/`helpOpen` pair:
+
+```text
+combinations: 26064 · overflowing: 0
+```
+
+Regression coverage added in `test/proof.ui.test.ts` at widths
+**20, 21, 26, 27, 30, 40, 50, 55, 59, 60, 70, 80** — the band the existing
+`WIDTHS = [60, 80, 100, 120, 160]` never touched — plus a test pinning the exact failing shape (the
+label truncated with an ellipsis at the 20-column floor). Confirmed to be a real guard: reverting the
+fix fails both tests; restoring it passes them.
+
+Two things this does **not** establish:
+
+1. **It is probably not what Joshua saw.** It only manifests below 27 columns and only with claim
+   detail open. A merely "minimized" terminal is unlikely to be that narrow.
+2. Lines padded to **exactly** `width` are far more numerous than first reported — **26 to 35 per
+   screen** at every width, not 1–2. If Pi's component frame reserves any horizontal space while
+   reporting full terminal width, a large fraction of every screen would wrap. That remains an
+   unconfirmed hypothesis about the host boundary, not a finding.
+
+Existing coverage does not close this: `test/proof.ui.test.ts` asserts no overflow only at
+`WIDTHS = [60, 80, 100, 120, 160]`, so **nothing below 60 columns is tested**, and no test models
+Pi's own frame — which is exactly why a sub-27-column defect survived.
+
+#### D6 resolved: reproduced in a real PTY, classified, and fixed
+
+Rather than ask for a third round of terminal observation, the TUI was driven directly: a
+pseudo-terminal was allocated with `pty.fork()`, sized exactly with `TIOCSWINSZ`, and the real Pi
+`0.82.0` TUI was run inside it with `/newfang home` opened. Captured output was ANSI-stripped and
+split on both newline and bare CR (the TUI repaints with `\r`), then every line measured.
+
+Static narrow widths were clean — 0 over-width lines at 111, 60, and 40 columns. The defect only
+appears on **resize**, which is exactly what was reported and what a fixed-width run never
+exercises. Opening the console at 111 columns and then shrinking the terminal:
+
+```text
+resize 111 -> 60 cols   lines wider than terminal: 0
+resize 111 -> 21 cols   lines wider than terminal: 0
+resize 111 -> 20 cols   lines wider than terminal: 0
+resize 111 -> 19 cols   lines wider than terminal: 29   <-- overflow begins
+resize 111 -> 15 cols   lines wider than terminal: 52
+```
+
+**Cause.** `renderConsole` clamped with `Math.max(20, …)`. Below 20 columns it kept laying out at
+20 and emitted 20-wide lines into a narrower terminal, which then wrapped every one of them. The
+20-column floor was correct as a _layout_ decision and wrong as an _output_ decision: refusing to
+lay out is fine, but emitting lines wider than the terminal is not.
+
+Classification, with every requested field:
+
+| Field                           | Value                                                                                                                                                     |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| terminal width                  | overflow at **≤ 19** columns; clean at 20 and above (reported window was 111×57, so the wrap required shrinking well past it)                             |
+| active view                     | all four — `focus`, `work`, `proof`, `truth`                                                                                                              |
+| selection                       | any; independent of selection                                                                                                                             |
+| detail / help open              | either; independent of both                                                                                                                               |
+| exact overflowing line          | e.g. `NEWFA… build · green`, `────────────────────`, `NEXT JUSTIFIED ACTI…`, `gate (382 tests) and` — all exactly 20 chars in a 15- or 19-column terminal |
+| classification                  | **2 — NewFang content line** (headings, rules, and body text alike; not Pi chrome)                                                                        |
+| originated from `renderConsole` | **yes**, confirmed by PTY capture and by the exact 20-column signature                                                                                    |
+
+**Fix.** Below `MIN_CONSOLE_WIDTH` (20, now a named export) the console renders a notice sized to the
+_actual_ width instead of clamping up to the floor:
+
+```text
+NewFang
+needs 20 cols
+widen · q quit
+```
+
+Nothing else changed: no host-frame allowance, no scattered `-2` arithmetic, no change to
+`layoutClass`, `columnWidths`, or the floor value itself.
+
+**Re-verified in the same PTY harness after the fix:**
+
+```text
+resize 111 -> 15 cols   lines wider than terminal: 0
+resize 111 -> 19 cols   lines wider than terminal: 0
+resize 111 -> 20 cols   lines wider than terminal: 0
+resize 111 -> 60 cols   lines wider than terminal: 0
+```
+
+Regression coverage in `test/proof.ui.test.ts`: every width from 1 to 19, all four views, both detail
+states, asserting no line exceeds the terminal; plus a test that the notice names the requirement,
+stays within the width, and that a zero-width terminal renders nothing rather than throwing.
+
+### D5 fix re-attested
+
+Joshua confirmed in a real terminal that the skill now loads. Session start showed no skill warning.
+
+### Second interactive observation (human-attested)
+
+Captured from Joshua's terminal on the reconciled branch at `HEAD = 5069494`:
+
+| Item                                                                        | Result   |
+| --------------------------------------------------------------------------- | -------- |
+| Project Steward skill loads                                                 | **PASS** |
+| Focus view renders (Work / Attention / Proof / Project Truth panels)        | **PASS** |
+| View switching `Focus → Proof` via the tab bar                              | **PASS** |
+| Claim status readable; `stale` emphasis distinguishable                     | **PASS** |
+| Required-claim marker (`*`) distinguishes required from non-required claims | **PASS** |
+| Receipt list bounded — no stdout dump in the principal view                 | **PASS** |
+| Completion-gate row present with a route to the full list                   | **PASS** |
+| Footer key hints present                                                    | **PASS** |
+
+**The rendering was cross-checked against the domain, not just eyeballed.** Every number and label on
+screen was reproduced from `proofSummary()` and `assessCompletion()`:
+
+```text
+on screen: Claims 2 · supported 0 · unsupported 0 · stale 2 · pending 0
+domain:    {"total":2,"supported":0,"unsupported":0,"stale":2,"pending":0}   MATCH
+
+on screen: NF-2 is not completable: 3 gate(s) failing — required claims attached
+domain:    NF-2 failing=3
+             required_claims_present | required claims attached
+             criteria_covered        | every acceptance criterion covered by a required claim
+             claims_supported        | every required claim supported by current passing evidence   MATCH
+
+on screen: Required claim CLM-1 evidence is stale: the repository changed since RCP-2 was
+           recorded; re-run verification
+domain:    CLM-1 stale (the repository changed since RCP-2 was recorded; re-run verification)  MATCH
+
+on screen: RCP-1..RCP-4 all marked stale
+domain:    HEAD moved to 5069494; every receipt predates it                                   MATCH
+```
+
+The truncated Focus-view line `— required claims attached` is the **first failing gate's label**, not
+a rendering fault.
+
+All four receipts and both claims read `stale` because the branch has since been committed. This is
+the documented by-design consequence of `HEAD` participating in the fingerprint, not a defect.
+
+### Third pass — remaining checklist, all confirmed
+
+Joshua confirmed the remaining eight items in a real terminal
+(`mise exec -- npm run pi`, then `/newfang home`):
+
+| Item                                                                                  | Result                                                       |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `j`/`k` move the selection across claims, then receipts, then the completion-gate row | **PASS**                                                     |
+| `Enter` opens claim detail (coverage + limitations) and closes with `Esc`             | **PASS**                                                     |
+| `Enter` on a receipt shows metadata and an artifact pointer only — no stdout dump     | **PASS**                                                     |
+| `Enter` on the completion-gate row lists every failing gate readably                  | **PASS**                                                     |
+| Below 80 columns nothing overflows or is clipped mid-word                             | **FAIL** → defect **D6**, now fixed; awaiting re-attestation |
+| Packet 3 intake review UI: `u` opens the Understanding Check; `a` / `v` / `x` offered | **PASS**                                                     |
+| `?` help lists the four-view order and the `a` / `v` / `x` keys; `r` reloads          | **PASS**                                                     |
+| `q` exits cleanly                                                                     | **PASS**                                                     |
 
 **Tier 8 remains PARTIAL**: eighteen of nineteen items attested PASS, with one real defect found and
 fixed (**D5**) and one still open (**D6**, narrow-width overflow).
