@@ -8,6 +8,7 @@ import { tryRepositoryFingerprint } from "../state/fingerprint.ts";
 import { proofSummary } from "../domain/proof.ts";
 import { buildFocusCapsule, type CapsuleInput } from "./inject.ts";
 import { observeRepository } from "./observe.ts";
+import { activeRun, latestSettlement, summarizeRun } from "../domain/operations-runtime.ts";
 
 export interface AssembleOptions {
   /** True when the developer's prompt was an explicit request to continue the accepted work. */
@@ -44,6 +45,7 @@ export async function assembleContext(
           ? proofSummary(state, await tryRepositoryFingerprint(root))
           : proofSummary(state, null),
       repository: await observeRepository(root),
+      operation: summarizeOperation(state),
     };
   } catch (error) {
     if (error instanceof StateNotFoundError) input = { status: "uninitialized" };
@@ -51,4 +53,15 @@ export async function assembleContext(
     else input = { status: "error", message: (error as Error).message };
   }
   return buildFocusCapsule(input);
+}
+
+/** Build the bounded operation summary that the capsule may emit. */
+function summarizeOperation(state: import("../domain/types.ts").ProjectState) {
+  const active = activeRun(state);
+  if (active) return summarizeRun(active, Date.now());
+  const settled = latestSettlement(state);
+  if (!settled) return null;
+  // Only surface a settled run while it is still undelivered, so the Steward can acknowledge it.
+  if (settled.deliveryState === "acknowledged") return null;
+  return summarizeRun(settled, Date.now());
 }
