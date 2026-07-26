@@ -4,7 +4,15 @@ Self-contained context for picking this project up cold. Written to be harness-n
 into any assistant, or read it yourself after a break.
 
 **Repo:** `git@github.com:jenksed/voila.git` · **Checkout:** `/Users/jenksed/Projects/voila`
-**Head at writing:** `0d07e1b` (main) · **Gate:** 587 tests passing
+**Branch:** `docs/project-steward-realignment` · **Head at writing:** `62bc434` (the R0 closeout
+commits on top of it) · **Gate:** 588 tests passing
+**Proof:** 5 claims, 5 supported · **Doctor:** 26 checks, 1 warning (orientation staleness — §6)
+
+> Canonical revision is deliberately **not** pinned here. It increments on every canonical write,
+> including each verification receipt, so any number written into this file is stale before the
+> commit lands — and chasing it is exactly the bookkeeping the doctrine says the developer should
+> never do. Read it from `.voila/project.json`, `/voila status`, or
+> [`.voila/briefs/PROJECT_BRIEF.md`](../.voila/briefs/PROJECT_BRIEF.md), which Voila regenerates.
 
 ---
 
@@ -72,9 +80,24 @@ system got excellent at recording whether work was *justified* and stayed weak a
 *perform and coordinate* it. Delegation, background terminals, worker visibility, and automatic
 settlement had all been classified as optional. They are now the critical path.
 
-**Next: R1 — friction containment and ambient continuity.** Its acceptance gate is behavioral: in a
-fresh Pi session the user says `Continue.` and the Steward identifies the correct work and begins
-useful action without asking for a recap. If `Continue` still produces a status report, R1 failed.
+### What happens next, in order
+
+**R0 is complete on this branch and is not yet delivered.** Do not start R1 here.
+
+1. **Immediate action — deliver R0.** Open and merge the R0 realignment pull request. Draft PR
+   [#9](https://github.com/jenksed/voila/pull/9) is open against `main` and is **not merged**; it
+   still needs to be marked ready and reviewed. Merge only once the doctrine is authoritative, the
+   previous roadmap is explicitly superseded, the product documents agree, canonical state points to
+   the new priority, and no runtime capability is falsely claimed
+   ([realignment plan §16](plans/PROJECT_REALIGNMENT_PLAN.md#16-immediate-execution-sequence)).
+2. **After the merge — begin R1.** Create a *new* implementation branch for NF-9 and build the first
+   bounded slice: the focus capsule and the orientation-freshness change. R1's acceptance gate is
+   behavioral: in a fresh Pi session the user says `Continue.` and the Steward identifies the correct
+   work and begins useful action without asking for a recap. If `Continue` still produces a status
+   report, R1 failed.
+
+**NF-9 is the canonical implementation focus** and stays that way through both steps. No R1
+capability is implemented today.
 
 **What is built** (and is not being walked back): durable per-project state, planning intake with
 preserved provenance, repository orientation, work items and dependencies, claims and deterministic
@@ -101,7 +124,7 @@ NF-10..NF-15       R2..R7, sequenced by dependency
 the gate during the walk-through and then reverted — see §5. The realignment does **not** release
 them; NF-2's authenticated intake is still owed.
 
-5 claims (CLM-1..CLM-5), 68 receipts, 18 decisions.
+5 claims (CLM-1..CLM-5), 78 receipts, 18 decisions (13 accepted).
 
 ---
 

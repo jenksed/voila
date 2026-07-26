@@ -20,9 +20,9 @@ The authoritative product statement is
 
 ## Picking this up cold
 
-[`docs/HANDOFF.md`](docs/HANDOFF.md) is a self-contained brief: where the project stands, the
-doctrine that is enforced by tests, the two open decisions, and the gotchas that will bite you. Read
-it before making changes after a break, or hand it to another assistant.
+[`docs/HANDOFF.md`](docs/HANDOFF.md) is a self-contained brief. It records the current direction, the
+active focus, open human-required work, the exact next justified action, and the gotchas that will
+bite you. Read it before making changes after a break, or hand it to another assistant.
 
 ## Using Voila on other projects
 
@@ -67,11 +67,11 @@ executable verification recorded as immutable receipts, evidence freshness deriv
 fingerprint, a **protected completion transition**, and a **delivery engine** that proposes
 commit boundaries and an evidence-backed delivery summary (`/voila deliver`, `/voila commit`) without
 ever committing, staging, or pushing. 30 LLM-callable tools, a real **Project
-Steward** Pi skill, and compact automatic context injection. Evidence freshness is
-**content-addressed** ([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so
-committing receipts no longer invalidates them. Pinned to
-`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**587 tests**). The
-repo **dogfoods its own** `.voila/` state.
+Steward** Pi skill, and compact automatic context injection (**partial** — the full focus capsule is
+R1 work, per the doctrine's capability table). Evidence freshness is **content-addressed**
+([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so committing receipts no
+longer invalidates them. Pinned to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via
+mise), tested (**588 tests**). The repo **dogfoods its own** `.voila/` state.
 
 **The boundary is explicit**: the model interprets (fallibly), Voila enforces (preservation,
 schemas, provenance, gating, persistence, idempotency), and *you* accept. Nothing enters canonical
@@ -109,6 +109,19 @@ The authoritative product statement is
 source; where the two disagree, the doctrine wins.
 
 ## Document map
+
+**Authority chain.** Three documents govern, in this order:
+
+```text
+PROJECT_REALIGNMENT_PLAN    controls current implementation sequencing
+PROJECT_STEWARD_DOCTRINE    controls Steward operating behavior and the product tests
+PRODUCT_DIRECTION           remains authoritative where it has not been superseded
+```
+
+The plan is the authored source, so it wins over the doctrine on sequencing. The doctrine wins over
+the v0.1 product direction on how the Steward behaves and what Voila is for. `PRODUCT_DIRECTION.md`
+is **not** obsolete — its vocabulary, role model, principles, and lifecycle still hold wherever the
+doctrine has not superseded them; its status banner marks exactly what changed.
 
 | Area | Document | Purpose |
 |------|----------|---------|

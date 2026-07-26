@@ -4,8 +4,8 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Open the R0 pull request titled 'Realign Voila around the Project Steward operational loop' for review, then branch for R1 (NF-9) and implement friction containment. R1's first slice is the focus capsule and the orientation freshness change; its gate is behavioral, not structural: in a fresh Pi session the single word 'Continue.' must produce useful action rather than a status report.",
-  "nextActionRationale": "DEC-18 makes the Project Steward Operational Loop the active priority, and R0 is a documentation and canonical-direction packet only -- no runtime work belongs in it. R1 (NF-9) is the first buildable packet and every later R-packet depends on it: R2 background terminals and R3 child workers both need the focus capsule and the ambient surface to report into, and R6 boundary reconciliation needs the verification grouping R1 prepares. NF-2 stays held for the authenticated owner-run Project Steward intake that DEC-17 requires; the realignment does not release it, and NF-3 and NF-4 remain dependency-blocked behind it.",
+  "nextAction": "Deliver R0 first: mark draft PR #9 ('Realign Voila around the Project Steward operational loop') ready for review and merge it into main. Do NOT begin R1 on this documentation branch. After the merge, create a new implementation branch for NF-9 and build R1's first bounded slice -- the focus capsule and the orientation-freshness change.",
+  "nextActionRationale": "R0 is documentation and canonical direction only and is complete on docs/project-steward-realignment: the doctrine is authoritative, Phases 5-8 are explicitly superseded, the product documents agree, canonical state points to the new priority, and no runtime capability is falsely claimed. The cold-reader acceptance test returned PASS at high confidence, and its material findings are corrected or explicitly assigned to R1 (docs/verification/R0_COLD_READER_ACCEPTANCE.md). The realignment plan section 16 sequences delivery before implementation, so starting NF-9 here would mix runtime work into a documentation packet and leave R0 undelivered. NF-9 remains the canonical focus across both steps. NF-2 stays held for the authenticated owner-run Project Steward intake that DEC-17 requires; its misleading 'ready' presentation is NF-9 acceptance criterion 4, not an R0 fix.",
   "focusWorkItemId": "NF-9",
   "sequences": {
     "workItem": 16,
@@ -15,7 +15,7 @@
     "intake": 9,
     "orientation": 6,
     "claim": 6,
-    "receipt": 79
+    "receipt": 94
   },
   "workItems": [
     {
@@ -705,10 +705,13 @@
         "RCP-54",
         "RCP-64",
         "RCP-69",
-        "RCP-74"
+        "RCP-74",
+        "RCP-79",
+        "RCP-84",
+        "RCP-89"
       ],
       "createdAt": "2026-07-25T16:38:42.263Z",
-      "updatedAt": "2026-07-26T15:06:56.336Z"
+      "updatedAt": "2026-07-26T15:57:07.597Z"
     },
     {
       "id": "CLM-2",
@@ -743,10 +746,13 @@
         "RCP-57",
         "RCP-65",
         "RCP-70",
-        "RCP-75"
+        "RCP-75",
+        "RCP-80",
+        "RCP-85",
+        "RCP-90"
       ],
       "createdAt": "2026-07-25T22:26:09.232Z",
-      "updatedAt": "2026-07-26T15:07:12.591Z"
+      "updatedAt": "2026-07-26T15:57:26.121Z"
     },
     {
       "id": "CLM-3",
@@ -780,10 +786,13 @@
         "RCP-59",
         "RCP-66",
         "RCP-71",
-        "RCP-76"
+        "RCP-76",
+        "RCP-81",
+        "RCP-86",
+        "RCP-91"
       ],
       "createdAt": "2026-07-26T04:13:58.284Z",
-      "updatedAt": "2026-07-26T15:07:28.268Z"
+      "updatedAt": "2026-07-26T15:57:44.263Z"
     },
     {
       "id": "CLM-4",
@@ -815,10 +824,13 @@
         "RCP-62",
         "RCP-67",
         "RCP-72",
-        "RCP-77"
+        "RCP-77",
+        "RCP-82",
+        "RCP-87",
+        "RCP-92"
       ],
       "createdAt": "2026-07-26T04:14:13.952Z",
-      "updatedAt": "2026-07-26T15:07:44.188Z"
+      "updatedAt": "2026-07-26T15:58:01.896Z"
     },
     {
       "id": "CLM-5",
@@ -847,10 +859,13 @@
         "RCP-63",
         "RCP-68",
         "RCP-73",
-        "RCP-78"
+        "RCP-78",
+        "RCP-83",
+        "RCP-88",
+        "RCP-93"
       ],
       "createdAt": "2026-07-26T04:14:13.958Z",
-      "updatedAt": "2026-07-26T15:08:00.202Z"
+      "updatedAt": "2026-07-26T15:58:19.432Z"
     }
   ],
   "receipts": [
@@ -2527,11 +2542,341 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "2e50723632bedeab857b8eb38af2a444f7ff1f77",
       "outputTruncated": false
+    },
+    {
+      "id": "RCP-79",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-79",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:52:44.354Z",
+      "finishedAt": "2026-07-26T15:53:02.580Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-80",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-80",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:53:02.679Z",
+      "finishedAt": "2026-07-26T15:53:20.729Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-81",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-81",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:53:20.828Z",
+      "finishedAt": "2026-07-26T15:53:37.775Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-82",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-82",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:53:37.882Z",
+      "finishedAt": "2026-07-26T15:53:55.788Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-83",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-83",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:53:55.891Z",
+      "finishedAt": "2026-07-26T15:54:14.823Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-84",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-84",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:54:50.091Z",
+      "finishedAt": "2026-07-26T15:55:07.758Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-85",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-85",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:55:07.862Z",
+      "finishedAt": "2026-07-26T15:55:26.005Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-86",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-86",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:55:26.095Z",
+      "finishedAt": "2026-07-26T15:55:43.597Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-87",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-87",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:55:43.694Z",
+      "finishedAt": "2026-07-26T15:56:00.996Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-88",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-88",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:56:01.094Z",
+      "finishedAt": "2026-07-26T15:56:18.914Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-89",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-89",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:56:50.438Z",
+      "finishedAt": "2026-07-26T15:57:07.593Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-90",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-90",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:57:07.701Z",
+      "finishedAt": "2026-07-26T15:57:26.118Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-91",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-91",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:57:26.215Z",
+      "finishedAt": "2026-07-26T15:57:44.259Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-92",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-92",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:57:44.367Z",
+      "finishedAt": "2026-07-26T15:58:01.893Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-93",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-93",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:58:01.996Z",
+      "finishedAt": "2026-07-26T15:58:19.428Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
     }
   ],
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T15:08:00.203Z",
-  "revision": 196
+  "updatedAt": "2026-07-26T15:58:19.432Z",
+  "revision": 212
 }

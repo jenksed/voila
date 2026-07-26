@@ -17,7 +17,7 @@ state, planning intake with preserved provenance, repository orientation, work i
 dependencies, decisions/assumptions/risks, a visible focus and next action, claims tied to exact
 acceptance criteria, deterministic verification receipts, a protected completion transition, a
 delivery summary and commit suggestion, a keyboard-first console, a Project Steward skill, and 587
-passing tests.
+passing tests at the time this decision was taken (588 once R0 added its own regression test).
 
 It also produced a product that the developer increasingly has to operate. Observed during the
 Phase 7 walk-through and the fingerprint-v2 work, the developer was required to refresh claims,
