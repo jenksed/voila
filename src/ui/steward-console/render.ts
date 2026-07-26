@@ -533,14 +533,16 @@ function detailView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: 
       ),
     );
     for (const l of wrapText(`claim: ${c.statement}`, width)) out.push(l);
-    out.push(st.fg("muted", "covers acceptance criteria:"));
+    // Fixed labels are sized like every other line: at the 20-column floor, "covers acceptance
+    // criteria:" is 27 characters and overflowed until it was truncated here.
+    out.push(st.fg("muted", truncate("covers acceptance criteria:", width)));
     for (const criterion of c.coveredAcceptanceCriteria) {
       for (const l of wrapText(`  - ${criterion}`, width)) out.push(st.fg("muted", l));
     }
     // Limitations stay visible: a supported claim is still bounded by what it does not establish.
-    out.push(st.fg("warning", "known limitations:"));
+    out.push(st.fg("warning", truncate("known limitations:", width)));
     if (c.knownLimitations.length === 0) {
-      out.push(st.fg("warning", "  - (none recorded)"));
+      out.push(st.fg("warning", truncate("  - (none recorded)", width)));
     } else {
       for (const lim of c.knownLimitations) {
         for (const l of wrapText(`  - ${lim}`, width)) out.push(st.fg("warning", l));

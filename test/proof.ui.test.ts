@@ -258,6 +258,41 @@ test("no Proof line overflows at compact, standard, or wide widths", () => {
   }
 });
 
+// D6: the suite above only ever exercised widths >= 60, so a fixed label that overflowed at the
+// 20-column floor survived four packets. `covers acceptance criteria:` is 27 characters and was
+// pushed untruncated, overflowing every width from the 20-column floor through 26. This walks the
+// narrow band explicitly, every view, both detail states, at the exact content shape that failed.
+test("no console line overflows at narrow widths, including the 20-column floor", () => {
+  const model = modelWithProof(fourStateProject());
+  for (const width of [20, 21, 26, 27, 30, 40, 50, 55, 59, 60, 70, 80]) {
+    for (const view of CONSOLE_VIEWS) {
+      for (const detailOpen of [false, true]) {
+        for (const helpOpen of [false, true]) {
+          for (let selection = 0; selection < 8; selection++) {
+            const lines = render(model, ui({ view, detailOpen, helpOpen, selection }), width);
+            const over = lines.filter((l) => Array.from(l).length > width);
+            assert.deepEqual(
+              over,
+              [],
+              `overflow at width ${width} view ${view} detail ${detailOpen} help ${helpOpen} selection ${selection}`,
+            );
+          }
+        }
+      }
+    }
+  }
+});
+
+test("the claim-detail label is truncated rather than overflowing the floor width", () => {
+  const model = modelWithProof(fourStateProject());
+  // Selection 0 is the first claim; detail open renders the covered-criteria block.
+  const lines = render(model, ui({ view: "proof", detailOpen: true, selection: 0 }), 20);
+  const label = lines.find((l) => l.startsWith("covers"));
+  assert.ok(label, "the covered-criteria label is rendered");
+  assert.equal(Array.from(label).length <= 20, true, `label is ${label} (${label.length} chars)`);
+  assert.match(label, /…$/, "it is truncated with an ellipsis, not clipped silently");
+});
+
 test("the Proof view renders content at every layout class", () => {
   const model = modelWithProof(fourStateProject());
   for (const width of [60, 80, 120, 160]) {

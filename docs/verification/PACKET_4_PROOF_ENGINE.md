@@ -19,7 +19,7 @@ suite is never mistaken for an interactive or authenticated check.
 | Tier                                          | Status      | Evidence                                                                        |
 | --------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
 | 0. Rebase and reconciliation                  | **PASS**    | `866e0d6` → `d397dfc` onto `3169878`; 6 conflicts resolved field-by-field       |
-| 1. Automated tests                            | **PASS**    | 383/383 via `mise exec -- npm run verify` (main baseline 206)                   |
+| 1. Automated tests                            | **PASS**    | 385/385 via `mise exec -- npm run verify` (main baseline 206)                   |
 | 1b. Migration against the integrated v3 state | **PASS**    | 7 tests over the real schema-v3 `project.json` from `3169878`                   |
 | 2. Pi registration (non-model)                | **PASS**    | 28 tools registered; asserted by tests and observed over RPC                    |
 | 3. Structured execution                       | **PASS**    | `/newfang verify CLM-2 -- mise exec -- npm run verify`, no shell, explicit argv |
@@ -27,7 +27,7 @@ suite is never mistaken for an interactive or authenticated check.
 | 5. Failing receipt                            | **PASS**    | honest `failed` receipt (exit 3) in a bounded fixture repository                |
 | 6. Stale-evidence demonstration               | **PASS**    | performed on this repository; fingerprint returns exactly                       |
 | 7. Protected-completion fixture               | **PASS**    | rejection preserves canonical bytes; success is fully gated                     |
-| 8. Interactive Proof view (TUI)               | **PARTIAL** | 18/19 items PASS; D5 fixed; **D6 OPEN** — renderer overflow confirmed <27 cols  |
+| 8. Interactive Proof view (TUI)               | **PARTIAL** | 18/19 items PASS; D5 fixed; label overflow fixed; **D6 OPEN** — unclassified    |
 | 9. Authenticated model use                    | **PENDING** | requires `/login`; the agent must not authenticate                              |
 | 10. GitHub CI                                 | **PASS**    | run 30177880494 on PR #4 — `verify` job green                                   |
 | 11. Doctor                                    | **PASS**    | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed                |
@@ -37,9 +37,10 @@ Steward skill never loaded) is fixed, regression-tested, and re-attested. **D6**
 minimized terminal width) is **open**: Joshua corrected an initial pass on that item. A first
 reproduction attempt reported "no overflow" — that result was a false negative from a malformed
 probe and has been **retracted**; see the correction under D6. The corrected sweep confirms a real
-renderer overflow below 27 columns, though it is probably not the wrap Joshua observed. Eighteen of
-nineteen items pass; rendered values were cross-checked against the domain, so what renders is
-accurate.
+renderer overflow below 27 columns — now **fixed** — but at Joshua's actual 111-column window the
+renderer was already clean, so that defect is **not** the wrap he reported and D6 remains
+unclassified. Eighteen of nineteen items pass; rendered values were cross-checked against the domain,
+so what renders is accurate.
 
 Tier 9 (authenticated model use) remains **not claimed**. It is the same human gate outstanding
 since Packet 2.5, is not a Packet 4R acceptance gate, and requires credentials Claude must not
@@ -62,7 +63,7 @@ Proof view does not pass in full while D6 is open — so gate 17 (merge) is deli
 | 10  | Protected completion cannot be bypassed               | PASS — 11 gates; generic paths refuse                            |
 | 11  | Rejected completion preserves canonical bytes         | PASS — byte-identical                                            |
 | 12  | Existing intake and orientation workflows still pass  | PASS — all Packet 3 suites, unchanged counts                     |
-| 13  | Complete automated gate passes                        | PASS — 383/383                                                   |
+| 13  | Complete automated gate passes                        | PASS — 385/385                                                   |
 | 14  | Interactive Proof view passes                         | **NOT MET** — 18/19 items; D6 narrow-width overflow open         |
 | 15  | Doctor passes                                         | PASS — 22 PASS, 2 honest WARN, 0 FAIL                            |
 | 16  | GitHub CI passes                                      | PASS                                                             |
@@ -134,7 +135,7 @@ the backups directory stays empty until `--apply`.
 mise exec -- npm run verify          (rebased branch)
   → tsc --noEmit          clean
   → prettier --check      clean
-  → node --test           tests 383 · pass 383 · fail 0
+  → node --test           tests 385 · pass 385 · fail 0
 ```
 
 Counts across the reconciliation:
@@ -550,6 +551,36 @@ So there **is** a genuine renderer-side overflow: the detail-view label `covers 
 is emitted at its natural 27-character length without truncation, and overflows any width below 27.
 It is a NewFang **content line** originating from `renderConsole`.
 
+#### Second correction: sub-20-column results were not defects
+
+A wider sweep initially reported the header line overflowing at widths 10–19 as well. That is **not**
+a defect and is retracted: `renderConsole` clamps with `Math.max(20, …)`, so it deliberately refuses
+to render below a 20-column floor and emits 20-column lines. Measuring those against the _requested_
+width counted the floor as overflow. Only one real defect remains.
+
+#### Fix (authorized as a separate narrow item)
+
+The claim-detail block pushed fixed labels without sizing them. `covers acceptance criteria:` (27
+chars) overflowed from the 20-column floor through width 26. All three literal labels in that block
+are now passed through the same `truncate()` every other line uses — `known limitations:` and
+`  - (none recorded)` fit at 20 only by luck and were one character from the same bug.
+
+No layout logic changed: no new width arithmetic, no `-2` allowances, no change to `layoutClass`,
+`columnWidths`, or the 20-column floor.
+
+Verification after the fix, over the **real** canonical state, widths 20–200, all four views, every
+selection index, every `detailOpen`/`helpOpen` pair:
+
+```text
+combinations: 26064 · overflowing: 0
+```
+
+Regression coverage added in `test/proof.ui.test.ts` at widths
+**20, 21, 26, 27, 30, 40, 50, 55, 59, 60, 70, 80** — the band the existing
+`WIDTHS = [60, 80, 100, 120, 160]` never touched — plus a test pinning the exact failing shape (the
+label truncated with an ellipsis at the 20-column floor). Confirmed to be a real guard: reverting the
+fix fails both tests; restoring it passes them.
+
 Two things this does **not** establish:
 
 1. **It is probably not what Joshua saw.** It only manifests below 27 columns and only with claim
@@ -563,9 +594,28 @@ Existing coverage does not close this: `test/proof.ui.test.ts` asserts no overfl
 `WIDTHS = [60, 80, 100, 120, 160]`, so **nothing below 60 columns is tested**, and no test models
 Pi's own frame — which is exactly why a sub-27-column defect survived.
 
-D6 stays **open**. The confirmed sub-27-column label defect is narrow and fixable, but it is not yet
-established as the cause of the reported wrap, and the packet direction is explicit: classify against
-a real TUI observation first, and do not change layout code speculatively.
+**D6 itself stays open.** The label defect above is fixed, but it is **not** the wrap Joshua
+reported: his window was **111x57**, and the renderer is now provably clean from 20 to 200 columns
+(and was already clean at 111 before the fix). Whatever wraps at 111 columns does not come from
+`renderConsole`, so D6 still needs the classification recorded below.
+
+Outstanding classification, to be supplied from a real TUI observation:
+
+| Field                           | Value                                                                                          |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| terminal width                  | reported window 111x57; width at the moment of wrap not yet captured                           |
+| active view                     | not yet recorded                                                                               |
+| selection                       | not yet recorded                                                                               |
+| detail / help open              | not yet recorded                                                                               |
+| exact overflowing line          | not yet transcribed                                                                            |
+| classification                  | **1** separator/heading rule · **2** NewFang content line · **3** Pi/startup/notification text |
+| originated from `renderConsole` | **undetermined** — decided by whether the line appears in the probe dump at that width         |
+
+Evidence that narrows it: at 111 columns `renderConsole` emits no over-width line, but **26–35 lines
+per screen are padded to exactly the requested width**. Against that, Pi's own components use the
+same `render(width): string[]` contract and some accept an explicit `outputPad`, which suggests the
+width Pi passes is already the usable width. Classification 3 (Pi chrome, `notify` text, or
+scrollback — the long `Why now:` rationale block was observed spilling) is not yet excluded.
 
 Scope of the attestation, recorded precisely so it is not read as more than it is:
 
