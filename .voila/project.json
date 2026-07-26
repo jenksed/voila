@@ -4,18 +4,18 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Owner folds the four generated Voila delivery-state files into the local R2A commit while correcting body indentation; afterward verify HEAD, clean worktree, and current evidence without further canonical mutation. Do not push or start R2B.",
-  "nextActionRationale": "The first amend corrected the subject but left each body line indented. The only uncommitted paths are .voila/project.json, events.jsonl, and its generated brief/status views, changed solely by supported post-commit next-action transitions. Include them in the same owner-reviewed commit so canonical delivery state and generated views match HEAD. This is the final planned canonical mutation for R2A delivery.",
+  "nextAction": "Owner completes delivery in two local boundaries: first amend 87d79fc with the already staged R2A canonical files using one paste-safe single-line command; then review, stage, and commit completed NF-18 as a separate `fix: make recommended commands paste-safe` change. Do not push.",
+  "nextActionRationale": "The failed copy exposed a real Steward presentation defect. NF-18 now completes through all gates with RCP-120. The index already contains only the four pre-NF-18 R2A canonical updates, while the working tree carries the later NF-18 instructions, regression tests, current canonical state, and receipts. Preserving that split fixes the R2A message without folding the new defect fix into the earlier feature commit.",
   "focusWorkItemId": null,
   "sequences": {
-    "workItem": 18,
+    "workItem": 19,
     "decision": 23,
     "assumption": 5,
     "risk": 10,
     "intake": 9,
     "orientation": 6,
-    "claim": 14,
-    "receipt": 119,
+    "claim": 15,
+    "receipt": 121,
     "operationDefinition": 1,
     "operationRun": 6
   },
@@ -340,6 +340,26 @@
       ],
       "createdAt": "2026-07-26T22:02:06.743Z",
       "updatedAt": "2026-07-26T23:12:15.125Z"
+    },
+    {
+      "id": "NF-18",
+      "kind": "defect",
+      "title": "Make recommended shell commands paste-safe",
+      "description": "Prevent Steward recommendations from relying on fragile backslash-newline continuations or formatting that can acquire whitespace when copied from the TUI. User-run commands must be easy to copy and paste without shell reinterpretation.",
+      "status": "completed",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "Project Steward instructions require user-run commands to be presented in fenced code blocks with explanations outside the block.",
+        "Each recommended shell command is one physical line with no backslash-newline continuation; multi-step sequences use one complete command per line.",
+        "When a truly multi-line input is unavoidable, the Steward uses a self-contained paste-safe script block and states what it will change.",
+        "Regression tests enforce the paste-safe command-presentation contract on active Steward instruction surfaces."
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [
+        "CLM-14"
+      ],
+      "createdAt": "2026-07-26T23:52:11.972Z",
+      "updatedAt": "2026-07-26T23:54:32.052Z"
     }
   ],
   "decisions": [
@@ -1183,6 +1203,25 @@
       ],
       "createdAt": "2026-07-26T23:17:46.428Z",
       "updatedAt": "2026-07-26T23:23:06.046Z"
+    },
+    {
+      "id": "CLM-14",
+      "workItemId": "NF-18",
+      "statement": "Active Project Steward instruction surfaces require paste-safe user commands: fenced bash blocks, one physical command per line without backslash continuations, explanations outside executable content, and a self-contained fallback for unavoidable multi-line input.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "Project Steward instructions require user-run commands to be presented in fenced code blocks with explanations outside the block.",
+        "Each recommended shell command is one physical line with no backslash-newline continuation; multi-step sequences use one complete command per line.",
+        "When a truly multi-line input is unavoidable, the Steward uses a self-contained paste-safe script block and states what it will change.",
+        "Regression tests enforce the paste-safe command-presentation contract on active Steward instruction surfaces."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-119",
+        "RCP-120"
+      ],
+      "createdAt": "2026-07-26T23:53:17.367Z",
+      "updatedAt": "2026-07-26T23:54:24.552Z"
     }
   ],
   "receipts": [
@@ -3742,6 +3781,50 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
       "outputTruncated": true
+    },
+    {
+      "id": "RCP-119",
+      "claimId": "CLM-14",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-119",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-26T23:53:25.947Z",
+      "finishedAt": "2026-07-26T23:53:41.222Z",
+      "repositoryFingerprint": "7bc92ed9857b082bd716a1fe4029ae3cd1fc14a671b151960269e04166e67dc6",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "87d79fc17c1c6afe2827bb1847532fca9919b57f",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-120",
+      "claimId": "CLM-14",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-120",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:54:07.035Z",
+      "finishedAt": "2026-07-26T23:54:22.182Z",
+      "repositoryFingerprint": "0ee6112f1ce786fb8dcbf44b84d04deb900adfd86540a79f77856e14608803d8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "87d79fc17c1c6afe2827bb1847532fca9919b57f",
+      "outputTruncated": true
     }
   ],
   "operationDefinitions": [
@@ -4064,6 +4147,6 @@
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T23:47:22.989Z",
-  "revision": 333
+  "updatedAt": "2026-07-26T23:54:55.657Z",
+  "revision": 342
 }

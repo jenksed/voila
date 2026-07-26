@@ -18,10 +18,15 @@ test("repository loads its own dogfooded canonical state", async () => {
   assert.equal(state.schemaVersion, SCHEMA_VERSION);
   assert.equal(state.phase, "build");
   assert.ok(state.workItems.length >= 7);
-  // R1 (NF-9) and bounded R2A (NF-16) completed through protected transitions. R2A delivery is the
-  // next action. NF-2 is still held and still owed its authenticated intake — asserted below, which
-  // is where that invariant belongs.
-  assert.equal(state.focusWorkItemId, null, "protected completion cleared the R2A focus");
+  // R1 (NF-9) and bounded R2A (NF-16) completed through protected transitions. A later accepted
+  // item may now hold focus; completion must not leave focus pointing at completed/cancelled work.
+  // NF-2 is still held and still owed its authenticated intake — asserted below.
+  if (state.focusWorkItemId !== null) {
+    const focused = state.workItems.find((item) => item.id === state.focusWorkItemId);
+    assert.ok(focused, "focus references an existing work item");
+    assert.notEqual(focused.status, "completed", "focus never points at completed work");
+    assert.notEqual(focused.status, "cancelled", "focus never points at cancelled work");
+  }
   assert.ok(state.nextActionRationale && state.nextActionRationale.length > 0);
   assert.ok(state.decisions.filter((d) => d.status === "accepted").length >= 6);
   assert.ok(state.risks.length >= 4);

@@ -127,6 +127,16 @@ Repository completion claims cover only what is in the repository and verified t
 - Commit messages: imperative subject, body explaining why. Co-authorship trailer per harness
   convention.
 
+## User-run command presentation
+
+- Put commands intended for the developer to copy and run in fenced `bash` blocks; keep explanations,
+  prompts, and output outside those blocks.
+- Write every executable command on one physical source line. Never use backslash-newline
+  continuation in a recommended command; TUI copy can turn wrapped whitespace into shell arguments.
+- For multi-step instructions, use one complete command per line in execution order.
+- If truly multi-line input is unavoidable, use a complete self-contained paste-safe script block and
+  state outside it exactly what the script changes.
+
 ## Toolchain (pinned)
 
 - Runtime is managed by **mise** (`mise.toml` pins Node `22.23.1`). Run project commands through it,

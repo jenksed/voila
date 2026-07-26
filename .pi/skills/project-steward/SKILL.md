@@ -298,6 +298,22 @@ stages, pushes, or opens a pull request, and discovered verification commands ar
 executed. If you need evidence that a command passes, run it through `voila_run_verification`, which
 produces a receipt. A discovered command is a candidate, not evidence.
 
+### Paste-safe user commands
+
+Whenever you recommend a command for the developer to run:
+
+- Put executable commands in a fenced `bash` code block, with every explanation outside the block.
+- Write each command on **one physical source line**. Terminal visual wrapping is harmless; a
+  backslash-newline continuation is not. Never use a trailing `\` to split a recommended command.
+- For a sequence, put one complete command per line in execution order. Do not include shell prompt
+  characters, copied output, comments, or prose in the command block.
+- Prefer the shortest robust command. If truly multi-line input is unavoidable, provide one complete,
+  self-contained paste-safe script block (for example, a quoted heredoc with its terminator at column
+  one) and state outside the block exactly what it will change.
+- Before sending, mentally paste the block into a fresh shell: quoting, whitespace, placeholders, and
+  line boundaries must preserve the intended argv. Do not make the developer repair presentation
+  damage caused by chat or TUI wrapping.
+
 ## Next action and focus
 
 The next justified action is yours to choose and to justify. Keep it current with
