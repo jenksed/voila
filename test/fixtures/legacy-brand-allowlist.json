@@ -351,6 +351,13 @@
       "removable": false
     },
     {
+      "path": "docs/verification/PACKET_5A_DELIVERY_INSPECTOR.md",
+      "category": "historical-migration-doc",
+      "reason": "Records the Packet 5A rebase onto Voila main, including the legacy .newfang/ misclassification the rename introduced and the fix, so it necessarily quotes the legacy directory name.",
+      "immutable": false,
+      "removable": true
+    },
+    {
       "path": "src/commands/loaderror.ts",
       "category": "legacy-migration-compatibility",
       "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
@@ -361,6 +368,13 @@
       "path": "src/commands/migrate.ts",
       "category": "legacy-migration-compatibility",
       "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "src/delivery-inspector/classify.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Classifies the legacy .newfang/ state directory alongside .voila/, so an unmigrated repository's canonical state and generated views are named correctly instead of falling through to configuration or documentation.",
       "immutable": false,
       "removable": true
     },
@@ -382,6 +396,20 @@
       "path": "src/state/legacy.ts",
       "category": "legacy-migration-compatibility",
       "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "test/delivery-inspector/attention.test.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Tests generated-view drift detection against a legacy .newfang/ change set.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "test/delivery-inspector/classify.test.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Tests that legacy .newfang/ paths classify as project state and generated views, and that lookalike paths do not.",
       "immutable": false,
       "removable": true
     },
