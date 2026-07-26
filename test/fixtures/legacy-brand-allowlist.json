@@ -351,6 +351,13 @@
       "removable": false
     },
     {
+      "path": "docs/verification/PACKET_5A_DELIVERY_INSPECTOR.md",
+      "category": "historical-migration-doc",
+      "reason": "Records the Packet 5A rebase onto Voila main, including the legacy .newfang/ misclassification the rename introduced and the fix, so it necessarily quotes the legacy directory name.",
+      "immutable": false,
+      "removable": true
+    },
+    {
       "path": "src/commands/loaderror.ts",
       "category": "legacy-migration-compatibility",
       "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",

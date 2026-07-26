@@ -8,11 +8,11 @@ Design: [`docs/design/DELIVERY_INSPECTOR.md`](../design/DELIVERY_INSPECTOR.md).
 
 | Tier | Status |
 |------|--------|
-| 1. Automated acceptance (`npm run verify`) | **PASS** — 296/296 (191 pre-existing + 105 new) |
+| 1. Automated acceptance (`npm run verify`) | **PASS** — 551/551 after the rebase onto Voila main (was 296/296 pre-rebase) |
 | 2. Real-repository integration (temporary git repos) | **PASS** — 13 tests, included in tier 1 |
 | 3. No-mutation proof (byte-identical porcelain + untouched index) | **PASS** — included in tier 1 |
 | 4. Pi integration | **NOT APPLICABLE** — Packet 5A registers no tool, command, or UI |
-| 5. GitHub CI | **NOT RUN** — nothing pushed |
+| 5. GitHub CI | **PENDING** — branch pushed; recorded when Actions completes |
 
 No pending tier is claimed as passed. The inspector has **no callers inside the extension**, so no
 daily-use readiness is claimed.
@@ -200,6 +200,55 @@ No tracked file was modified. In particular: no change to `package.json`, `packa
 `src/domain/**`, `src/state/**`, `src/tools/**`, `src/commands/**`, `src/context/**`, `src/ui/**`,
 `.pi/**`, or `.voila/**`. No `test/fixtures/` directory was added; the in-memory filesystem made one
 unnecessary.
+
+## Rebase onto Voila main (Packet 4.5)
+
+This packet was authored before the NewFang -> Voila rename and was rebased onto `main` at
+`4bc9769` afterwards. The rebase itself was conflict-free: Packet 5A only adds files.
+
+Two changes were then required.
+
+**Rename.** The inspector's path rules, prose, tests, and docs moved from `.newfang/` to `.voila/`.
+This was folded into the feature commit rather than appended, so every commit on the branch passes
+the rename guard introduced in Packet 4.5.
+
+**Legacy classification fix.** The rename alone left an unmigrated repository *worse* than before:
+`.newfang/project.json` fell through to `configuration` and `.newfang/views/PROJECT_STATUS.md` to
+prose `documentation`. Verified directly:
+
+```text
+.newfang/project.json              -> configuration   | structured configuration file
+.newfang/views/PROJECT_STATUS.md   -> documentation   | prose document
+```
+
+Since a repository that has not yet run `/voila migrate --apply` still holds real canonical state
+there, the legacy directory is now classified alongside `.voila/`, with a reason naming it as
+legacy, and is treated as a state area in the generated-view-drift heuristic:
+
+```text
+.newfang/project.json              -> project_state   | canonical Voila project state under the legacy .newfang/ state directory
+.newfang/views/PROJECT_STATUS.md   -> generated       | generated Voila view under the legacy .newfang/ state directory
+```
+
+Lookalike paths (`newfang/project.json`, `docs/newfang-notes.md`) are asserted **not** to match, and
+`config.json` and `docs/design/X.md` still classify as before.
+
+`LEGACY_STATE_DIR` is defined locally in `classify.ts` rather than imported from
+`src/state/legacy.ts`, preserving this library's invariant that it imports nothing from canonical
+state, tools, commands, context, or UI.
+
+Three files gained rename-guard allowlist entries (`classify.ts` and the two touched test files);
+`attention.ts` did not, because it imports the constant rather than spelling the directory — the
+guard's staleness check caught the over-broad entry and it was removed.
+
+### Independent review
+
+The rename-only diff was also reviewed by an external model (MiniMax `MiniMax-M2.7` via `mmx text
+chat`) as a second opinion. It confirmed literal-for-literal consistency and no smuggled behavioral
+change, but asserted that a legacy `.newfang/` directory would simply be "unclassified" and that
+this was acceptable. Direct execution of `classifyPath` showed that claim to be wrong — the files
+were actively misclassified — which is what prompted the fix above. The review was advisory; the
+finding came from running the code.
 
 ## Known limitations
 
