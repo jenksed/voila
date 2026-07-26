@@ -54,3 +54,8 @@
 {"type":"verification_recorded","id":"RCP-3","claimId":"CLM-2","result":"passed","revision":54,"ts":"2026-07-25T22:26:34.890Z"}
 {"type":"verification_recorded","id":"RCP-4","claimId":"CLM-2","result":"passed","revision":55,"ts":"2026-07-25T22:29:23.997Z"}
 {"type":"next_action_set","revision":56,"ts":"2026-07-25T22:31:37.742Z"}
+{"type":"state_directory_migrated","from":".newfang","to":".voila","fileCount":53,"immutableFileCount":48,"revision":57,"ts":"2026-07-26T03:06:08.002Z"}
+{"type":"decision_recorded","id":"DEC-11","status":"accepted","revision":58,"ts":"2026-07-26T03:07:06.046Z"}
+{"type":"work_item_updated","id":"NF-7","revision":59,"ts":"2026-07-26T03:07:06.048Z"}
+{"type":"assumption_updated","id":"ASM-1","revision":60,"ts":"2026-07-26T03:07:15.427Z"}
+{"type":"risk_updated","id":"RSK-2","revision":61,"ts":"2026-07-26T03:07:15.430Z"}
