@@ -234,16 +234,26 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
       : { name: "git repository", level: "warn", detail: "no .git in project root" },
   );
 
-  // Project trust visibility.
+  // Project trust visibility. Not a structural defect — Pi runs without a trust store on
+  // fresh CI runners and on cold local clones, so this check is informational rather than warn.
   try {
     const trustFile = join(homedir(), ".pi", "agent", "trust.json");
     checks.push(
       existsSync(trustFile)
         ? { name: "project trust", level: "pass", detail: "Pi trust store present" }
-        : { name: "project trust", level: "warn", detail: "no Pi trust store yet (first run?)" },
+        : {
+            name: "project trust",
+            level: "info",
+            detail:
+              "no Pi trust store yet (first run?) — ask Pi to approve before the next session",
+          },
     );
   } catch {
-    checks.push({ name: "project trust", level: "warn", detail: "trust store not visible" });
+    checks.push({
+      name: "project trust",
+      level: "info",
+      detail: "trust store not visible",
+    });
   }
 
   // Writable state directory.
