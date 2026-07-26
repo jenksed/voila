@@ -164,10 +164,23 @@ function tabsLine(view: ConsoleView, width: number, st: Styler): string {
     ["proof", "Proof"],
     ["truth", "Project Truth"],
   ];
-  const parts = labels.map(([v, label]) =>
-    v === view ? st.fg("accent", st.bold(`[${label}]`)) : st.fg("muted", ` ${label} `),
-  );
-  return truncate(parts.join(" "), width);
+  // Fit on the PLAIN text and style each segment afterwards. Styling first and truncating the
+  // result makes truncate() count ANSI escape bytes as visible characters, which collapses the
+  // whole row to an ellipsis in a real terminal while looking correct under plainStyler.
+  const out: string[] = [];
+  let used = 0;
+  for (const [v, label] of labels) {
+    const plain = v === view ? `[${label}]` : ` ${label} `;
+    const sep = out.length === 0 ? "" : " ";
+    if (used + len(sep) + len(plain) > width) {
+      if (used + 1 <= width) out.push("…");
+      break;
+    }
+    used += len(sep) + len(plain);
+    const styled = v === view ? st.fg("accent", st.bold(plain)) : st.fg("muted", plain);
+    out.push(sep + styled);
+  }
+  return out.join("");
 }
 
 function attentionLines(

@@ -19,7 +19,7 @@ suite is never mistaken for an interactive or authenticated check.
 | Tier                                          | Status      | Evidence                                                                        |
 | --------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
 | 0. Rebase and reconciliation                  | **PASS**    | `866e0d6` → `d397dfc` onto `3169878`; 6 conflicts resolved field-by-field       |
-| 1. Automated tests                            | **PASS**    | 387/387 via `mise exec -- npm run verify` (main baseline 206)                   |
+| 1. Automated tests                            | **PASS**    | 389/389 via `mise exec -- npm run verify` (main baseline 206)                   |
 | 1b. Migration against the integrated v3 state | **PASS**    | 7 tests over the real schema-v3 `project.json` from `3169878`                   |
 | 2. Pi registration (non-model)                | **PASS**    | 28 tools registered; asserted by tests and observed over RPC                    |
 | 3. Structured execution                       | **PASS**    | `/newfang verify CLM-2 -- mise exec -- npm run verify`, no shell, explicit argv |
@@ -27,7 +27,7 @@ suite is never mistaken for an interactive or authenticated check.
 | 5. Failing receipt                            | **PASS**    | honest `failed` receipt (exit 3) in a bounded fixture repository                |
 | 6. Stale-evidence demonstration               | **PASS**    | performed on this repository; fingerprint returns exactly                       |
 | 7. Protected-completion fixture               | **PASS**    | rejection preserves canonical bytes; success is fully gated                     |
-| 8. Interactive Proof view (TUI)               | **PARTIAL** | 18/19 PASS; D5 and D6 both fixed and machine-verified; D6 awaits re-attestation |
+| 8. Interactive Proof view (TUI)               | **PARTIAL** | D5, D6, D7 found and fixed; awaits a clean re-attestation pass                  |
 | 9. Authenticated model use                    | **PENDING** | requires `/login`; the agent must not authenticate                              |
 | 10. GitHub CI                                 | **PASS**    | run 30177880494 on PR #4 — `verify` job green                                   |
 | 11. Doctor                                    | **PASS**    | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed                |
@@ -138,7 +138,7 @@ the backups directory stays empty until `--apply`.
 mise exec -- npm run verify          (rebased branch)
   → tsc --noEmit          clean
   → prettier --check      clean
-  → node --test           tests 387 · pass 387 · fail 0
+  → node --test           tests 389 · pass 389 · fail 0
 ```
 
 Counts across the reconciliation:
@@ -449,6 +449,44 @@ Steward context" was only proof-aware in the injected context and tool descripti
 file itself was never loaded by Pi**. Tier 9 (authenticated model use) has therefore never exercised
 the skill, and remains unclaimed.
 
+### D7 — the tab row collapsed to an ellipsis under real styling (found by Joshua, fixed)
+
+Re-attesting D6 at the 20-column floor, Joshua reported the view-switcher row showing a bare `…`
+instead of the view names. The renderer disagreed: at width 20 `renderConsole` emits
+`[Focus]  Work   Pro…`. The discrepancy was the defect.
+
+`tabsLine()` styled each label and truncated the **result**:
+
+```ts
+const parts = labels.map(([v, label]) =>
+  v === view ? st.fg("accent", st.bold(`[${label}]`)) : st.fg("muted", ` ${label} `),
+);
+return truncate(parts.join(" "), width);
+```
+
+`truncate()` counts characters, and under a real styler those characters are mostly ANSI escape
+bytes. At 20 columns the slice consumed the escapes and left only the ellipsis visible. Under
+`plainStyler` there are no escapes, so it looked perfect.
+
+**This class of bug was structurally invisible to the test suite**: every existing console test
+renders with `plainStyler`. A style-then-size mistake could not fail any of them. An audit of the
+renderer found exactly one such site — every other call sizes the plain string and styles the
+result — so the fix is confined to `tabsLine()`, which now fits on plain text and styles each
+segment afterwards.
+
+Confirmed in the real TUI at 20 columns after the fix:
+
+```text
+before:  …
+after:   [Focus]  Work …          (15 visible columns, 0 lines over width)
+```
+
+Regression coverage adds an **ANSI-injecting styler** and asserts the _ANSI-stripped_ width — the
+width the terminal actually sees — across widths 20, 21, 24, 28, 32, 40, 60, 80, 120, all four
+views, both detail states, plus a test that the tab row never degrades to a bare ellipsis and still
+shows a neighbouring view at the floor. Confirmed a real guard: restoring the style-then-truncate
+form fails it.
+
 ### D5 fix re-attested
 
 Joshua confirmed in a real terminal that the skill now loads. Session start showed no skill warning.
@@ -657,6 +695,44 @@ resize 111 -> 60 cols   lines wider than terminal: 0
 Regression coverage in `test/proof.ui.test.ts`: every width from 1 to 19, all four views, both detail
 states, asserting no line exceeds the terminal; plus a test that the notice names the requirement,
 stays within the width, and that a zero-width terminal renders nothing rather than throwing.
+
+### D7 — the tab row collapsed to an ellipsis under real styling (found by Joshua, fixed)
+
+Re-attesting D6 at the 20-column floor, Joshua reported the view-switcher row showing a bare `…`
+instead of the view names. The renderer disagreed: at width 20 `renderConsole` emits
+`[Focus]  Work   Pro…`. The discrepancy was the defect.
+
+`tabsLine()` styled each label and truncated the **result**:
+
+```ts
+const parts = labels.map(([v, label]) =>
+  v === view ? st.fg("accent", st.bold(`[${label}]`)) : st.fg("muted", ` ${label} `),
+);
+return truncate(parts.join(" "), width);
+```
+
+`truncate()` counts characters, and under a real styler those characters are mostly ANSI escape
+bytes. At 20 columns the slice consumed the escapes and left only the ellipsis visible. Under
+`plainStyler` there are no escapes, so it looked perfect.
+
+**This class of bug was structurally invisible to the test suite**: every existing console test
+renders with `plainStyler`. A style-then-size mistake could not fail any of them. An audit of the
+renderer found exactly one such site — every other call sizes the plain string and styles the
+result — so the fix is confined to `tabsLine()`, which now fits on plain text and styles each
+segment afterwards.
+
+Confirmed in the real TUI at 20 columns after the fix:
+
+```text
+before:  …
+after:   [Focus]  Work …          (15 visible columns, 0 lines over width)
+```
+
+Regression coverage adds an **ANSI-injecting styler** and asserts the _ANSI-stripped_ width — the
+width the terminal actually sees — across widths 20, 21, 24, 28, 32, 40, 60, 80, 120, all four
+views, both detail states, plus a test that the tab row never degrades to a bare ellipsis and still
+shows a neighbouring view at the floor. Confirmed a real guard: restoring the style-then-truncate
+form fails it.
 
 ### D5 fix re-attested
 

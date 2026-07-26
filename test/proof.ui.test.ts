@@ -283,6 +283,53 @@ test("no console line overflows at narrow widths, including the 20-column floor"
   }
 });
 
+// D7: every other test in this repository renders with `plainStyler`, so any code that styles a
+// string BEFORE sizing it looks correct here and collapses in a real terminal — truncate() counts
+// ANSI escape bytes as visible characters. This styler injects real escapes, and the assertions
+// measure the ANSI-STRIPPED width, which is what the terminal actually sees.
+const ANSI_RE = /\x1b\[[0-9;]*m/g;
+const ansiStyler = {
+  fg: (token: string, text: string) => `\x1b[38;5;${token.length + 30}m${text}\x1b[39m`,
+  bold: (text: string) => `\x1b[1m${text}\x1b[22m`,
+};
+const stripAnsi = (s: string) => s.replace(ANSI_RE, "");
+const visibleWidth = (s: string) => Array.from(stripAnsi(s)).length;
+
+test("styled rendering keeps every line within the width (ANSI is not visible width)", () => {
+  const model = modelWithProof(fourStateProject());
+  for (const width of [20, 21, 24, 28, 32, 40, 60, 80, 120]) {
+    for (const view of CONSOLE_VIEWS) {
+      for (const detailOpen of [false, true]) {
+        const lines = renderConsole(model, ui({ view, detailOpen }), width, ansiStyler);
+        for (const line of lines) {
+          assert.ok(
+            visibleWidth(line) <= width,
+            `styled overflow at width ${width} view ${view}: visible ${visibleWidth(line)} in ${JSON.stringify(stripAnsi(line))}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+test("the tab row survives styling at the floor width instead of collapsing to an ellipsis", () => {
+  const model = modelWithProof(fourStateProject());
+  // Observed in a real terminal at 20 columns: the row rendered as a bare "…" because it was
+  // styled first and truncated afterwards.
+  for (const width of [20, 24, 28, 32, 40]) {
+    const lines = renderConsole(model, ui({ view: "focus" }), width, ansiStyler);
+    const row = lines.map(stripAnsi).find((l) => l.includes("[Focus]"));
+    assert.ok(row, `the tab row shows the active view at width ${width}, got no [Focus]`);
+    assert.ok(Array.from(row).length <= width);
+    assert.notEqual(row.trim(), "…", `tab row collapsed to an ellipsis at width ${width}`);
+  }
+  // At the floor there is room for more than just the active tab.
+  const at20 = renderConsole(model, ui({ view: "focus" }), 20, ansiStyler)
+    .map(stripAnsi)
+    .find((l) => l.includes("[Focus]"));
+  assert.match(at20 ?? "", /\[Focus\].*Work/, "neighbouring views remain visible at 20 columns");
+});
+
 // D6, reproduced in a real PTY: resizing the terminal below the 20-column floor made the console
 // clamp its content UP to 20 and emit 20-wide lines into a narrower terminal, which then wrapped
 // every one of them (29 overflowing lines at 19 columns, 52 at 15). Measured threshold: clean at
