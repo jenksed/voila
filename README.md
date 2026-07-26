@@ -54,9 +54,12 @@ had become responsible for operating Voila. The active roadmap is
 toward **Project Steward Operational Loop v1**. Delegation and background execution moved from
 "deferred, optional" to product-critical. Approval-bundle self-hosting is **paused**.
 
-**Not built yet:** friction containment (R1), background terminals (R2), Pi child workers (R3),
-automatic settlement (R4), fresh-session continuity (R5), quiet boundary reconciliation (R6). None of
-it exists today. See the doctrine's built/not-built table.
+**Not built yet:** background terminals (R2), Pi child workers (R3), automatic settlement (R4),
+fresh-session continuity (R5), quiet boundary reconciliation (R6). None of it exists today. See the
+doctrine's built/not-built table. R1 (friction containment and ambient continuity) is **in progress**
+on `feat/r1-ambient-continuity`: its automated tier passes, and NF-9 stays open until the fresh-session
+`Continue.` acceptance is observed in a real Pi session
+([docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md)).
 
 **What is built — Phase 0 + Packets 1–4 + Phase 6.** Voila is a runnable Pi extension:
 a thin adapter (`.pi/extensions/voila.ts`), canonical `.voila/` state with **explicit schema
@@ -67,11 +70,14 @@ executable verification recorded as immutable receipts, evidence freshness deriv
 fingerprint, a **protected completion transition**, and a **delivery engine** that proposes
 commit boundaries and an evidence-backed delivery summary (`/voila deliver`, `/voila commit`) without
 ever committing, staging, or pushing. 30 LLM-callable tools, a real **Project
-Steward** Pi skill, and compact automatic context injection (**partial** — the full focus capsule is
-R1 work, per the doctrine's capability table). Evidence freshness is **content-addressed**
-([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so committing receipts no
-longer invalidates them. Pinned to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via
-mise), tested (**588 tests**). The repo **dogfoods its own** `.voila/` state.
+Steward** Pi skill, and a **focus capsule** injected before every Steward turn: canonical truth,
+bounded repository observation, and a directive that turns `Continue.` into work instead of a status
+report ([docs/design/FOCUS_CAPSULE.md](docs/design/FOCUS_CAPSULE.md)). Evidence freshness is
+**content-addressed** ([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so
+committing receipts no longer invalidates them; orientation freshness follows the content it inspected,
+not git HEAD. Doctor separates structural health from expected development drift. Pinned to
+`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**624 tests**). The repo
+**dogfoods its own** `.voila/` state.
 
 **The boundary is explicit**: the model interprets (fallibly), Voila enforces (preservation,
 schemas, provenance, gating, persistence, idempotency), and *you* accept. Nothing enters canonical

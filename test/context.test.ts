@@ -85,7 +85,7 @@ test("pending intake and stale orientation appear with the right handling", () =
   });
   assert.match(block, /Pending intake: INT-1 "Brief"/);
   assert.match(block, /never apply it without explicit user confirmation/);
-  assert.match(block, /orientation: ORI-1 stale \(AGENTS\.md changed\)/);
+  assert.match(block, /orientation: ORI-1 describes changed inputs \(AGENTS\.md changed\)/);
 });
 
 test("a current orientation is reported plainly and a clean worktree is observable", () => {

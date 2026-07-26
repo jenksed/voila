@@ -253,6 +253,62 @@ untouched, focus is cleared **if and only if** it pointed at this item — no ne
 automatically — exactly one `work_item_completed` event is appended, and the generated view is
 refreshed.
 
+## Derived readiness: passing gates is not acceptance (R1)
+
+The gates above decide one thing: whether canonical state will move an item to `completed`. They
+cannot see a requirement that lives outside automation — an authenticated run nobody has performed, an
+interactive tier nobody has observed. A required claim records exactly that, in its own words, as a
+`knownLimitation`.
+
+So presentation is derived separately from the gate result
+([`src/domain/readiness.ts`](../../src/domain/readiness.ts)):
+
+| Kind        | When                                                                    | Label                  |
+| ----------- | ----------------------------------------------------------------------- | ---------------------- |
+| `completed` | canonical status is `completed`                                          | `completed`            |
+| `cancelled` | canonical status is `cancelled`                                          | `cancelled`            |
+| `blocked`   | one or more completion gates fail                                        | `N gate(s) failing`    |
+| `held`      | every gate passes, but a required claim records outstanding limitations  | `HELD`                 |
+| `ready`     | every gate passes and no required claim records a limitation             | `READY to complete`    |
+
+`/voila proof NF-n`, `voila_get_proof`, and the console gate view list every outstanding limitation
+verbatim; the compact surfaces (proof overview, focus capsule) name the claim and the count rather
+than choosing which limitation matters most — that choice is a judgement, and the capsule budget is
+not the place to guess.
+
+This is **presentation only**, and deliberately so:
+
+- no new completion gate — the gate set is unchanged, and a held item is still refused or permitted by
+  exactly the gates listed above;
+- no lifecycle change — a held item keeps whatever canonical status it had (NF-2 stays `ready`);
+- no attestation framework — a limitation is discharged by doing the real human activity it names and
+  updating the claim through `voila_update_claim`, which is the same supported path as before.
+
+It reads only supported canonical state, so the label moves exactly when that state moves. **Known
+limitation:** because no gate was added, `voila_complete_work_item` would still accept a held item
+whose gates all pass. R1 corrects the misleading *label*, narrowly, as NF-9's acceptance criterion 4
+asks; turning a hold into an enforced gate is a product decision, not a presentation fix.
+
+## Verification contracts: the grouping seam (R1, for R6)
+
+Today each `voila_run_verification` call records one receipt for one claim, so five claims covered by
+the same command cost five identical executions. R6 ("quiet boundary reconciliation") will run each
+unique command once and apply the result to every claim it covers.
+
+R1 adds only the deterministic identity that work needs:
+
+- `verificationContractKey({ executable, args, cwdRef })` — a stable identity, JSON-encoded so no
+  argument boundary can collide (`["a b"]` and `["a", "b"]` stay distinct);
+- `verificationContractGroups(state)` — recorded receipts grouped by contract, in first-recorded order,
+  with the claims and receipts each contract serves;
+- `uniqueVerificationContractCount(state)` — how many distinct commands the evidence represents;
+- reported by `/voila proof` as `Verification contracts: N unique across M recorded execution(s)`.
+
+It executes nothing, deduplicates nothing, and rewrites no receipt. Measured on this repository at the
+start of R1: **2 unique contracts across 93 executions serving 5 claims**. The second contract is a
+single historical receipt (`RCP-67`) whose argv captured a mistyped command line; it genuinely is a
+different command, and historical evidence is immutable, so it stays exactly as recorded.
+
 ## Surfaces
 
 ### Pi tools
@@ -286,25 +342,48 @@ warning (`unsupported` > `stale` > `unproven`) and stays within its two-line con
 Unsupported and stale **required** claims raise attention (high and medium); pending claims do not —
 unproven is a normal early state, not an alarm.
 
-### Context injection
+### The focus capsule
 
-Deterministic, under the 2400-character cap: claim counts by status plus a compact rules line stating
-that claims cite exact criteria, verification runs through `voila_run_verification`, a passing
-command is evidence only for the claim it ran for, stale or failed evidence cannot complete work,
-limitations stay visible, and only `voila_complete_work_item` may complete work. Individual claim
-statements are never enumerated, and the wording deliberately avoids nudging toward satisfying the
-gate cheaply.
+Since R1 the injected block is the focus capsule
+([docs/design/FOCUS_CAPSULE.md](FOCUS_CAPSULE.md)). Proof appears there as **one bounded observation
+line** — the most severe of: claims contradicted by current evidence, claims affected by current
+development changes ("reconcile once at the boundary, not now"), or claims supported right now — plus
+**one** required rule line: only `voila_complete_work_item` completes work, and only a
+`voila_run_verification` receipt is evidence.
+
+The full proof-rules paragraph is gone from every turn: the Proof Engine is a boundary service, not a
+daily obligation, and the rest of the discipline lives in the
+[Project Steward skill](../../.pi/skills/project-steward/SKILL.md). Individual claim statements are
+still never enumerated, and the wording still avoids nudging toward satisfying the gate cheaply.
 
 ### Doctor (read-only, repairs nothing)
 
-Detects: v4 migration requirement; missing claim/receipt/requirement references; claims covering
-criteria the work item no longer states; uncovered criteria on gated items; missing receipt
-artifacts; manifest disagreeing with canonical metadata; stdout/stderr hash mismatch; stale or
-unsupported evidence; duplicate IDs; out-of-date claim/receipt counters; leftover staging
-directories; and **completed work whose current proof no longer revalidates**.
+Doctor answers one question: **is Voila structurally valid and internally consistent?**
 
-That last one is a **WARNING**, never a failure and never a reversion: the completion record stands
-and the message says so. Silently un-completing work would be worse than a stale record.
+It detects, as `FAIL` or `WARN`: v4 migration requirement; missing claim/receipt/requirement
+references; claims covering criteria the work item no longer states; uncovered criteria on gated items;
+missing receipt artifacts; manifest disagreeing with canonical metadata; stdout/stderr hash mismatch;
+**claims contradicted by a receipt that failed at the current state**; duplicate IDs; out-of-date
+claim/receipt counters; leftover staging directories; generated-view divergence; and **completed work
+whose current proof no longer revalidates for a reason other than staleness**.
+
+Since R1 it also has an `INFO` level, used for expected readiness drift during development:
+
+| Check                         | Level  | Why                                                                     |
+| ----------------------------- | ------ | ----------------------------------------------------------------------- |
+| `evidence reconciliation`     | `INFO` | claims went stale because files are being edited — the normal case       |
+| `completed work evidence`     | `INFO` | a completed item cannot be revalidated for the same reason               |
+| `orientation freshness`       | `INFO` | the orientation describes inputs that have since changed                |
+| `orientation` (none recorded) | `INFO` | a consistent project can simply not have oriented yet                   |
+
+`INFO` never escalates the notification level and is excluded from the structural-health summary
+Doctor now prints. On this repository the same state went from three warnings before R1 to zero
+warnings and three INFO lines.
+
+Two distinctions the split preserves. A receipt that **actually failed** at the current fingerprint is
+still a warning — that is a result, not drift. And completed work whose proof no longer revalidates is
+still a **WARNING**, never a failure and never a reversion: the completion record stands and the
+message says so. Silently un-completing work would be worse than a stale record.
 
 ## Schema v4 migration
 

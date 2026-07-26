@@ -30,21 +30,27 @@ export const CAPSULE_HARD_MAX = 2400;
  * never push a required field out of the capsule or truncate the tail of the block.
  */
 const CAP = {
-  objective: 150,
+  objective: 120,
   focus: 120,
-  slice: 130,
-  nextAction: 260,
-  whyNow: 150,
-  blocker: 130,
-  held: 130,
+  slice: 120,
+  nextAction: 200,
+  whyNow: 120,
+  blocker: 120,
+  held: 120,
   decision: 110,
   intake: 90,
-  orientationReasons: 60,
+  orientationReasons: 45,
 } as const;
 
 const MAX_HELD = 2;
 const MAX_DECISIONS = 3;
-const MAX_OBSERVATIONS = 3;
+/**
+ * Observation lines kept, in the order `observationLines` produces them: the git line first (genuine
+ * continuity), then the single most severe evidence note. A third line pushed the block past the
+ * budget and cost the capsule its whole observation section, which is a worse trade than dropping the
+ * orientation note — Doctor and /voila orient carry that, and it is explicitly not a blocker.
+ */
+const MAX_OBSERVATIONS = 2;
 
 export type ContextStatus = "ok" | "uninitialized" | "migration" | "error";
 
@@ -125,14 +131,16 @@ function blockerLine(state: ProjectState): string {
 
 /**
  * The current slice, derived from the canonical next action rather than from a new planning
- * subsystem. Emitted only when the next action has more than one sentence, so it adds information
- * instead of repeating the line below it.
+ * subsystem (R1 records no slice of its own, and inventing one would be fiction).
+ *
+ * Emitted only when the next action opens with a short, complete sentence: a truncated prefix of the
+ * line directly below it is noise, not information.
  */
 function sliceLine(nextAction: string): string | null {
-  const match = /^(.+?[.!?])\s+\S/.exec(nextAction.trim());
-  const first = match?.[1];
-  if (!first || first.length >= nextAction.trim().length) return null;
-  return `Current slice: ${abbreviate(first, CAP.slice)} (derived from the canonical next action)`;
+  const text = nextAction.trim();
+  const first = /^(.+?[.!?])\s+\S/.exec(text)?.[1];
+  if (!first || first.length > CAP.slice || first.length >= text.length) return null;
+  return `Current slice: ${first} (the canonical next action's first step)`;
 }
 
 /**
@@ -170,16 +178,14 @@ function observationLines(input: CapsuleInput): string[] {
   const proof = input.proof;
   if (proof && proof.total > 0) {
     if (!proof.fingerprintAvailable) {
-      lines.push(
-        `  evidence: ${proof.total} claim(s); git is unavailable, so none can be shown as current`,
-      );
+      lines.push(`  evidence: ${proof.total} claim(s); git unavailable, so none reads as current`);
     } else if (proof.unsupported > 0) {
       lines.push(
         `  evidence: ${proof.unsupported} claim(s) contradicted by current evidence — a real failure, read it`,
       );
     } else if (proof.stale > 0) {
       lines.push(
-        `  evidence: ${proof.stale} of ${proof.total} claim(s) affected by current development changes — expected; reconcile once at the boundary, not now`,
+        `  evidence: ${proof.stale}/${proof.total} claim(s) affected by current changes — expected; reconcile once at the boundary, not now`,
       );
     } else {
       lines.push(`  evidence: ${proof.supported} of ${proof.total} claim(s) supported right now`);
@@ -190,7 +196,7 @@ function observationLines(input: CapsuleInput): string[] {
   if (orientation) {
     lines.push(
       orientation.stale
-        ? `  orientation: ${orientation.id} stale (${abbreviate(orientation.reasons.join("; "), CAP.orientationReasons)}) — your call, not a blocker`
+        ? `  orientation: ${orientation.id} describes changed inputs (${abbreviate(orientation.reasons.join("; "), CAP.orientationReasons)}) — your call, not a blocker`
         : `  orientation: ${orientation.id} current`,
     );
   }
@@ -221,13 +227,12 @@ function directiveLines(input: CapsuleInput, focusId: string | null): string[] {
  * narrating completion, and they stay.
  */
 const EVIDENCE_LINE =
-  "  Evidence: only voila_complete_work_item can complete work, and only a receipt from voila_run_verification is evidence.";
+  "  Evidence: only voila_complete_work_item completes work, and only a voila_run_verification receipt is evidence.";
 
 const AUTHORITY_LINES = [
   "Authority boundary:",
-  "  Escalate only a material product decision, an irreversible or external action, credentials or",
-  "  authenticated human activity, or final owner acceptance. Canonical state changes only through",
-  "  voila_* tools (never edit .voila/ by hand); Voila never commits, stages, pushes, or opens a PR.",
+  "  Escalate only a material decision, an irreversible or external action, credentials or authenticated human activity, or final owner acceptance.",
+  "  Canonical state changes only through voila_* tools (never edit .voila/ by hand); Voila never commits, stages, pushes, or opens a PR.",
 ];
 
 /**
@@ -309,7 +314,10 @@ export function buildFocusCapsule(input: CapsuleInput): string {
   add(12, 0, true, [EVIDENCE_LINE]);
   add(13, 0, true, AUTHORITY_LINES);
 
-  // Selection: every required entry, then optional entries by priority while inside the target.
+  // Selection: every required entry, then optional entries in ascending priority while inside the
+  // target. An entry that does not fit is skipped rather than ending the pass, so leftover budget can
+  // still carry a smaller entry — but nothing more relevant is ever dropped to make room for
+  // something less relevant, because relevance decides the order of consideration.
   const selected = entries.filter((e) => e.required);
   let used = selected.reduce((n, e) => n + entryLength(e), 0);
   const optional = entries

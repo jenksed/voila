@@ -662,8 +662,8 @@ test("the capsule reports evidence as an observation, and states the two evidenc
   assert.match(capsule, /evidence: 1 claim\(s\) contradicted by current evidence/);
   assert.match(capsule, /Repository observation \(observed now, not canonical truth\)/);
   // The load-bearing evidence facts survive the removal of the old proof-rules block.
-  assert.match(capsule, /only voila_complete_work_item can complete work/);
-  assert.match(capsule, /only a receipt from voila_run_verification is evidence/);
+  assert.match(capsule, /only voila_complete_work_item completes work/);
+  assert.match(capsule, /only a voila_run_verification receipt is evidence/);
   assert.ok(capsule.length <= CAPSULE_HARD_MAX, `capsule was ${capsule.length} chars`);
 });
 
@@ -681,7 +681,7 @@ test("expected development staleness is deferred to the boundary, never assigned
       fingerprintAvailable: true,
     },
   });
-  assert.match(capsule, /5 of 5 claim\(s\) affected by current development changes — expected/);
+  assert.match(capsule, /5\/5 claim\(s\) affected by current changes — expected/);
   assert.match(capsule, /reconcile once at the boundary, not now/);
   assert.doesNotMatch(capsule, /refresh (the )?claims/i);
 });
@@ -712,7 +712,7 @@ test("a project with no claims omits the evidence line, and unavailable git is s
     state,
     proof: buildProofOverview(state, null).summary,
   });
-  assert.match(noGit, /git is unavailable, so none can be shown as current/);
+  assert.match(noGit, /git unavailable, so none reads as current/);
 });
 
 test("the capsule stays under the hard maximum with many claims and never enumerates them", () => {
