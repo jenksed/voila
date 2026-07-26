@@ -1,9 +1,9 @@
 // Public surface of the read-only delivery inspector.
 //
 // This module is standalone on purpose: it imports nothing from Pi, nothing from Voila canonical
-// state (`src/domain`, `src/state`), no tools, no commands, and no UI. A later delivery engine
-// (Packet 5B) will consume `inspectDelivery` and join its output to claims and receipts; until then
-// this is an inspection library with no callers inside the extension.
+// state (`src/domain`, `src/state`), no tools, no commands, and no UI. The dependency arrow only ever
+// points inward: the delivery engine consumes `inspectDelivery`, and the focus capsule
+// (`src/context/observe.ts`) consumes the read-only git seam for bounded repository observation.
 
 export { inspectDelivery } from "./inspect.ts";
 export type { InspectDeliveryOptions } from "./inspect.ts";
@@ -44,8 +44,8 @@ export type {
 } from "./types.ts";
 
 // Seams that exist so tests (and later, a delivery engine) need no real repository.
-export { createGitRunner, READ_ONLY_GIT_SUBCOMMANDS } from "./git.ts";
-export type { GitCommandResult, GitRunner } from "./git.ts";
+export { createGitRunner, parseStatusPorcelainV2, READ_ONLY_GIT_SUBCOMMANDS } from "./git.ts";
+export type { GitCommandResult, GitRunner, ParsedStatus } from "./git.ts";
 export { createMemoryFileSystem, createNodeFileSystem } from "./fs.ts";
 export type { InspectionFileSystem } from "./fs.ts";
 

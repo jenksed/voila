@@ -341,5 +341,5 @@ test("context injection does not overstate command confidence", async () => {
   // Injected context reports orientation status only — never commands or their confidence.
   assert.ok(!/npm test/.test(block), "no command text injected");
   assert.ok(!/\bverified\b/i.test(block), "no verification language injected");
-  assert.match(block, /Orientation: ORI-1/);
+  assert.match(block, /orientation: ORI-1/);
 });

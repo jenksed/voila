@@ -16,7 +16,7 @@ import {
   type ProofView,
 } from "../src/ui/steward-console/model.ts";
 import { homeViewLines, proofWarning } from "../src/ui/homeview.ts";
-import { buildContextBlock, CONTEXT_CHAR_LIMIT } from "../src/context/inject.ts";
+import { buildFocusCapsule, CAPSULE_HARD_MAX } from "../src/context/inject.ts";
 import { buildProofOverview } from "../src/state/proof-store.ts";
 import { assessCompletion, createClaim, linkReceipt, requireClaim } from "../src/domain/proof.ts";
 import { createInitialState } from "../src/domain/defaults.ts";
@@ -641,52 +641,70 @@ test("the widget still degrades at narrow widths with a proof warning present", 
   }
 });
 
-// --- Context injection ---
+// --- Focus capsule: how evidence appears in an injected turn ---
 
-test("injected context states claim counts and the proof rules", () => {
+test("the capsule reports evidence as an observation, and states the two evidence rules once", () => {
   const state = fourStateProject();
   const summary = buildProofOverview(state, FP).summary;
-  const block = buildContextBlock({ status: "ok", state, proof: summary });
-  assert.match(block, /Claims: 4 — 1 supported, 1 unsupported, 1 stale, 1 pending/);
-  assert.match(block, /claims cite exact acceptance criteria/);
-  assert.match(block, /voila_run_verification/);
-  assert.match(block, /evidence only for the claim it ran for/);
-  assert.match(block, /stale or failed evidence cannot complete work/);
-  assert.match(block, /only voila_complete_work_item may mark work completed/);
-  assert.ok(block.length <= CONTEXT_CHAR_LIMIT, `block was ${block.length} chars`);
+  const capsule = buildFocusCapsule({ status: "ok", state, proof: summary });
+  // One unsupported claim is a real failure and is surfaced as such, not softened.
+  assert.match(capsule, /evidence: 1 claim\(s\) contradicted by current evidence/);
+  assert.match(capsule, /Repository observation \(observed now, not canonical truth\)/);
+  // The load-bearing evidence facts survive the removal of the old proof-rules block.
+  assert.match(capsule, /only voila_complete_work_item can complete work/);
+  assert.match(capsule, /only a receipt from voila_run_verification is evidence/);
+  assert.ok(capsule.length <= CAPSULE_HARD_MAX, `capsule was ${capsule.length} chars`);
 });
 
-test("injected context is deterministic and does not encourage weak claims", () => {
+test("expected development staleness is deferred to the boundary, never assigned to the developer", () => {
+  const state = fourStateProject();
+  const capsule = buildFocusCapsule({
+    status: "ok",
+    state,
+    proof: {
+      total: 5,
+      pending: 0,
+      supported: 0,
+      unsupported: 0,
+      stale: 5,
+      fingerprintAvailable: true,
+    },
+  });
+  assert.match(capsule, /5 of 5 claim\(s\) affected by current development changes — expected/);
+  assert.match(capsule, /reconcile once at the boundary, not now/);
+  assert.doesNotMatch(capsule, /refresh (the )?claims/i);
+});
+
+test("the capsule is deterministic and does not encourage weak claims", () => {
   const state = fourStateProject();
   const summary = buildProofOverview(state, FP).summary;
-  const first = buildContextBlock({ status: "ok", state, proof: summary });
-  const second = buildContextBlock({ status: "ok", state, proof: summary });
+  const first = buildFocusCapsule({ status: "ok", state, proof: summary });
+  const second = buildFocusCapsule({ status: "ok", state, proof: summary });
   assert.equal(first, second, "deterministic for identical input");
-  // No language that would nudge the model toward satisfying the gate cheaply.
   for (const phrase of ["to pass the gate", "satisfy the gate", "in order to complete", "easier"]) {
     assert.equal(first.toLowerCase().includes(phrase), false, `avoids "${phrase}"`);
   }
 });
 
-test("a project with no claims says so, and unavailable git is stated", () => {
+test("a project with no claims omits the evidence line, and unavailable git is stated", () => {
   const empty = createInitialState({ displayName: "e", now: T, projectId: "p" });
-  const noClaims = buildContextBlock({
+  const noClaims = buildFocusCapsule({
     status: "ok",
     state: empty,
     proof: buildProofOverview(empty, null).summary,
   });
-  assert.match(noClaims, /Claims: none recorded — no work item can be completed yet/);
+  assert.doesNotMatch(noClaims, /evidence:/);
 
   const state = fourStateProject();
-  const noGit = buildContextBlock({
+  const noGit = buildFocusCapsule({
     status: "ok",
     state,
     proof: buildProofOverview(state, null).summary,
   });
-  assert.match(noGit, /git unavailable: nothing counts as current/);
+  assert.match(noGit, /git is unavailable, so none can be shown as current/);
 });
 
-test("injected context stays under the cap with many claims", () => {
+test("the capsule stays under the hard maximum with many claims and never enumerates them", () => {
   let s = createInitialState({ displayName: "big", now: T, projectId: "p" });
   const criteria = Array.from({ length: 40 }, (_, i) => `criterion number ${i} `.repeat(3));
   s = createWorkItem(s, { kind: "outcome", title: "Big", acceptanceCriteria: criteria }, T);
@@ -703,12 +721,11 @@ test("injected context stays under the cap with many claims", () => {
       T,
     );
   }
-  const block = buildContextBlock({
+  const capsule = buildFocusCapsule({
     status: "ok",
     state: s,
     proof: buildProofOverview(s, FP).summary,
   });
-  assert.ok(block.length <= CONTEXT_CHAR_LIMIT, `block was ${block.length} chars`);
-  // Individual claim statements are never enumerated; only counts and rules.
-  assert.equal(block.includes("a long claim statement about"), false);
+  assert.ok(capsule.length <= CAPSULE_HARD_MAX, `capsule was ${capsule.length} chars`);
+  assert.equal(capsule.includes("a long claim statement about"), false);
 });
