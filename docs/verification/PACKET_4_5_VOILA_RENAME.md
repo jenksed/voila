@@ -22,7 +22,7 @@ says so; it is not claimed.
 | 13 | Interactive TUI | **PENDING — no TTY in this environment** |
 | 14 | Doctor | PASS |
 | 15 | Full automated verification | PASS |
-| 16 | GitHub CI | PENDING — recorded after the branch is pushed |
+| 16 | GitHub CI | PASS (run 30185912072) |
 | 17 | GitHub repository rename | PENDING — only after merge and green push-to-main CI |
 | 18 | Post-rename remote verification | PENDING — follows tier 17 |
 
@@ -294,9 +294,21 @@ Baseline before this packet was 382. No existing Packet 4 proof test was removed
 57 added tests are new files (`legacy-migration`, `product-identity`, `rename-guard`) plus three
 appended fingerprint tests.
 
-## Tier 16 — GitHub CI — PENDING
+## Tier 16 — GitHub CI
 
-Recorded after the branch is pushed and Actions completes.
+Code PR: [jenksed/newfang#6](https://github.com/jenksed/newfang/pull/6).
+
+| Run | Head SHA | Workflow | Conclusion |
+| --- | --- | --- | --- |
+| 30185912072 | `7cd533b1d157ea968d79dbd9c719d1ca8cda0a8e` | CI | **success** |
+
+The workflow runs `npm ci --ignore-scripts && npm run verify` on the pinned Node 22.23.1, so the
+complete gate (typecheck, format check, full test suite) passed in a clean environment, not only
+locally.
+
+This tier's own commit lands after that run, so it triggers a further run on the updated head; the
+result recorded above is the one that gated the merge decision, and the post-merge push-to-main run
+is recorded in tier 18.
 
 ## Tier 17 — GitHub repository rename — PENDING
 
