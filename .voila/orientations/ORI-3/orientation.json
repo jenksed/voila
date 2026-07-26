@@ -1,0 +1,72 @@
+{
+  "intakeStyleVersion": 1,
+  "purpose": "Voila is a personal development operating system built on the Pi coding-agent harness. It owns the path from intent to verified, delivered result: preserving planning sources, holding durable project truth, requiring evidence before completion, and proposing a delivery boundary a human approves.",
+  "instructionFiles": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "39a0aa054c49f3b37fb9a6f5d9f61ffa0b284d08f5a0fda9842490dda0db379e",
+      "note": "Harness-neutral operating instructions; takes precedence over CLAUDE.md."
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "19889c7cf4ec1162b41be9e4fc6aaf4dabb42abf9cb3c2138ada6c18e26dedc0",
+      "note": "Claude-specific refinements; defers to AGENTS.md on conflict."
+    },
+    {
+      "path": "README.md",
+      "sha256": "048240f760442e32758af52ec622bb7f93bc194737137354aa9f66a30d209220",
+      "note": "Status, boundary, and document map."
+    }
+  ],
+  "keyDocuments": [
+    "docs/plans/MVP_IMPLEMENTATION_PLAN.md",
+    "docs/design/PROOF_ENGINE.md",
+    "docs/design/DELIVERY_ENGINE.md",
+    "docs/design/DELIVERY_INSPECTOR.md",
+    "docs/migrations/NEWFANG_TO_VOILA.md",
+    "docs/project/PROJECT_LEDGER.md"
+  ],
+  "implementationAreas": [
+    "src/domain — pure project truth, proof, schema migrations",
+    "src/state — canonical store, receipts, intake, fingerprint, legacy migration",
+    "src/delivery-inspector — read-only observation of the working tree",
+    "src/delivery — delivery summary and commit suggestion (Phase 6)",
+    "src/tools — 30 model-callable voila_* tools",
+    "src/ui/steward-console — keyboard-first TUI",
+    ".pi/extensions/voila.ts — the single Pi boundary"
+  ],
+  "commands": [
+    {
+      "command": "mise exec -- npm run verify",
+      "basis": "observed_in_session",
+      "observedResult": "passed",
+      "evidenceNote": "Run repeatedly this session; recorded as receipts RCP-5 through RCP-9."
+    },
+    {
+      "command": "mise exec -- npm run pi",
+      "basis": "declared_in_documentation",
+      "evidenceNote": "Cannot be observed here: no TTY, so Pi exits immediately."
+    }
+  ],
+  "relevantWork": [
+    "NF-1 through NF-4 completed through the protected gate during this walk-through, each backed by a passing receipt.",
+    "NF-6 (reach the self-hosting gate) is the current focus; its dependencies are now complete."
+  ],
+  "risks": [
+    "The interactive TUI tier has never been observed in this environment; every claim about it is unverified.",
+    "Voila is project-local: .pi/extensions/voila.ts loads only in this repository, so it cannot yet be used on other projects."
+  ],
+  "unknowns": [
+    "Whether the Steward Console renders correctly at the users terminal width.",
+    "Whether Pi loads the Project Steward skill cleanly at runtime."
+  ],
+  "observedAt": "2026-07-26T04:16:12.966Z",
+  "provenance": [
+    "Read directly this session: package.json, AGENTS.md, CLAUDE.md, README.md, docs/plans/MVP_IMPLEMENTATION_PLAN.md, src/**, test/**.",
+    "Command results observed this session, not inferred."
+  ],
+  "branch": "main",
+  "head": "321b90f59990c09a02a0a370a6e978dd277fa161",
+  "dirty": true,
+  "dirtySummary": "Canonical .voila/ state changed by this Phase 7 gate walk-through (completions, claims, receipts). The fingerprint excludes .voila/, so evidence is unaffected."
+}

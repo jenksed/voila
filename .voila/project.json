@@ -4,18 +4,18 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Run the interactive Proof view check in a real terminal (mise exec -- npm run pi), then merge Packet 4R once GitHub Actions passes on the PR.",
-  "nextActionRationale": "The reconciled Proof Engine passes the complete automated gate (382 tests) and CLM-2 is supported by RCP-3 and RCP-4 at fingerprint 95ff7ef7006d. Two tiers remain that Claude cannot perform: the interactive Proof view needs a real TTY (process.stdin.isTTY is false here, so /voila home correctly refuses), and GitHub CI needs the branch pushed. CLM-1 stays honestly stale because its receipts were recorded at gitHead 20effff before the rebase; NF-3 therefore remains incomplete rather than being completed retroactively.",
-  "focusWorkItemId": "NF-2",
+  "nextAction": "Run the Phase 7 self-hosting gate walk-through in a real terminal (mise exec -- npm run pi) to confirm the interactive tier, then decide go/no-go for using Voila as the daily driver.",
+  "nextActionRationale": "All eight self-hosting capabilities are implemented and evidenced headlessly: NF-1 through NF-4 are completed through the protected gate, each backed by a passing receipt at the current fingerprint. The only tier no automated run can cover is the interactive TUI, which needs a real TTY.",
+  "focusWorkItemId": "NF-6",
   "sequences": {
     "workItem": 9,
     "decision": 12,
     "assumption": 4,
     "risk": 6,
     "intake": 9,
-    "orientation": 3,
-    "claim": 3,
-    "receipt": 5
+    "orientation": 4,
+    "claim": 6,
+    "receipt": 10
   },
   "workItems": [
     {
@@ -23,24 +23,26 @@
       "kind": "outcome",
       "title": "Complete the minimal project-operations layer",
       "description": "Implementation and tests are done, but this item is NOT canonically complete: the protected completion transition (newfang_complete_work_item) does not exist yet.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "high",
       "acceptanceCriteria": [
         "schema v2 with explicit 1->2 migration",
         "work items, decisions, assumptions, risks persist canonically",
         "Pi tools and commands with compact output",
-        "awaits the future protected completion mechanism before it can be marked complete"
+        "the protected completion transition exists and refuses unsupported completion"
       ],
       "dependsOn": [],
       "createdAt": "2026-07-25T02:00:04.852Z",
-      "updatedAt": "2026-07-25T02:00:04.852Z",
-      "requiredClaimIds": []
+      "updatedAt": "2026-07-26T04:15:14.415Z",
+      "requiredClaimIds": [
+        "CLM-3"
+      ]
     },
     {
       "id": "NF-2",
       "kind": "outcome",
       "title": "Build planning-document intake and repository orientation",
-      "status": "ready",
+      "status": "completed",
       "priority": "high",
       "acceptanceCriteria": [
         "preserve the original plan/document",
@@ -49,23 +51,25 @@
       ],
       "dependsOn": [],
       "createdAt": "2026-07-25T02:00:04.854Z",
-      "updatedAt": "2026-07-25T02:00:04.854Z",
-      "requiredClaimIds": []
+      "updatedAt": "2026-07-26T04:15:14.483Z",
+      "requiredClaimIds": [
+        "CLM-4"
+      ]
     },
     {
       "id": "NF-3",
       "kind": "outcome",
       "title": "Build claims, receipts, and completion gates",
-      "status": "backlog",
+      "status": "completed",
       "priority": "high",
       "acceptanceCriteria": [
-        "newfang_complete_work_item rejects unsupported completion"
+        "voila_complete_work_item rejects unsupported completion"
       ],
       "dependsOn": [
         "NF-2"
       ],
       "createdAt": "2026-07-25T02:00:04.855Z",
-      "updatedAt": "2026-07-25T16:38:42.263Z",
+      "updatedAt": "2026-07-26T04:15:14.543Z",
       "requiredClaimIds": [
         "CLM-1"
       ]
@@ -74,15 +78,21 @@
       "id": "NF-4",
       "kind": "task",
       "title": "Add delivery behavior: commit suggestions and delivery summary",
-      "status": "backlog",
+      "status": "completed",
       "priority": "normal",
-      "acceptanceCriteria": [],
+      "acceptanceCriteria": [
+        "a delivery summary reports what changed, claims at their real evaluation status, risks, limitations, and the canonical next action",
+        "commit boundaries are proposed with disjoint paths and a readiness verdict",
+        "the engine never commits, stages, pushes, or opens a pull request"
+      ],
       "dependsOn": [
         "NF-3"
       ],
       "createdAt": "2026-07-25T02:00:04.856Z",
-      "updatedAt": "2026-07-25T02:00:04.856Z",
-      "requiredClaimIds": []
+      "updatedAt": "2026-07-26T04:15:14.608Z",
+      "requiredClaimIds": [
+        "CLM-5"
+      ]
     },
     {
       "id": "NF-5",
@@ -432,19 +442,27 @@
       "id": "ORI-2",
       "artifactRef": "orientations/ORI-2/orientation.json",
       "repositoryHead": "20effff08615016a2cb8cd881cf5e901dc6249f8",
-      "status": "current",
+      "status": "stale",
       "createdAt": "2026-07-25T16:21:57.163Z",
-      "updatedAt": "2026-07-25T16:21:57.163Z"
+      "updatedAt": "2026-07-26T04:16:12.969Z"
+    },
+    {
+      "id": "ORI-3",
+      "artifactRef": "orientations/ORI-3/orientation.json",
+      "repositoryHead": "321b90f59990c09a02a0a370a6e978dd277fa161",
+      "status": "current",
+      "createdAt": "2026-07-26T04:16:12.969Z",
+      "updatedAt": "2026-07-26T04:16:12.969Z"
     }
   ],
   "claims": [
     {
       "id": "CLM-1",
       "workItemId": "NF-3",
-      "statement": "newfang_complete_work_item is the only path to the completed status, and it refuses the transition whenever any gate fails — reporting every failing gate rather than the first — while generic create/update operations continue to reject `completed` outright.",
+      "statement": "voila_complete_work_item is the only path to the completed status, and it refuses the transition whenever any gate fails - reporting every failing gate rather than the first - while generic create/update operations continue to reject `completed` outright.",
       "confidence": "high",
       "coveredAcceptanceCriteria": [
-        "newfang_complete_work_item rejects unsupported completion"
+        "voila_complete_work_item rejects unsupported completion"
       ],
       "knownLimitations": [
         "Guarantees NewFang's own state transition only; it does not prevent a model from writing unsupported prose in conversation.",
@@ -454,18 +472,19 @@
       ],
       "receiptIds": [
         "RCP-1",
-        "RCP-2"
+        "RCP-2",
+        "RCP-6"
       ],
       "createdAt": "2026-07-25T16:38:42.263Z",
-      "updatedAt": "2026-07-25T16:46:50.383Z"
+      "updatedAt": "2026-07-26T04:12:56.743Z"
     },
     {
       "id": "CLM-2",
       "workItemId": "NF-3",
-      "statement": "The complete automated verification gate (npm run verify = tsc --noEmit, prettier --check, and the full node --test suite) passes at the repository fingerprint recorded on its receipt, including the proof.completion tests that assert newfang_complete_work_item rejects every unsupported completion and the migration tests that run 3 -> 4 against the real integrated Packet 3 canonical state.",
+      "statement": "The complete automated verification gate (npm run verify = tsc --noEmit, prettier --check, and the full node --test suite) passes at the repository fingerprint recorded on its receipt, including the proof.completion tests that assert voila_complete_work_item rejects every unsupported completion.",
       "confidence": "high",
       "coveredAcceptanceCriteria": [
-        "newfang_complete_work_item rejects unsupported completion"
+        "voila_complete_work_item rejects unsupported completion"
       ],
       "knownLimitations": [
         "Scoped to the automated gate only: it is evidence that the suite passes, not that the interactive Proof view or any human-attested tier passed.",
@@ -475,10 +494,73 @@
       ],
       "receiptIds": [
         "RCP-3",
-        "RCP-4"
+        "RCP-4",
+        "RCP-5"
       ],
       "createdAt": "2026-07-25T22:26:09.232Z",
-      "updatedAt": "2026-07-25T22:29:23.996Z"
+      "updatedAt": "2026-07-26T04:12:32.973Z"
+    },
+    {
+      "id": "CLM-3",
+      "workItemId": "NF-1",
+      "statement": "The project-operations layer persists work items, decisions, assumptions, and risks in canonical state through an explicit schema migration chain that includes 1->2, exposes them as Pi tools and commands with compact output, and is gated by a protected completion transition that refuses unsupported completion. The complete automated gate (npm run verify) passes at the recorded fingerprint.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "schema v2 with explicit 1->2 migration",
+        "work items, decisions, assumptions, risks persist canonically",
+        "Pi tools and commands with compact output",
+        "the protected completion transition exists and refuses unsupported completion"
+      ],
+      "knownLimitations": [
+        "Evidence is the automated suite at one repository fingerprint; any tracked change makes it stale until verification is re-run.",
+        "The suite does not cover the interactive TUI, which requires a real terminal."
+      ],
+      "receiptIds": [
+        "RCP-7"
+      ],
+      "createdAt": "2026-07-26T04:13:58.284Z",
+      "updatedAt": "2026-07-26T04:14:39.368Z"
+    },
+    {
+      "id": "CLM-4",
+      "workItemId": "NF-2",
+      "statement": "Planning intake preserves the original document byte-for-byte under a recorded sha256, classifies its contents into decisions, constraints, questions, and risks as a reviewable draft, and produces an Understanding Check plus a next action before anything is applied to canonical truth. Repository orientation records a bounded artifact with staleness. The complete automated gate (npm run verify) passes at the recorded fingerprint.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "preserve the original plan/document",
+        "classify contents (decisions, constraints, questions, risks)",
+        "produce an understanding check and the next action"
+      ],
+      "knownLimitations": [
+        "Classification is model interpretation and is fallible; the Understanding Check and human acceptance are the only guarantees that applied truth is correct.",
+        "Evidence is the automated suite at one repository fingerprint."
+      ],
+      "receiptIds": [
+        "RCP-8"
+      ],
+      "createdAt": "2026-07-26T04:14:13.952Z",
+      "updatedAt": "2026-07-26T04:14:53.910Z"
+    },
+    {
+      "id": "CLM-5",
+      "workItemId": "NF-4",
+      "statement": "The delivery engine renders a summary of what changed joined to every claim at its real evaluation status (a stale claim is reported unsupported, never counted as support), plus risks, limitations, discovered-but-unexecuted verification commands, and the canonical next action; it proposes disjoint commit boundaries each carrying a readiness verdict; and it never commits, stages, pushes, or opens a pull request, which is asserted against a real repository by checking HEAD, the commit count, porcelain status, and .git/index. The complete automated gate (npm run verify) passes at the recorded fingerprint.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "a delivery summary reports what changed, claims at their real evaluation status, risks, limitations, and the canonical next action",
+        "commit boundaries are proposed with disjoint paths and a readiness verdict",
+        "the engine never commits, stages, pushes, or opens a pull request"
+      ],
+      "knownLimitations": [
+        "Commit subjects describe change shape, not intent; the author must rewrite them.",
+        "Attention items are heuristics from naming and change shape, never confirmed secrets or defects.",
+        "Evidence is the automated suite at one repository fingerprint."
+      ],
+      "receiptIds": [
+        "RCP-9"
+      ],
+      "createdAt": "2026-07-26T04:14:13.958Z",
+      "updatedAt": "2026-07-26T04:15:08.819Z"
     }
   ],
   "receipts": [
@@ -565,11 +647,116 @@
       "repositoryFingerprint": "95ff7ef7006d7ed372a21957f3f6407d6b1260556c83f1db4791e5cf9e96a9f3",
       "gitHead": "1e39b172156a69e45c4dd56ad1f7c1ea68486011",
       "outputTruncated": false
+    },
+    {
+      "id": "RCP-5",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-5",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:12:18.191Z",
+      "finishedAt": "2026-07-26T04:12:32.969Z",
+      "repositoryFingerprint": "0ffc3bfde9027fcac9e99121b1dc594338c85925ea091beb4e9afc1d1bde4c17",
+      "gitHead": "321b90f59990c09a02a0a370a6e978dd277fa161",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-6",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-6",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:12:41.787Z",
+      "finishedAt": "2026-07-26T04:12:56.740Z",
+      "repositoryFingerprint": "0ffc3bfde9027fcac9e99121b1dc594338c85925ea091beb4e9afc1d1bde4c17",
+      "gitHead": "321b90f59990c09a02a0a370a6e978dd277fa161",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-7",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-7",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:14:24.885Z",
+      "finishedAt": "2026-07-26T04:14:39.366Z",
+      "repositoryFingerprint": "0ffc3bfde9027fcac9e99121b1dc594338c85925ea091beb4e9afc1d1bde4c17",
+      "gitHead": "321b90f59990c09a02a0a370a6e978dd277fa161",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-8",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-8",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:14:39.433Z",
+      "finishedAt": "2026-07-26T04:14:53.908Z",
+      "repositoryFingerprint": "0ffc3bfde9027fcac9e99121b1dc594338c85925ea091beb4e9afc1d1bde4c17",
+      "gitHead": "321b90f59990c09a02a0a370a6e978dd277fa161",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-9",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-9",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:14:53.983Z",
+      "finishedAt": "2026-07-26T04:15:08.817Z",
+      "repositoryFingerprint": "0ffc3bfde9027fcac9e99121b1dc594338c85925ea091beb4e9afc1d1bde4c17",
+      "gitHead": "321b90f59990c09a02a0a370a6e978dd277fa161",
+      "outputTruncated": false
     }
   ],
   "currentIntakeId": "INT-8",
-  "currentOrientationId": "ORI-2",
+  "currentOrientationId": "ORI-3",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T03:07:15.430Z",
-  "revision": 61
+  "updatedAt": "2026-07-26T04:16:12.971Z",
+  "revision": 84
 }
