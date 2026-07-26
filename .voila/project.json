@@ -14,8 +14,8 @@
     "risk": 6,
     "intake": 9,
     "orientation": 6,
-    "claim": 6,
-    "receipt": 94
+    "claim": 11,
+    "receipt": 99
   },
   "workItems": [
     {
@@ -166,9 +166,15 @@
         "The focus capsule injected before a Steward turn contains the accepted objective, active work item, current slice, relevant decisions and non-goals, known blocker, next justified action, and active workers and terminals -- and not the entire ledger"
       ],
       "dependsOn": [],
-      "requiredClaimIds": [],
+      "requiredClaimIds": [
+        "CLM-10",
+        "CLM-6",
+        "CLM-8",
+        "CLM-9",
+        "CLM-7"
+      ],
       "createdAt": "2026-07-26T14:59:55.461Z",
-      "updatedAt": "2026-07-26T17:47:37.205Z"
+      "updatedAt": "2026-07-26T17:55:34.601Z"
     },
     {
       "id": "NF-10",
@@ -875,6 +881,101 @@
       ],
       "createdAt": "2026-07-26T04:14:13.958Z",
       "updatedAt": "2026-07-26T15:58:19.432Z"
+    },
+    {
+      "id": "CLM-6",
+      "workItemId": "NF-9",
+      "statement": "Voila deterministically identifies and groups claims with equivalent verification contracts, reports the unique contract count, and exposes a stable integration seam for later shared execution; R1 does not execute each group once or distribute a shared execution result across claims, and execution deduplication remains R6 scope, per DEC-19. The contract identity, stable grouping, and purity assertions are made by test/readiness.test.ts, and the live grouping is observable in this repository's /voila proof output (two unique contracts across ninety-three receipts serving five claims, as recorded in the R1 verification document sections 1 and 2).",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "Voila deterministically identifies and groups claims with equivalent verification contracts, reports the unique contract count, and exposes a stable integration seam for later shared execution. R1 does not execute each group once or distribute a shared execution result across claims; execution deduplication remains R6 scope."
+      ],
+      "knownLimitations": [
+        "R1 built the grouping seam only; one voila_run_verification call still records one receipt for one claim. Execution deduplication and result fan-out are explicitly R6 scope and are not implied here.",
+        "The grouping is observable from /voila proof and from the underlying suite; it is not separately scored as a readiness gate.",
+        "Evidence is scoped to one repository fingerprint; any change to proof logic, to the contract comparison, or to the readiness surface requires re-running the suite."
+      ],
+      "receiptIds": [
+        "RCP-94"
+      ],
+      "createdAt": "2026-07-26T17:54:58.321Z",
+      "updatedAt": "2026-07-26T17:55:57.092Z"
+    },
+    {
+      "id": "CLM-7",
+      "workItemId": "NF-9",
+      "statement": "In a fresh Pi session that receives only the literal prompt \"Continue.\" with no prior conversational history and no session to resume, the Steward identifies the focused work item (NF-9), begins useful repository work in the same turn, and never asks for a recap, a status report, an orientation refresh, or a manual proof refresh. This is the interactive tier recorded in docs/verification/R1_AMBIENT_CONTINUITY.md (sections 3 and 4): the recorded prompt, response, first tool call, pass conditions 1-11, and verdict PASS are the behavioural evidence; the deterministic half (capsule composition, intent recognition) is asserted by the test suite via the other NF-9 claims.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "In a fresh Pi session the user says only 'Continue.' and the Steward identifies the correct work and begins useful action without asking for a recap or requiring state maintenance"
+      ],
+      "knownLimitations": [
+        "Evidence is the interactive tier recorded in docs/verification/R1_AMBIENT_CONTINUITY.md, not a per-session automated check. No test can prove a model acts on a capsule; that requires the recorded transcript.",
+        "The recorded run used Pi's --print mode rather than the TUI, so the ambient widget's quiet staleness indicator and the Steward Console were not exercised in a live terminal (they were asserted via their own tests).",
+        "The recorded run is one model (MiniMax-M3 at high thinking), one prompt variant, one date; nothing here establishes behavior for other models or prompts.",
+        "A fresh transcript at a new commit becomes the binding behavioural evidence; this receipt confirms only that the underlying automated suite still passes at this fingerprint."
+      ],
+      "receiptIds": [
+        "RCP-95"
+      ],
+      "createdAt": "2026-07-26T17:55:09.176Z",
+      "updatedAt": "2026-07-26T17:56:16.793Z"
+    },
+    {
+      "id": "CLM-8",
+      "workItemId": "NF-9",
+      "statement": "A commit that changes no orientation-relevant content does not mark orientation stale. This is asserted by test/orientation.test.ts (HEAD-only change stays current; unrelated git metadata never stales; instruction change, missing source, and un-inspected policy source stale it; a declared policy mismatch is stale, explicitly; relevant canonical-state change stales it; bookkeeping does not), by the readiness classification (development staleness is INFO, not WARN), and by the Doctor observation on this repository after R1 (worst level INFO; HEAD movement is no longer a stale reason).",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "A commit that changes no orientation-relevant content does not mark orientation stale"
+      ],
+      "knownLimitations": [
+        "Evidence is the automated suite and one Doctor observation on this repository; the interactive orientation widget was not exercised in a live terminal.",
+        "Policy-version and state-digest components cannot be self-reported by a model; they are observed values, asserted by tests.",
+        "Evidence is scoped to one repository fingerprint: a change to orientation logic, to a covered content source, or to the documentation posture requires re-running the suite."
+      ],
+      "receiptIds": [
+        "RCP-96"
+      ],
+      "createdAt": "2026-07-26T17:55:12.506Z",
+      "updatedAt": "2026-07-26T17:56:35.927Z"
+    },
+    {
+      "id": "CLM-9",
+      "workItemId": "NF-9",
+      "statement": "A work item does not display \"READY to complete\" while a known required human or authenticated activity remains pending. The narrow correction is asserted by test/readiness.test.ts (passing gates alone never produce an unqualified ready label; held work lists startable items only; derived state changes only with supported state) and is confirmed at this repository's /voila proof output, which now reads HELD with the named limitations rather than READY to complete when an item's gate happens to pass while a human tier is owed (see CLM-4's three outstanding limitations on NF-2).",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "A work item does not display READY to complete while a known required human or authenticated activity remains pending"
+      ],
+      "knownLimitations": [
+        "The label was corrected narrowly, as the criterion asks. voila_complete_work_item still accepts an item whose gates all pass while a limitation stands; turning a hold into an enforced gate is a product decision (R2+ scope), not a presentation fix.",
+        "Evidence is the readiness tests and one /voila proof observation; the HELD/READY distinction was not separately exercised in a live TUI.",
+        "Evidence is scoped to one repository fingerprint; a change to proof logic or to the readiness surface requires re-running the suite."
+      ],
+      "receiptIds": [
+        "RCP-97"
+      ],
+      "createdAt": "2026-07-26T17:55:15.484Z",
+      "updatedAt": "2026-07-26T17:56:55.384Z"
+    },
+    {
+      "id": "CLM-10",
+      "workItemId": "NF-9",
+      "statement": "R1 implements a deterministic bounded focus capsule containing the accepted objective, active work item, trustworthy current slice when derivable, relevant decisions and non-goals, known blocker, and next justified action, while excluding the entire ledger. Active workers and terminals are not included because those runtimes do not exist in R1; therefore the literal final clause of NF-9 criterion 5 is not satisfied at this repository state.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "The focus capsule injected before a Steward turn contains the accepted objective, active work item, current slice, relevant decisions and non-goals, known blocker, next justified action, and active workers and terminals -- and not the entire ledger"
+      ],
+      "knownLimitations": [
+        "NF-9 criterion 5 literally requires active workers and terminals, but R1 intentionally has no such runtime and its tests require those fields to be absent; this claim cannot honestly establish that clause.",
+        "Completing NF-9 would require an authorized criterion amendment or out-of-scope R2/R3 implementation; neither is authorized here."
+      ],
+      "receiptIds": [
+        "RCP-98"
+      ],
+      "createdAt": "2026-07-26T17:55:19.623Z",
+      "updatedAt": "2026-07-26T18:00:39.300Z"
     }
   ],
   "receipts": [
@@ -2881,11 +2982,121 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
       "outputTruncated": false
+    },
+    {
+      "id": "RCP-94",
+      "claimId": "CLM-6",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-94",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T17:55:39.655Z",
+      "finishedAt": "2026-07-26T17:55:57.086Z",
+      "repositoryFingerprint": "a4432210661383b8ff07360deeef5b9f435dc02422ccc67e275ef4e6fb5b7a2e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "37ae7fd6c953719260fc3dce4e455801610ab685",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-95",
+      "claimId": "CLM-7",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-95",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T17:55:59.578Z",
+      "finishedAt": "2026-07-26T17:56:16.787Z",
+      "repositoryFingerprint": "a4432210661383b8ff07360deeef5b9f435dc02422ccc67e275ef4e6fb5b7a2e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "37ae7fd6c953719260fc3dce4e455801610ab685",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-96",
+      "claimId": "CLM-8",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-96",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T17:56:18.631Z",
+      "finishedAt": "2026-07-26T17:56:35.921Z",
+      "repositoryFingerprint": "a4432210661383b8ff07360deeef5b9f435dc02422ccc67e275ef4e6fb5b7a2e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "37ae7fd6c953719260fc3dce4e455801610ab685",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-97",
+      "claimId": "CLM-9",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-97",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T17:56:37.861Z",
+      "finishedAt": "2026-07-26T17:56:55.377Z",
+      "repositoryFingerprint": "a4432210661383b8ff07360deeef5b9f435dc02422ccc67e275ef4e6fb5b7a2e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "37ae7fd6c953719260fc3dce4e455801610ab685",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-98",
+      "claimId": "CLM-10",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-98",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T17:56:57.265Z",
+      "finishedAt": "2026-07-26T17:57:18.009Z",
+      "repositoryFingerprint": "a4432210661383b8ff07360deeef5b9f435dc02422ccc67e275ef4e6fb5b7a2e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "37ae7fd6c953719260fc3dce4e455801610ab685",
+      "outputTruncated": true
     }
   ],
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T17:47:45.501Z",
-  "revision": 216
+  "updatedAt": "2026-07-26T18:00:39.300Z",
+  "revision": 232
 }

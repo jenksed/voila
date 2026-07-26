@@ -280,3 +280,144 @@ reported by `/voila proof`. It executes nothing and rewrites no receipt.
 **Recommendation: A.** The plan is authoritative and says "prepare"; the criterion overstates it. The
 owner decision required is one sentence: *may criterion 3 of NF-9 be narrowed to the plan's wording?*
 Nothing was changed on my own authority.
+
+---
+
+## 8. Final closeout attempt on 2026-07-26
+
+This section supplements rather than replaces the historical results above.
+
+### Completion inventory
+
+| Requirement | Final classification | Evidence |
+| --- | --- | --- |
+| Focus-capsule generation, limits, filtering, and truth/observation labels | VERIFIED COMPLETE | `test/continuation.test.ts`, `test/context.test.ts` |
+| Continuation detection and same-turn action directive | VERIFIED COMPLETE | focused tests plus the final fresh-session run below |
+| Content-based freshness and legacy compatibility | VERIFIED COMPLETE | `test/orientation.test.ts` |
+| Doctor structural-health/development-drift separation | VERIFIED COMPLETE | automated tests and real-TTY `/voila doctor` |
+| NF-2 held presentation | VERIFIED COMPLETE when evidence is current; stale proof shows the evidence gate instead | readiness tests; the TTY run observed the stale state honestly |
+| Verification-contract grouping seam | VERIFIED COMPLETE | `test/readiness.test.ts`; `/voila proof` reports 2 unique contracts |
+| Project Steward skill | VERIFIED COMPLETE | skill tests and final fresh-session behavior |
+| Current-slice correction | VERIFIED COMPLETE | focused tests cover `Continue.`, `app.py`, `22.23.1`, a real sentence boundary, no trustworthy boundary, required fields, and the hard size limit |
+| Automated gate | VERIFIED COMPLETE | 625/625 tests passed, exit 0 |
+| Real-TTY presentation | VERIFIED COMPLETE | Pi 0.82.0 under an `expect`-managed pseudo-terminal; status, NF-2 proof, NF-9 proof, and Doctor all rendered |
+| Final fresh-session `Continue.` | VERIFIED COMPLETE for the behavioral criterion | final run at `37ae7fd`, fingerprint `a4432210661383b8ff07360deeef5b9f435dc02422ccc67e275ef4e6fb5b7a2e` |
+| Criterion 3 wording | VERIFIED COMPLETE | amended through `voila_update_work_item`; rationale recorded as DEC-19 |
+| Required claim coverage | PARTIALLY COMPLETE | CLM-6..CLM-10 are required and mechanically cover all five criteria, but CLM-10 explicitly records that criterion 5 is not substantively met |
+| Final-fingerprint proof | PARTIALLY COMPLETE | RCP-94..RCP-98 passed at the final behavioral fingerprint; five identical executions were performed because R6 deduplication does not exist |
+| Protected NF-9 completion | BLOCKED | criterion 5 literally requires active workers and terminals, while R1 intentionally has none and tests require those fields to be absent |
+
+### Current-slice correction
+
+The naive punctuation split treated the period inside the literal `Continue.` as a sentence boundary.
+The correction only emits a derived slice when punctuation is followed by whitespace and a capital
+letter starting a subsequent sentence. Otherwise the slice is omitted and the complete bounded
+canonical next action carries the meaning. This prefers complete canonical meaning over a malformed
+summary without adding a general language parser or a `Continue.`-only special case.
+
+Focused command:
+
+```text
+mise exec -- node --test test/continuation.test.ts test/context.test.ts
+24 tests, 24 pass, 0 fail
+```
+
+Complete gate after formatting correction:
+
+```text
+mise exec -- npm run verify
+625 tests, 625 pass, 0 fail, exit 0
+```
+
+### Criterion 3 amendment
+
+Previous wording:
+
+> One identical verification command can serve every applicable claim without being re-executed per
+> claim
+
+Final wording:
+
+> Voila deterministically identifies and groups claims with equivalent verification contracts,
+> reports the unique contract count, and exposes a stable integration seam for later shared execution.
+> R1 does not execute each group once or distribute a shared execution result across claims; execution
+> deduplication remains R6 scope.
+
+DEC-19 records the authorized rationale:
+
+> This amendment aligns NF-9 with the accepted Project Realignment Plan. It corrects a sequencing
+> mismatch and does not claim execution deduplication that has not been implemented.
+
+### Real-TTY presentation
+
+Command environment: Pi 0.82.0, Node 22.23.1, macOS pseudo-terminal allocated by `/usr/bin/expect`,
+branch `feat/r1-ambient-continuity`, HEAD `37ae7fd`.
+
+Observed:
+
+- Voila loaded and the ambient widget rendered `Voila · BUILD · GREEN · Focus NF-9`.
+- `/voila status` showed NF-9 as focus and stated that R2-R7 remain unbuilt: no workers, terminals, or
+  settlement.
+- `/voila proof NF-2` showed its required claim stale at the current fingerprint. This was an honest
+  evidence-gate presentation, not the `HELD` label; the authenticated owner-run intake limitation
+  remained visible in status/canonical next-action rationale.
+- `/voila proof NF-9` showed all five criteria uncovered before claims were created.
+- `/voila doctor` reported structural health `OK`; orientation and evidence drift were `INFO`, not
+  structural warnings.
+- Pi exited cleanly after the checks.
+
+### Final-state fresh-session `Continue.`
+
+Invocation:
+
+```text
+mise exec -- npm run pi -- --approve --no-session --mode json -p "Continue."
+```
+
+- Behavioral SHA: `37ae7fd6c953719260fc3dce4e455801610ab685`
+- Effective content fingerprint: `a4432210661383b8ff07360deeef5b9f435dc02422ccc67e275ef4e6fb5b7a2e`
+- Model: MiniMax-M3, thinking `high`; Pi 0.82.0
+- Initial response: `I'll read the canonical state and the R1 verification doc to identify the exact remaining gap on NF-9.`
+- Prose lines before acting: 1
+- First tool call: `voila_get_project_context {}`
+- First useful repository action: read canonical NF-9 context, then inspect the R1 verification record
+- User questions: 0
+- Context restatements requested: 0
+- Proof/orientation maintenance requested from the developer: 0
+- NF-2 work attempted: no
+- Unsupported R2-R7 capability claims: none
+- Malformed current slice: absent; the capsule omitted the unreliable slice and retained the complete
+  bounded next action
+- Useful continuation: the run created CLM-6..CLM-10, required them, and recorded RCP-94..RCP-98
+  through supported tools before the harness timeout terminated its extended reasoning
+
+Verdict for the fresh-session behavioral criterion: **PASS**. The run acted in the same turn and did
+not wait for routine permission. The harness timeout is a limitation of the long closeout sequence,
+not of the first-turn continuation behavior.
+
+### Claim map and reconciliation result
+
+| Claim | Criterion | Honest result |
+| --- | --- | --- |
+| CLM-7 | Fresh-session `Continue.` | Supported by RCP-95 plus the final transcript above |
+| CLM-8 | Orientation freshness | Supported by RCP-96 and the automated suite |
+| CLM-6 | Grouping seam | Supported by RCP-94; execution/fan-out explicitly remain R6 |
+| CLM-9 | Held readiness presentation | Supported by RCP-97 and readiness tests |
+| CLM-10 | Focus capsule | Capsule behavior is supported by RCP-98, but the claim explicitly records that the literal active-workers-and-terminals clause is not met |
+
+Final grouping report: **2 unique verification contracts across 98 recorded executions**. The normal
+contract (`mise exec -- npm run verify`) has 97 executions and serves all 10 claims; one historical
+mistyped command remains a distinct contract. This closeout performed **5 identical executions** for
+5 NF-9 claims and 5 claim evaluations. R1 did not deduplicate execution or fan out a shared result.
+
+### Stop condition and No Managing the Manager verdict
+
+Protected completion was not called. Although the mechanical proof gates report coverage and current
+passing receipts, completing NF-9 would assert criterion 5 despite CLM-10's explicit admission that
+active workers and terminals do not exist. The authorized criterion-3 correction does not authorize
+weakening criterion 5, and implementing those runtimes would begin R2/R3.
+
+**No Managing the Manager verdict: PASS for implemented R1 behavior.** One `Continue.` produced useful
+work without recap, routine permission, proof-refresh requests, orientation-refresh requests, or NF-2
+drift. **NF-9 acceptance coverage remains FAIL** until criterion 5 is resolved by an owner-authorized
+criterion correction or by its correctly sequenced implementation; no completion claim is made here.
