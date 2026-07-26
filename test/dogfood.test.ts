@@ -17,17 +17,13 @@ test("repository loads its own dogfooded v4 canonical state", async () => {
   assert.equal(state.schemaVersion, 4);
   assert.equal(state.phase, "build");
   assert.ok(state.workItems.length >= 7);
-  // DEC-18 (ADR-0009) moved the active priority to the Project Steward operational loop, so focus
-  // moved from NF-2 to NF-9 (R1). This is a deliberate direction change under owner direction, not
-  // drift. NF-2 is still held and still owed its authenticated intake — asserted below, which is
-  // where that invariant belongs.
-  assert.equal(state.focusWorkItemId, "NF-9");
+  // R1 (NF-9) was completed through the protected transition. Canonical focus is empty and the next
+  // action points at R2 planning. NF-2 is still held and still owed its authenticated intake —
+  // asserted below, which is where that invariant belongs.
+  assert.equal(state.focusWorkItemId, null);
   assert.ok(state.nextActionRationale && state.nextActionRationale.length > 0);
   assert.ok(state.decisions.filter((d) => d.status === "accepted").length >= 6);
   assert.ok(state.risks.length >= 4);
-  // The focused item is neither completed nor cancelled.
-  const focus = state.workItems.find((w) => w.id === state.focusWorkItemId);
-  assert.ok(focus && focus.status !== "completed" && focus.status !== "cancelled");
 });
 
 test("the realignment is recorded in canonical state and the R-sequence is sequenced", async () => {
@@ -38,23 +34,24 @@ test("the realignment is recorded in canonical state and the R-sequence is seque
   assert.ok(dec18, "DEC-18 records the operational realignment");
   assert.equal(dec18.status, "accepted");
 
-  // R1..R7 exist as work items and form a dependency chain, so no later R-packet can be picked up
-  // before its predecessor. NF-9 (R1) is the only one that is startable.
+  // R1..R7 exist as work items and form a dependency chain. R1 (NF-9) is completed; R2..R7
+  // remain uncompleted, so no later R-packet can be picked up before its predecessor.
   const chain = ["NF-9", "NF-10", "NF-11", "NF-12", "NF-13", "NF-14", "NF-15"];
   for (const [i, id] of chain.entries()) {
     const item = state.workItems.find((w) => w.id === id);
     assert.ok(item, `${id} exists for R${i + 1}`);
-    assert.notEqual(item.status, "completed", `${id} is unbuilt; nothing here may claim otherwise`);
-    assert.ok(item.acceptanceCriteria.length > 0, `${id} states how it will be judged`);
     if (i === 0) {
+      assert.equal(item.status, "completed", "R1 is completed on this branch");
       assert.deepEqual(item.dependsOn, [], "R1 has no predecessor in the R-sequence");
     } else {
+      assert.notEqual(item.status, "completed", `${id} is unbuilt; nothing here may claim otherwise`);
       assert.deepEqual(item.dependsOn, [chain[i - 1]], `${id} depends on ${chain[i - 1]}`);
     }
+    assert.ok(item.acceptanceCriteria.length > 0, `${id} states how it will be judged`);
   }
 });
 
-test("dogfooded state stays honest: completed set is exactly NF-1; NF-2..NF-4 remain held", async () => {
+test("dogfooded state stays honest: completed set is exactly {NF-1, NF-9}; NF-2..NF-4 remain held", async () => {
   const state = await loadState(process.cwd());
   const completed = state.workItems
     .filter((w) => w.status === "completed")
@@ -62,13 +59,17 @@ test("dogfooded state stays honest: completed set is exactly NF-1; NF-2..NF-4 re
     .sort();
   assert.deepEqual(
     completed,
-    ["NF-1"],
-    "only NF-1 has satisfied every completion gate; NF-2..NF-4 remain held",
+    ["NF-1", "NF-9"],
+    "only NF-1 and NF-9 have satisfied every completion gate; NF-2..NF-4 remain held",
   );
 
   const nf1 = state.workItems.find((w) => w.id === "NF-1");
   assert.ok(nf1);
   assert.equal(nf1.status, "completed", "DEC-17 released NF-1; it must be marked completed");
+
+  const nf9 = state.workItems.find((w) => w.id === "NF-9");
+  assert.ok(nf9);
+  assert.equal(nf9.status, "completed", "NF-9 was completed through voila_complete_work_item");
 
   // NF-2 must NOT be completed: the authenticated Project Steward intake acceptance is still
   // pending, so its acceptance criteria have not actually been demonstrated.
