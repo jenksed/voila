@@ -23,8 +23,8 @@ says so; it is not claimed.
 | 14 | Doctor | PASS |
 | 15 | Full automated verification | PASS |
 | 16 | GitHub CI | PASS (run 30185912072) |
-| 17 | GitHub repository rename | PENDING — only after merge and green push-to-main CI |
-| 18 | Post-rename remote verification | PENDING — follows tier 17 |
+| 17 | GitHub repository rename | PASS |
+| 18 | Post-rename remote verification | PASS |
 
 Starting `origin/main`: `1678e0d1d6b55758f6c7222f3e6897a1ed0beaed`.
 
@@ -310,16 +310,67 @@ This tier's own commit lands after that run, so it triggers a further run on the
 result recorded above is the one that gated the merge decision, and the post-merge push-to-main run
 is recorded in tier 18.
 
-## Tier 17 — GitHub repository rename — PENDING
+## Tier 17 — GitHub repository rename
 
-`gh api repos/jenksed/voila` returned 404 before starting, so the destination name is free. The
-rename runs only after the code PR merges and push-to-main CI passes. Not claimed here.
+Sequenced strictly after the code merged and push-to-main CI passed:
 
-Note: `jenksed/newfang-nerve` is a separate, unrelated repository and is not affected.
+| Step | Result |
+| --- | --- |
+| Code PR merged with a **merge commit** (not squashed) | `62510d1` |
+| Push-to-main CI on the merge commit | run 30186092108, **success** |
+| Destination availability re-checked immediately before renaming | 404, free |
+| `gh api --method PATCH repos/jenksed/newfang -f name=voila` | `jenksed/voila` |
 
-## Tier 18 — Post-rename remote verification — PENDING
+```json
+{"full_name":"jenksed/voila","html_url":"https://github.com/jenksed/voila","name":"voila"}
+```
 
-Follows tier 17.
+`jenksed/newfang-nerve` is a separate, unrelated repository and was not affected.
+
+## Tier 18 — Post-rename remote verification
+
+| Check | Result |
+| --- | --- |
+| Repository opens at the new URL | `https://github.com/jenksed/voila`, public, default branch `main` |
+| Old URL redirects | `gh api repos/jenksed/newfang` resolves to `jenksed/voila` |
+| Actions remain registered | workflow `CI` (id 320474570), active |
+| Run history preserved | pre-rename runs still listed under the new name |
+| CI runs on the renamed repository | confirmed by the run triggered by this record's own commit |
+| Branch protection / settings intact | `main` was never protected (`404 Branch not protected`), so nothing was lost |
+| Open branches available | `main`, `refactor/rename-voila`, `chore/bootstrap-ci`, `feat/proof-engine`, `feat/intake-orientation`, `feat/project-operations` |
+| Current docs point at `jenksed/voila` | yes |
+| No active badge or URL points at `jenksed/newfang` | yes; old URLs survive only inside closed verification records |
+
+### Remote and worktree status
+
+`git remote set-url origin git@github.com:jenksed/voila.git` was run once in the primary checkout.
+All four linked worktrees share one repository config, so all four resolve the new origin, and a
+`git fetch origin` from a linked worktree succeeds:
+
+```text
+/Users/jenksed/Projects/newfang                      git@github.com:jenksed/voila.git
+/Users/jenksed/Projects/newfang-accept               git@github.com:jenksed/voila.git
+/Users/jenksed/Projects/newfang-delivery-inspector   git@github.com:jenksed/voila.git
+/Users/jenksed/Projects/newfang-proof                git@github.com:jenksed/voila.git
+```
+
+The local directory was **not** renamed. That is optional and explicitly not an acceptance gate, and
+renaming it while four worktrees are linked would break them.
+
+**`feat/delivery-inspector` (Packet 5A) exists only locally**, in
+`/Users/jenksed/Projects/newfang-delivery-inspector` at `7a9fc95`. It was never pushed, so it is
+absent from the remote. The rename did not cause this and did not affect the branch, but it means
+Packet 5A's work is currently unbacked by the remote.
+
+### Fresh-clone smoke test
+
+```bash
+git clone git@github.com:jenksed/voila.git voila-fresh
+cd voila-fresh && mise trust && mise exec -- npm ci --ignore-scripts && mise exec -- npm run verify
+```
+
+**443 tests, 443 passing, 0 failing.** The clone contains `.voila/` and no `.newfang/`. The temporary
+clone was deleted afterwards; no credentials or authenticated session data were retained in it.
 
 ## Decisions recorded during this packet
 
