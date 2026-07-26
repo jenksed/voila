@@ -21,6 +21,7 @@ import {
   runOrient,
 } from "../commands/intake.ts";
 import { runClaims, runComplete, runProof, runVerify } from "../commands/proof.ts";
+import { runCommitSuggestion, runDeliver } from "../commands/deliver.ts";
 import { assembleContext } from "../context/assemble.ts";
 import { formatDoctor, runDoctor, worstLevel } from "../commands/doctor.ts";
 import type { CommandResult } from "../commands/types.ts";
@@ -84,6 +85,8 @@ export const SUBCOMMANDS = [
   "proof",
   "verify",
   "complete",
+  "deliver",
+  "commit",
   "decisions",
   "assumptions",
   "risks",
@@ -131,6 +134,10 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
           return renderResult(ctx, await runVerify(ctx.cwd, tokens.slice(1)));
         case "complete":
           return renderResult(ctx, await runComplete(ctx.cwd, tokens[1]));
+        case "deliver":
+          return renderResult(ctx, await runDeliver(ctx.cwd));
+        case "commit":
+          return renderResult(ctx, await runCommitSuggestion(ctx.cwd));
         case "decisions":
           return renderResult(ctx, await runDecisions(ctx.cwd));
         case "assumptions":

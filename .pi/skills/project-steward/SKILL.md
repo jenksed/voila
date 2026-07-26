@@ -185,6 +185,29 @@ steps. If the honest position is "this is not done", say that.
 
 Use `voila_get_proof` before asserting anything is done — it shows which gates actually pass.
 
+## Preparing a delivery
+
+When work is ready to hand over, do not narrate a diff from memory. Call
+`voila_get_delivery_summary`. It returns what changed, every claim at its **real** evaluation status,
+open risks, limitations, discovered verification commands, and proposed commit boundaries.
+
+Report claim statuses exactly as returned. A `stale` claim is **not** support — it means the
+repository changed since its receipt was recorded. If a delivery has zero supported claims, say so
+plainly; a summary that shows only the good news is the failure the proof engine exists to prevent.
+
+Use `voila_suggest_commit` to propose commit boundaries instead of guessing them from a diff. Two
+things matter when you present them:
+
+- The generated subject describes change *shape*, not intent. **Rewrite it** to say what the change
+  actually does before suggesting the user commit it.
+- Never present a boundary whose readiness is `blocked` as safe to commit. Blocked means something
+  wants a human's eyes first.
+
+**Voila never commits.** It proposes; the user reviews and runs git. There is no tool that commits,
+stages, pushes, or opens a pull request, and discovered verification commands are listed but never
+executed. If you need evidence that a command passes, run it through `voila_run_verification`, which
+produces a receipt. A discovered command is a candidate, not evidence.
+
 ## Next action and focus
 
 The next justified action is yours to choose and to justify. Keep it current with
@@ -209,3 +232,5 @@ proceed.
 - Do not apply an intake without explicit user confirmation.
 - Do not write to `.voila/` directly.
 - Do not spawn subagents; there is no runtime delegation in this version.
+- Do not commit, stage, push, or open a pull request on the user's behalf; propose and let them act.
+- Do not present a `blocked` commit boundary, or a `stale` claim, as ready.
