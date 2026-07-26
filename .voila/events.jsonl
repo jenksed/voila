@@ -103,3 +103,12 @@
 {"type":"verification_recorded","id":"RCP-17","claimId":"CLM-3","result":"passed","revision":103,"ts":"2026-07-26T04:49:03.395Z"}
 {"type":"verification_recorded","id":"RCP-18","claimId":"CLM-4","result":"passed","revision":104,"ts":"2026-07-26T04:49:19.473Z"}
 {"type":"verification_recorded","id":"RCP-19","claimId":"CLM-5","result":"passed","revision":105,"ts":"2026-07-26T04:49:35.158Z"}
+{"type":"decision_recorded","id":"DEC-13","status":"accepted","revision":106,"ts":"2026-07-26T04:54:35.833Z"}
+{"type":"decision_updated","id":"DEC-1","revision":107,"ts":"2026-07-26T04:54:35.837Z"}
+{"type":"decision_recorded","id":"DEC-14","status":"accepted","revision":108,"ts":"2026-07-26T04:54:35.843Z"}
+{"type":"decision_updated","id":"DEC-2","revision":109,"ts":"2026-07-26T04:54:35.845Z"}
+{"type":"decision_recorded","id":"DEC-15","status":"accepted","revision":110,"ts":"2026-07-26T04:54:35.847Z"}
+{"type":"decision_updated","id":"DEC-3","revision":111,"ts":"2026-07-26T04:54:35.848Z"}
+{"type":"decision_recorded","id":"DEC-16","status":"accepted","revision":112,"ts":"2026-07-26T04:54:35.849Z"}
+{"type":"decision_updated","id":"DEC-7","revision":113,"ts":"2026-07-26T04:54:35.850Z"}
+{"type":"next_action_set","revision":114,"ts":"2026-07-26T04:55:03.969Z"}

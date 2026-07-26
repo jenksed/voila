@@ -269,3 +269,39 @@ test("no tracked path name carries the legacy or accented brand", () => {
     "a tracked file name still carries the old brand",
   );
 });
+
+test("accepted decisions do not present the old product name as current truth", async () => {
+  // The Steward Console renders accepted decisions in its "Project Truth" pane. A decision that
+  // still names NewFang or .newfang/ there is the dashboard asserting something untrue. Superseded
+  // decisions are exempt: they are preserved records, and superseding is how a decision is restated.
+  const state = JSON.parse(await readFile(join(ROOT, ".voila/project.json"), "utf8"));
+
+  // Two accepted decisions name the old brand on purpose.
+  const INTENTIONAL = new Set([
+    "DEC-11", // records the rename itself
+    "DEC-14", // states that a legacy .newfang/ tree is detected and migrated
+  ]);
+
+  const offenders: string[] = [];
+  for (const decision of state.decisions) {
+    if (decision.status !== "accepted") continue;
+    if (INTENTIONAL.has(decision.id)) continue;
+    const text = `${decision.title} ${decision.decision}`;
+    if (LEGACY_SPELLINGS.some((s) => text.includes(s))) offenders.push(decision.id);
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `these accepted decisions render the old brand as current truth: ${offenders.join(", ")}`,
+  );
+});
+
+test("open assumptions and risks do not present the old product name as current truth", async () => {
+  const state = JSON.parse(await readFile(join(ROOT, ".voila/project.json"), "utf8"));
+  const offenders: string[] = [];
+  for (const record of [...state.assumptions, ...state.risks]) {
+    if (record.status !== "open") continue;
+    if (LEGACY_SPELLINGS.some((s) => record.statement.includes(s))) offenders.push(record.id);
+  }
+  assert.deepEqual(offenders, [], "an open assumption or risk still names the old product");
+});

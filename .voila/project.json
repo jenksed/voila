@@ -4,12 +4,12 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Run an authenticated Project Steward intake in a real terminal (mise exec -- npm run pi): ingest a planning document end to end and accept it, then walk the Steward Console. That closes the two tiers NF-1 and NF-2 acceptance actually depend on.",
-  "nextActionRationale": "Every capability the self-hosting gate names is implemented and evidenced headlessly: 5 claims supported by 9 receipts at the current fingerprint, 573 tests passing. NF-1 through NF-4 were completed through the gate during the walk-through and then reverted, because their criteria depend on the interactive Steward Console and an authenticated Steward intake run, and no automated run can observe either. This environment has no TTY, so those tiers are the only work left before the backlog can honestly close.",
+  "nextAction": "Run an authenticated Project Steward intake in a real terminal: ingest a planning document end to end and accept it. That is the last tier NF-2 acceptance depends on.",
+  "nextActionRationale": "The Steward Console, status, doctor, and delivery summary are now attested in a real terminal, and the two defects that run exposed are fixed. What remains unobserved is an authenticated Steward intake classifying a real planning document — the automated suite exercises the intake machinery with test inputs only, which is exactly the gap DEC-12 records. Evidence goes stale on every commit while the fingerprint includes gitHead, so re-run verification after committing if you want current receipts.",
   "focusWorkItemId": "NF-2",
   "sequences": {
     "workItem": 9,
-    "decision": 13,
+    "decision": 17,
     "assumption": 4,
     "risk": 6,
     "intake": 9,
@@ -158,27 +158,30 @@
       "title": "Extensions-first architecture",
       "decision": "Ship NewFang as project-local Pi extensions first; package second; SDK/RPC held in reserve.",
       "rationale": "See ADR-0002.",
-      "status": "accepted",
+      "status": "superseded",
       "createdAt": "2026-07-25T02:00:04.861Z",
-      "updatedAt": "2026-07-25T02:00:04.861Z"
+      "updatedAt": "2026-07-26T04:54:35.836Z",
+      "supersededBy": "DEC-13"
     },
     {
       "id": "DEC-2",
       "title": "Canonical repository state in .newfang/",
       "decision": "project.json is authoritative; events.jsonl is append-only history; PROJECT_STATUS.md is generated.",
       "rationale": "See ADR-0003.",
-      "status": "accepted",
+      "status": "superseded",
       "createdAt": "2026-07-25T02:00:04.862Z",
-      "updatedAt": "2026-07-25T02:00:04.862Z"
+      "updatedAt": "2026-07-26T04:54:35.845Z",
+      "supersededBy": "DEC-14"
     },
     {
       "id": "DEC-3",
       "title": "Thin Pi adapter, modular src/",
       "decision": ".pi/extensions/newfang.ts is a thin adapter; domain/state/tools/ui live in src/ and are Pi-free.",
       "rationale": "See ADR-0007.",
-      "status": "accepted",
+      "status": "superseded",
       "createdAt": "2026-07-25T02:00:04.863Z",
-      "updatedAt": "2026-07-25T02:00:04.863Z"
+      "updatedAt": "2026-07-26T04:54:35.847Z",
+      "supersededBy": "DEC-15"
     },
     {
       "id": "DEC-4",
@@ -212,9 +215,10 @@
       "title": "The language model performs interpretation; NewFang owns preservation, schema...",
       "decision": "The language model performs interpretation; NewFang owns preservation, schemas, lifecycle, review, application, persistence, provenance, and resumability.",
       "rationale": "From intake INT-1 finding F2.",
-      "status": "accepted",
+      "status": "superseded",
       "createdAt": "2026-07-25T04:51:01.991Z",
-      "updatedAt": "2026-07-25T04:51:01.991Z"
+      "updatedAt": "2026-07-26T04:54:35.850Z",
+      "supersededBy": "DEC-16"
     },
     {
       "id": "DEC-8",
@@ -260,6 +264,42 @@
       "status": "accepted",
       "createdAt": "2026-07-26T04:19:24.535Z",
       "updatedAt": "2026-07-26T04:19:24.535Z"
+    },
+    {
+      "id": "DEC-13",
+      "title": "Extensions-first architecture",
+      "decision": "Ship Voila as project-local Pi extensions first; package second; SDK/RPC held in reserve. A global install is available via ~/.pi/agent/extensions/ without packaging.",
+      "rationale": "Restates DEC-1 in current terms. The decision is unchanged; the product is now named Voila, and a global-extension install path has since been demonstrated. Superseded rather than edited so the original record stays readable.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T04:54:35.831Z",
+      "updatedAt": "2026-07-26T04:54:35.831Z"
+    },
+    {
+      "id": "DEC-14",
+      "title": "Canonical repository state in .voila/",
+      "decision": "project.json is authoritative; events.jsonl is append-only history; PROJECT_STATUS.md is generated. Canonical state lives in .voila/; a legacy .newfang/ tree is detected and migrated explicitly, never operated on in place.",
+      "rationale": "Supersedes DEC-2, whose title named .newfang/. Packet 4.5 moved the canonical state directory, so the referent of that decision actually changed. The original is preserved.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T04:54:35.843Z",
+      "updatedAt": "2026-07-26T04:54:35.843Z"
+    },
+    {
+      "id": "DEC-15",
+      "title": "Thin Pi adapter, modular src/",
+      "decision": ".pi/extensions/voila.ts is a thin adapter; domain/state/tools/ui live in src/ and are Pi-free.",
+      "rationale": "Supersedes DEC-3, which named .pi/extensions/newfang.ts. Packet 4.5 renamed the adapter file, so the artifact that decision points at changed. The decision itself is unchanged.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T04:54:35.846Z",
+      "updatedAt": "2026-07-26T04:54:35.846Z"
+    },
+    {
+      "id": "DEC-16",
+      "title": "The language model interprets; Voila owns preservation and enforcement",
+      "decision": "The language model performs interpretation; Voila owns preservation, schemas, lifecycle, review, application, persistence, provenance, and resumability.",
+      "rationale": "Restates DEC-7 under the current product name. The division of labor is unchanged.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T04:54:35.849Z",
+      "updatedAt": "2026-07-26T04:54:35.849Z"
     }
   ],
   "assumptions": [
@@ -988,6 +1028,6 @@
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-3",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T04:49:35.157Z",
-  "revision": 105
+  "updatedAt": "2026-07-26T04:55:03.967Z",
+  "revision": 114
 }

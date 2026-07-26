@@ -149,8 +149,45 @@ Pasted output was the evidence; nothing below is inferred.
 | `/voila deliver` | **PASS** — full summary: change set, all 5 claims at real status, risks, limitations, discovered commands, next action |
 | Claim honesty in a live UI | **PASS** — `0 of 5 claim(s) currently supported`, every stale claim listed with its reason |
 
-Still owed, and still not claimed: `/voila home` (Steward Console panes), an end-to-end authenticated
-intake, `/voila commit` against a dirty tree, narrow-width resize, `/reload`, and clean exit.
+A second run added the Steward Console:
+
+| Item | Result |
+| --- | --- |
+| `/voila home` opens | **PASS** |
+| Header, next action, and focus render | **PASS** |
+| Tab row: Focus / Work / Proof / Project Truth | **PASS** |
+| Work pane counts | **PASS** — ready 1, in progress 1, blocked 0, backlog 6, open 8 |
+| Attention pane | **PASS** — stale claims, stale orientation, high-impact risk, each truncated to width |
+| Proof pane | **PASS** — `Claims 5 · supported 0 · stale 5`, plus the exact failing completion gate for NF-2 |
+| Project Truth pane | **PASS (rendered)** — but see the defect below |
+| Footer keybindings | **PASS** — `? help · j/k move · Enter detail · u intake · Tab view · r reload · q quit` |
+
+Still owed, and still not claimed: an end-to-end authenticated intake, `/voila commit` against a
+dirty tree, narrow-width resize, `/reload`, and clean exit.
+
+### Third defect: the dashboard asserted stale truth
+
+The Project Truth pane rendered:
+
+```text
+DEC-2  Canonical repository state in .newfang/
+```
+
+Four **accepted** decisions still named the old product or the old state directory — DEC-1, DEC-2,
+DEC-3, DEC-7 — and the console presents accepted decisions as current truth. The rename packet had
+deliberately left decisions untouched as dated records. That was defensible for an archive and wrong
+for a dashboard: the product was asserting a directory that no longer exists.
+
+Fixed through the supported transition rather than by editing records. DEC-13 through DEC-16 restate
+each decision in current terms, and DEC-1, DEC-2, DEC-3, and DEC-7 are now `superseded` with a
+`supersededBy` pointer. Nothing was erased; the originals remain in canonical state and readable.
+
+Two accepted decisions still name the old brand on purpose: DEC-11 records the rename itself, and
+DEC-14 states that a legacy `.newfang/` tree is detected and migrated. Both are correct.
+
+Two new guards hold the line: accepted decisions, and open assumptions and risks, may not carry the
+legacy brand outside that explicit exemption list. The wider rename guard could not catch this,
+because `.voila/project.json` is allowlisted wholesale for its quoted historical records.
 
 ### Two defects this run surfaced
 
