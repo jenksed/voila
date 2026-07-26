@@ -208,6 +208,8 @@ export interface VerificationReceiptRecord {
   finishedAt: string;
   /** Deterministic digest of the repository work state observed when the command ran. */
   repositoryFingerprint: string;
+  /** Algorithm that produced this fingerprint. v1 receipts have no such field. */
+  fingerprintAlgorithm?: "v1" | "v2";
   gitHead?: string;
   /** True when either captured stream was capped. Recorded honestly; never silently hidden. */
   outputTruncated: boolean;

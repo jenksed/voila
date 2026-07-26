@@ -26,22 +26,35 @@ test("repository loads its own dogfooded v4 canonical state", async () => {
   assert.ok(focus && focus.status !== "completed" && focus.status !== "cancelled");
 });
 
-test("dogfooded state stays honest: nothing is marked completed yet", async () => {
+test("dogfooded state stays honest: completed set is exactly NF-1; NF-2..NF-4 remain held", async () => {
   const state = await loadState(process.cwd());
-  assert.equal(
-    state.workItems.filter((w) => w.status === "completed").length,
-    0,
-    "no work item has honestly satisfied every completion gate yet",
+  const completed = state.workItems
+    .filter((w) => w.status === "completed")
+    .map((w) => w.id)
+    .sort();
+  assert.deepEqual(
+    completed,
+    ["NF-1"],
+    "only NF-1 has satisfied every completion gate; NF-2..NF-4 remain held",
   );
+
   const nf1 = state.workItems.find((w) => w.id === "NF-1");
   assert.ok(nf1);
-  assert.equal(nf1.status, "in_progress");
+  assert.equal(nf1.status, "completed", "DEC-17 released NF-1; it must be marked completed");
 
   // NF-2 must NOT be completed: the authenticated Project Steward intake acceptance is still
   // pending, so its acceptance criteria have not actually been demonstrated.
   const nf2 = state.workItems.find((w) => w.id === "NF-2");
   assert.ok(nf2);
   assert.notEqual(nf2.status, "completed", "authenticated intake acceptance is still pending");
+
+  // NF-3 and NF-4 remain uncompleted and dependency-blocked on the chain ahead of them.
+  for (const id of ["NF-3", "NF-4"]) {
+    const item = state.workItems.find((w) => w.id === id);
+    assert.ok(item, `${id} is on the backlog`);
+    assert.notEqual(item.status, "completed", `${id} cannot complete ahead of its dependency`);
+    assert.ok(item.dependsOn.length > 0, `${id} still has unmet dependencies on the chain`);
+  }
 });
 
 test("dogfooded proof state is real: a claim exists with a linked receipt artifact", async () => {

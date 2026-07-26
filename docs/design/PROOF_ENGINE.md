@@ -156,30 +156,54 @@ produces a valid `failed` receipt, and both the tool text and `/voila verify` sa
 
 ## Repository fingerprint
 
-A deterministic sha256 over a stable record of:
+**Algorithm: v2.** A deterministic sha256 over a sorted representation of the **effective working
+tree**, prefixed with the literal string `fingerprint-v2\n` so v1 and v2 inputs are disjoint:
 
-- git `HEAD` (empty string on an unborn branch),
-- the tracked working-tree diff vs HEAD (hashed, never stored),
-- the staged diff (hashed, never stored),
-- untracked, non-ignored repository files by **sorted** path plus content hash.
+- every tracked file currently present in the working tree, plus every untracked, non-ignored file,
+- each entry carrying a normalized mode (`regular` | `executable` | `symlink`) and a sha256 over
+  either the file content (streaming reads) or the symlink target bytes,
+- paths sorted and repository-relative; no absolute path, no staging state, no branch name, no
+  commit identity, no timestamp in the digest.
 
-Properties, each covered by a test against real temporary git repositories: deterministic when
-nothing changes; changes on HEAD movement, tracked modification, staged change, and untracked file
-add/modify/remove; unaffected by gitignored files or by file creation order; and **independent of the
-repository's absolute path** (a byte-identical copy at a different location yields the same digest).
+`gitHead` is reported on `RepositoryFingerprint` and persisted in receipt manifests as
+**non-authoritative diagnostic metadata** — present for human inspection, never used in the digest,
+never required for equality.
+
+Properties, each covered by a test against real temporary git repositories
+(`test/proof.fingerprint.test.ts`): deterministic when nothing changes; changes on tracked
+modification, addition, removal, rename, executable-bit change, and untracked file add/modify/remove;
+**unaffected by `git add`, `git reset`, or empty commits**; **unaffected by the repository's absolute
+path or current branch name** (a byte-identical copy on another branch or at a different location
+yields the same digest); unaffected by gitignored files; correctly represents symlink targets
+explicitly; and **creating a receipt does not invalidate its own fingerprint** (a property with a
+dedicated test).
 
 When git is unavailable, `repositoryFingerprint` fails clearly. Read-only surfaces use a best-effort
 variant that returns `null`, and `null` means *nothing can be current* — evidence reads `stale`, never
 optimistically `supported`.
 
+### Algorithm versioning and migration
+
+Every receipt manifest records `fingerprintAlgorithm` (the value of the algorithm that produced it).
+v2 is current; v1 is the diff-based predecessor that included `gitHead`, tracked diffs, and the staged
+diff. A v1 receipt carries no `fingerprintAlgorithm` field; the proof engine recognizes it as v1 by
+absence. Because the v1 and v2 digest inputs are structurally disjoint and the v2 input is prefixed
+`fingerprint-v2\n`, a v1 hex value cannot equal a v2 hex value without a sha256 collision, so a v1
+receipt is automatically `stale` against any v2 current without any code special-casing the algorithm.
+
+The fingerprint ADR (`docs/decisions/0008-fingerprint-v2-content-addressed.md`) records the design
+and the migration consequences: every v1 receipt becomes stale once on the first run that records a
+v2 receipt, and re-running `voila_run_verification` once per claim produces a fresh v2 receipt.
+
 ### The `.voila/` exclusion
 
-Everything under `.voila/` is excluded from the fingerprint. This is deliberate and is the reason
-**creating a receipt does not invalidate its own fingerprint** — a property with a dedicated test.
-Linking a receipt necessarily rewrites `project.json`, `events.jsonl`, the generated view, and the
-artifact itself; including them would make every receipt stale the instant it was created.
+Everything under `.voila/` (and the legacy state directory while it still exists, on the same
+grounds) is excluded from the fingerprint. This is deliberate and is the reason **creating a receipt
+does not invalidate its own fingerprint** — a property with a dedicated test. Linking a receipt
+necessarily rewrites `project.json`, `events.jsonl`, the generated view, and the artifact itself;
+including them would make every receipt stale the instant it was created.
 
-The tradeoff, stated plainly: **a change confined entirely to `.voila/` does not invalidate
+The tradeoff, stated plainly: **a change confined entirely to canonical state does not invalidate
 existing evidence.**
 
 ## Evidence evaluation (derived, never stored)

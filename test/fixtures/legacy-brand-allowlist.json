@@ -447,6 +447,27 @@
       "reason": "The rename guard. It must spell out every prohibited form in order to search for it.",
       "immutable": false,
       "removable": false
+    },
+    {
+      "path": ".voila/orientations/ORI-4/ORIENTATION.md",
+      "category": "generated-projection",
+      "reason": "The generated orientation truthfully references the intentionally retained NEWFANG_TO_VOILA migration document by its exact filename.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": ".voila/orientations/ORI-4/orientation.json",
+      "category": "generated-projection",
+      "reason": "The structured orientation truthfully references the intentionally retained NEWFANG_TO_VOILA migration document by its exact filename.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "docs/decisions/0008-fingerprint-v2-content-addressed.md",
+      "category": "legacy-migration-compatibility",
+      "reason": "ADR-0008 names the literal legacy .newfang/ state path because fingerprint compatibility explicitly excludes that directory.",
+      "immutable": false,
+      "removable": true
     }
   ]
 }

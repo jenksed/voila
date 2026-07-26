@@ -1,17 +1,23 @@
-// Repository fingerprinting against real temporary git repositories.
+// Repository fingerprinting (algorithm v2) against real temporary git repositories.
 //
-// The properties that matter: determinism when nothing changed, sensitivity to HEAD movement, tracked
-// modifications, staged changes, and untracked files; independence from the repository's absolute
-// location; and — critically — that creating a receipt does not invalidate its own fingerprint.
+// The properties that matter: determinism when nothing changed; sensitivity to effective working-tree
+// content; independence from staging state, branch name, commit identity, and absolute repository
+// path; correct handling of added, removed, renamed, executable, symlink, and untracked files;
+// exclusion of gitignored and state-directory files; and — critically — that creating a receipt does
+// not invalidate its own fingerprint.
+//
+// The algorithm is documented in ADR-0008 (docs/decisions/0008-fingerprint-v2-content-addressed.md)
+// and implemented in src/state/fingerprint.ts.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
+  CURRENT_FINGERPRINT_ALGORITHM,
   FingerprintUnavailableError,
   repositoryFingerprint,
   tryRepositoryFingerprint,
@@ -43,6 +49,17 @@ async function tempRepo(prefix = "voila-fp-"): Promise<string> {
   return root;
 }
 
+// --- Algorithm identification ---
+
+test("the current fingerprint algorithm is v2 and the interface reports it", async () => {
+  assert.equal(CURRENT_FINGERPRINT_ALGORITHM, "v2");
+  const root = await tempRepo();
+  const fp = await repositoryFingerprint(root);
+  assert.equal(fp.algorithm, "v2");
+  assert.match(fp.value, /^[a-f0-9]{64}$/);
+  assert.ok(fp.gitHead && fp.gitHead.length >= 7, "gitHead is reported as diagnostic metadata");
+});
+
 test("a non-git directory fails clearly instead of guessing", async () => {
   const root = await mkdtemp(join(tmpdir(), "voila-nogit-"));
   await assert.rejects(() => repositoryFingerprint(root), FingerprintUnavailableError);
@@ -51,6 +68,8 @@ test("a non-git directory fails clearly instead of guessing", async () => {
   assert.equal(await tryRepositoryFingerprint(root), null);
 });
 
+// --- Determinism ---
+
 test("the fingerprint is deterministic when nothing changes", async () => {
   const root = await tempRepo();
   const a = await repositoryFingerprint(root);
@@ -58,54 +77,264 @@ test("the fingerprint is deterministic when nothing changes", async () => {
   const c = await repositoryFingerprint(root);
   assert.equal(a.value, b.value);
   assert.equal(b.value, c.value);
-  assert.match(a.value, /^[a-f0-9]{64}$/);
-  assert.equal(a.dirty, false);
-  assert.equal(a.untrackedCount, 0);
-  assert.ok(a.gitHead && a.gitHead.length >= 7);
+  assert.equal(a.entryCount, b.entryCount);
 });
 
-test("HEAD movement changes the fingerprint", async () => {
+test("the digest depends only on sorted paths, not on enumeration order", async () => {
   const root = await tempRepo();
-  const before = await repositoryFingerprint(root);
-  await writeFile(join(root, "second.txt"), "second\n", "utf8");
-  git(root, ["add", "-A"]);
-  git(root, ["commit", "-q", "-m", "second"]);
-  const after = await repositoryFingerprint(root);
-  assert.notEqual(after.value, before.value, "a new commit is a new repository state");
-  assert.notEqual(after.gitHead, before.gitHead);
-  assert.equal(after.dirty, false);
+  await writeFile(join(root, "z-third.txt"), "z\n", "utf8");
+  await writeFile(join(root, "a-first.txt"), "a\n", "utf8");
+  await writeFile(join(root, "m-second.txt"), "m\n", "utf8");
+  const first = await repositoryFingerprint(root);
+
+  await rm(join(root, "z-third.txt"));
+  await rm(join(root, "a-first.txt"));
+  await rm(join(root, "m-second.txt"));
+  await writeFile(join(root, "a-first.txt"), "a\n", "utf8");
+  await writeFile(join(root, "m-second.txt"), "m\n", "utf8");
+  await writeFile(join(root, "z-third.txt"), "z\n", "utf8");
+  const second = await repositoryFingerprint(root);
+  assert.equal(second.value, first.value, "creation order does not change the digest");
 });
 
-test("a tracked working-tree modification changes the fingerprint, and reverting restores it", async () => {
+// --- Working-tree content sensitivity ---
+
+test("a tracked working-tree modification changes the fingerprint; restoring bytes restores it", async () => {
   const root = await tempRepo();
   const original = await repositoryFingerprint(root);
 
   await writeFile(join(root, "tracked.txt"), "modified\n", "utf8");
   const modified = await repositoryFingerprint(root);
   assert.notEqual(modified.value, original.value);
-  assert.equal(modified.dirty, true);
 
-  // Restoring the exact bytes restores the exact fingerprint.
   await writeFile(join(root, "tracked.txt"), "original\n", "utf8");
   const restored = await repositoryFingerprint(root);
   assert.equal(restored.value, original.value, "byte-identical content yields the same digest");
 });
 
-test("a staged change changes the fingerprint independently of the working tree", async () => {
+test("content changes invalidate evidence; identical content restores it", async () => {
   const root = await tempRepo();
+  await initState(root, { displayName: "fp-demo" });
+  await updateState(root, (cur) => {
+    let s = createWorkItem(
+      cur,
+      { kind: "outcome", title: "Verified thing", acceptanceCriteria: [CRITERION] },
+      "T",
+    );
+    s = createClaim(
+      s,
+      {
+        workItemId: "NF-1",
+        statement: "the suite passes",
+        confidence: "high",
+        coveredAcceptanceCriteria: [CRITERION],
+      },
+      "T",
+    );
+    return requireClaim(s, { workItemId: "NF-1", claimId: "CLM-1" }, "T");
+  });
+  await runVerification(root, {
+    claimId: "CLM-1",
+    executable: process.execPath,
+    args: ["-e", "process.exit(0)"],
+  });
+
+  const state = await loadState(root);
+  const pristine = await repositoryFingerprint(root);
+  assert.equal(evaluateClaim(state, findClaim(state, "CLM-1"), pristine.value).status, "supported");
+
+  await writeFile(join(root, "tracked.txt"), "changed by the developer\n", "utf8");
+  const dirty = await repositoryFingerprint(root);
+  assert.notEqual(dirty.value, pristine.value);
+  assert.equal(evaluateClaim(state, findClaim(state, "CLM-1"), dirty.value).status, "stale");
+
+  await writeFile(join(root, "tracked.txt"), "original\n", "utf8");
+  const restored = await repositoryFingerprint(root);
+  assert.equal(restored.value, pristine.value);
+  assert.equal(evaluateClaim(state, findClaim(state, "CLM-1"), restored.value).status, "supported");
+});
+
+// --- Staging and commit independence ---
+
+test("staging identical working-tree content does not change the fingerprint", async () => {
+  const root = await tempRepo();
+  const before = await repositoryFingerprint(root);
+
+  // Modify, stage, leave as staged — the digest must be identical because the working tree matches
+  // what we already had at `before`.
+  await writeFile(join(root, "tracked.txt"), "modified\n", "utf8");
+  git(root, ["add", "tracked.txt"]);
+  git(root, ["restore", "--staged", "--worktree", "tracked.txt"]);
+  await writeFile(join(root, "tracked.txt"), "original\n", "utf8");
+  const afterUnstage = await repositoryFingerprint(root);
+  assert.equal(afterUnstage.value, before.value, "unstaging restored identical tree content");
+
+  // Stage the original tree again; still identical.
+  git(root, ["add", "tracked.txt"]);
+  const afterReStage = await repositoryFingerprint(root);
+  assert.equal(afterReStage.value, before.value, "re-staging identical tree content");
+
+  // Reset the index so the working tree is clean; must still match.
+  git(root, ["reset", "-q", "HEAD", "tracked.txt"]);
+  const afterReset = await repositoryFingerprint(root);
+  assert.equal(afterReset.value, before.value, "index reset on identical tree content");
+});
+
+test("committing identical working-tree content does not change the fingerprint", async () => {
+  const root = await tempRepo();
+  const before = await repositoryFingerprint(root);
+
+  // Empty commit: HEAD moves, the working tree is byte-identical, and the digest must hold.
+  git(root, ["commit", "--allow-empty", "-q", "-m", "empty"]);
+  const afterEmptyCommit = await repositoryFingerprint(root);
+  assert.equal(
+    afterEmptyCommit.value,
+    before.value,
+    "HEAD movement without content change does not move the digest",
+  );
+  assert.notEqual(afterEmptyCommit.gitHead, before.gitHead);
+
+  // A commit that adds a NEW file: new content, digest moves.
+  await writeFile(join(root, "added.txt"), "added\n", "utf8");
+  git(root, ["add", "-A"]);
+  git(root, ["commit", "-q", "-m", "added"]);
+  const afterAddCommit = await repositoryFingerprint(root);
+  assert.notEqual(afterAddCommit.value, before.value);
+});
+
+test("a state-only commit under .voila/ does not change the fingerprint", async () => {
+  const root = await tempRepo();
+  await initState(root, { displayName: "fp-demo" });
   const original = await repositoryFingerprint(root);
 
-  await writeFile(join(root, "tracked.txt"), "staged\n", "utf8");
-  git(root, ["add", "tracked.txt"]);
-  const staged = await repositoryFingerprint(root);
-  assert.notEqual(staged.value, original.value);
-  assert.equal(staged.dirty, true);
+  // Stage a change inside .voila/ as if bookkeeping were tracked.
+  git(root, ["add", "-f", ".voila/project.json"]);
+  git(root, ["commit", "-q", "-m", "track voila state"]);
+  const afterCommit = await repositoryFingerprint(root);
+  assert.equal(
+    afterCommit.value,
+    original.value,
+    "committing identical content with a tracked .voila/ file does not move the digest",
+  );
 
-  // Unstaging while keeping the same worktree content is still a different state than pristine.
-  git(root, ["reset", "-q", "HEAD", "tracked.txt"]);
-  const unstaged = await repositoryFingerprint(root);
-  assert.notEqual(unstaged.value, original.value, "the modified worktree still differs");
-  assert.notEqual(unstaged.value, staged.value, "staged and unstaged are distinct states");
+  // Edit the now-tracked .voila/ file: still excluded.
+  await writeFile(join(root, ".voila", "project.json"), '{"schemaVersion":4,"displayName":"x"}\n');
+  const afterEdit = await repositoryFingerprint(root);
+  assert.equal(
+    afterEdit.value,
+    original.value,
+    "tracked .voila/ writes are excluded from the digest",
+  );
+});
+
+// --- Branch and location independence ---
+
+test("equivalent content on a different branch has the same fingerprint", async () => {
+  const root = await tempRepo();
+  // Add content on the default branch.
+  await writeFile(join(root, "feature.txt"), "feature\n", "utf8");
+  git(root, ["add", "-A"]);
+  git(root, ["commit", "-q", "-m", "add feature"]);
+  const onMain = await repositoryFingerprint(root);
+
+  // Move to a new branch and bring the same content back via cherry-pick-free path: just check out
+  // the same commit (HEAD) on a new branch.
+  git(root, ["checkout", "-q", "-b", "other-branch"]);
+  const onBranch = await repositoryFingerprint(root);
+  assert.equal(
+    onBranch.value,
+    onMain.value,
+    "the digest does not include the branch name; HEAD identity is diagnostic only",
+  );
+});
+
+test("equivalent content at a different absolute path has the same fingerprint", async () => {
+  const source = await tempRepo("voila-fp-src-");
+  await writeFile(join(source, "untracked.txt"), "same everywhere\n", "utf8");
+  const before = await repositoryFingerprint(source);
+
+  const parent = await mkdtemp(join(tmpdir(), "voila-fp-dst-"));
+  const destination = join(parent, "relocated-with-a-different-name");
+  await cp(source, destination, { recursive: true });
+
+  const after = await repositoryFingerprint(destination);
+  assert.equal(after.value, before.value, "no machine-specific absolute path enters the digest");
+});
+
+// --- File-type and mode representation ---
+
+test("executable mode is recorded; regular and executable files produce distinct digests", async () => {
+  const root = await tempRepo();
+  await writeFile(join(root, "tool.sh"), "#!/bin/sh\ntrue\n", "utf8");
+  git(root, ["add", "-A"]);
+  git(root, ["commit", "-q", "-m", "add tool"]);
+  const asText = await repositoryFingerprint(root);
+
+  // Make it executable. The content is unchanged.
+  await import("node:fs/promises").then((m) => m.chmod(join(root, "tool.sh"), 0o755));
+  const asExec = await repositoryFingerprint(root);
+  assert.notEqual(
+    asExec.value,
+    asText.value,
+    "the executable bit participates in the digest even when content is identical",
+  );
+
+  // Another file with different content but the same executable mode differs on content, not mode.
+  await writeFile(join(root, "tool.sh"), "#!/bin/sh\necho hi\n", "utf8");
+  const asExecDifferent = await repositoryFingerprint(root);
+  assert.notEqual(asExecDifferent.value, asExec.value);
+  assert.notEqual(asExecDifferent.value, asText.value);
+});
+
+test("a symlink target is represented explicitly and changes when the target changes", async () => {
+  const root = await tempRepo();
+  await writeFile(join(root, "target.txt"), "the target\n", "utf8");
+  await symlink(join(root, "target.txt"), join(root, "link.lnk"));
+  git(root, ["add", "-A"]);
+  git(root, ["commit", "-q", "-m", "add symlink"]);
+  const initial = await repositoryFingerprint(root);
+
+  // Repoint the symlink; target bytes differ, digest differs.
+  await rm(join(root, "link.lnk"));
+  await writeFile(join(root, "other.txt"), "another target\n", "utf8");
+  await symlink(join(root, "other.txt"), join(root, "link.lnk"));
+  const repointed = await repositoryFingerprint(root);
+  assert.notEqual(repointed.value, initial.value);
+
+  // Restore the original symlink target path; remove the repointing target file too, so the
+  // untracked set is identical to the initial snapshot.
+  await rm(join(root, "link.lnk"));
+  await rm(join(root, "other.txt"));
+  await symlink(join(root, "target.txt"), join(root, "link.lnk"));
+  const restored = await repositoryFingerprint(root);
+  assert.equal(restored.value, initial.value);
+});
+
+test("adding, removing, and renaming files each change the digest; renaming without content change produces a distinct digest", async () => {
+  const root = await tempRepo();
+  const baseline = await repositoryFingerprint(root);
+
+  // Add.
+  await writeFile(join(root, "added.txt"), "added\n", "utf8");
+  const added = await repositoryFingerprint(root);
+  assert.notEqual(added.value, baseline.value);
+
+  // Remove.
+  await rm(join(root, "added.txt"));
+  const removed = await repositoryFingerprint(root);
+  assert.equal(removed.value, baseline.value);
+
+  // Rename (add a file under one name, then rename it; both intermediate states must differ).
+  await writeFile(join(root, "before.txt"), "same content\n", "utf8");
+  const before = await repositoryFingerprint(root);
+  await rm(join(root, "before.txt"));
+  await writeFile(join(root, "after.txt"), "same content\n", "utf8");
+  const after = await repositoryFingerprint(root);
+  assert.notEqual(
+    after.value,
+    before.value,
+    "rename without content change still changes the digest",
+  );
 });
 
 test("an untracked repository file changes the fingerprint; gitignored files do not", async () => {
@@ -115,7 +344,6 @@ test("an untracked repository file changes the fingerprint; gitignored files do 
   await writeFile(join(root, "untracked.txt"), "new file\n", "utf8");
   const withUntracked = await repositoryFingerprint(root);
   assert.notEqual(withUntracked.value, original.value);
-  assert.equal(withUntracked.untrackedCount, 1);
 
   // Content of an untracked file matters, not just its presence.
   await writeFile(join(root, "untracked.txt"), "different content\n", "utf8");
@@ -123,7 +351,11 @@ test("an untracked repository file changes the fingerprint; gitignored files do 
   assert.notEqual(changedContent.value, withUntracked.value);
 
   await rm(join(root, "untracked.txt"));
-  assert.equal((await repositoryFingerprint(root)).value, original.value, "removal restores it");
+  assert.equal(
+    (await repositoryFingerprint(root)).value,
+    original.value,
+    "removal restores the digest",
+  );
 
   // Ignored paths are excluded via --exclude-standard.
   await mkdir(join(root, "ignored"), { recursive: true });
@@ -135,34 +367,7 @@ test("an untracked repository file changes the fingerprint; gitignored files do 
   );
 });
 
-test("untracked files are order-independent: the digest depends on sorted paths only", async () => {
-  const root = await tempRepo();
-  await writeFile(join(root, "b.txt"), "b\n", "utf8");
-  await writeFile(join(root, "a.txt"), "a\n", "utf8");
-  const first = await repositoryFingerprint(root);
-
-  // Recreate in the opposite creation order with identical content.
-  await rm(join(root, "a.txt"));
-  await rm(join(root, "b.txt"));
-  await writeFile(join(root, "a.txt"), "a\n", "utf8");
-  await writeFile(join(root, "b.txt"), "b\n", "utf8");
-  const second = await repositoryFingerprint(root);
-  assert.equal(second.value, first.value, "creation order does not change the digest");
-});
-
-test("the fingerprint does not depend on the repository's absolute path", async () => {
-  const source = await tempRepo("voila-fp-src-");
-  await writeFile(join(source, "untracked.txt"), "same everywhere\n", "utf8");
-  const before = await repositoryFingerprint(source);
-
-  // Copy the whole repository (including .git) to a different absolute location.
-  const parent = await mkdtemp(join(tmpdir(), "voila-fp-dst-"));
-  const destination = join(parent, "relocated-with-a-different-name");
-  await cp(source, destination, { recursive: true });
-
-  const after = await repositoryFingerprint(destination);
-  assert.equal(after.value, before.value, "no machine-specific absolute path enters the digest");
-});
+// --- Exclusion of state directories ---
 
 test("everything under .voila/ is excluded, so Voila bookkeeping cannot invalidate evidence", async () => {
   const root = await tempRepo();
@@ -181,8 +386,6 @@ test("everything under .voila/ is excluded, so Voila bookkeeping cannot invalida
   git(root, ["commit", "-q", "-m", "track voila state"]);
   await updateState(root, (cur) => ({ ...cur, health: "green" as const }));
   const afterTrackedChange = await repositoryFingerprint(root);
-  // HEAD moved, so the value differs from `original`; what matters is that further .voila writes
-  // do not move it again.
   const again = await repositoryFingerprint(root);
   assert.equal(again.value, afterTrackedChange.value, "tracked .voila diffs are excluded");
 });
@@ -217,9 +420,11 @@ test("creating a receipt does not invalidate its own fingerprint", async () => {
   });
   assert.equal(result.receipt.result, "passed");
   assert.equal(result.receipt.repositoryFingerprint, beforeRun.value);
+  assert.equal(result.receipt.fingerprintAlgorithm, "v2");
+  // The manifest carries the algorithm explicitly.
+  assert.equal(result.manifest.fingerprintAlgorithm, "v2");
 
-  // THE property: after writing the artifact and linking it canonically, the fingerprint is unchanged,
-  // so the receipt is immediately current evidence rather than instantly stale.
+  // THE property: after writing the artifact and linking it canonically, the fingerprint is unchanged.
   const afterRun = await repositoryFingerprint(root);
   assert.equal(afterRun.value, beforeRun.value, "the receipt did not invalidate itself");
 
@@ -227,64 +432,6 @@ test("creating a receipt does not invalidate its own fingerprint", async () => {
   const evaluation = evaluateClaim(state, findClaim(state, "CLM-1"), afterRun.value);
   assert.equal(evaluation.status, "supported", "the fresh receipt supports its claim");
   assert.equal(evaluation.currentReceiptId, result.receipt.id);
-});
-
-test("modifying a tracked file makes existing evidence stale; restoring it makes evidence current again", async () => {
-  const root = await tempRepo();
-  await initState(root, { displayName: "fp-demo" });
-  await updateState(root, (cur) => {
-    let s = createWorkItem(
-      cur,
-      { kind: "outcome", title: "Verified thing", acceptanceCriteria: [CRITERION] },
-      "T",
-    );
-    s = createClaim(
-      s,
-      {
-        workItemId: "NF-1",
-        statement: "the suite passes",
-        confidence: "high",
-        coveredAcceptanceCriteria: [CRITERION],
-      },
-      "T",
-    );
-    return requireClaim(s, { workItemId: "NF-1", claimId: "CLM-1" }, "T");
-  });
-  await runVerification(root, {
-    claimId: "CLM-1",
-    executable: process.execPath,
-    args: ["-e", "process.exit(0)"],
-  });
-
-  const state = await loadState(root);
-  const pristine = await repositoryFingerprint(root);
-  assert.equal(evaluateClaim(state, findClaim(state, "CLM-1"), pristine.value).status, "supported");
-
-  // Change a tracked file: the evidence no longer describes the current repository.
-  await writeFile(join(root, "tracked.txt"), "changed by the developer\n", "utf8");
-  const dirty = await repositoryFingerprint(root);
-  assert.notEqual(dirty.value, pristine.value);
-  const stale = evaluateClaim(state, findClaim(state, "CLM-1"), dirty.value);
-  assert.equal(stale.status, "stale");
-  assert.match(stale.reason, /repository changed/);
-
-  // Restore the exact bytes: the same receipt is current evidence again.
-  await writeFile(join(root, "tracked.txt"), "original\n", "utf8");
-  const restored = await repositoryFingerprint(root);
-  assert.equal(restored.value, pristine.value);
-  assert.equal(evaluateClaim(state, findClaim(state, "CLM-1"), restored.value).status, "supported");
-});
-
-test("the fingerprint record stores no raw diff and no absolute path", async () => {
-  const root = await tempRepo();
-  await writeFile(join(root, "tracked.txt"), "SECRET_DIFF_MARKER\n", "utf8");
-  await writeFile(join(root, "untracked.txt"), "ANOTHER_MARKER\n", "utf8");
-  const fingerprint = await repositoryFingerprint(root);
-  const serialized = JSON.stringify(fingerprint);
-  assert.equal(serialized.includes("SECRET_DIFF_MARKER"), false, "no diff content is retained");
-  assert.equal(serialized.includes("ANOTHER_MARKER"), false, "no file content is retained");
-  assert.equal(serialized.includes(tmpdir()), false, "no absolute path is retained");
-  assert.equal(serialized.includes(root), false);
 });
 
 test("legacy .newfang/ state is excluded from the fingerprint while it still exists", async () => {
@@ -331,7 +478,7 @@ test("migrating .newfang/ to .voila/ does not change the repository fingerprint"
   );
 });
 
-test("excluding both state directories does not weaken ordinary source detection", async () => {
+test("excluded state directories do not weaken ordinary source detection", async () => {
   const root = await tempRepo();
   await mkdir(join(root, ".newfang"), { recursive: true });
   await writeFile(join(root, ".newfang", "project.json"), '{"schemaVersion":4}\n', "utf8");
@@ -347,15 +494,169 @@ test("excluding both state directories does not weaken ordinary source detection
   await writeFile(join(root, "tracked.txt"), "modified\n", "utf8");
   const modified = await repositoryFingerprint(root);
   assert.notEqual(modified.value, untracked.value, "tracked modification still detected");
-  assert.equal(modified.dirty, true);
-
-  // Staged change.
-  git(root, ["add", "tracked.txt"]);
-  const staged = await repositoryFingerprint(root);
-  assert.notEqual(staged.value, modified.value, "staged change still detected");
 
   // A file named like the state directories but NOT inside them is still detected.
   await writeFile(join(root, "voila-notes.md"), "notes\n", "utf8");
   const sibling = await repositoryFingerprint(root);
-  assert.notEqual(sibling.value, staged.value, "a similarly named file is not excluded");
+  assert.notEqual(sibling.value, modified.value, "a similarly named file is not excluded");
+});
+
+// --- No secret leak ---
+
+test("the fingerprint record stores no raw content and no absolute path", async () => {
+  const root = await tempRepo();
+  await writeFile(join(root, "tracked.txt"), "SECRET_DIFF_MARKER\n", "utf8");
+  await writeFile(join(root, "untracked.txt"), "ANOTHER_MARKER\n", "utf8");
+  const fingerprint = await repositoryFingerprint(root);
+  const serialized = JSON.stringify(fingerprint);
+  assert.equal(serialized.includes("SECRET_DIFF_MARKER"), false, "no file content is retained");
+  assert.equal(serialized.includes("ANOTHER_MARKER"), false, "no file content is retained");
+  assert.equal(serialized.includes(tmpdir()), false, "no absolute path is retained");
+  assert.equal(serialized.includes(root), false);
+
+  // The hex digest itself is the only persisted representation.
+  assert.match(fingerprint.value, /^[a-f0-9]{64}$/);
+});
+
+// --- v1 compatibility: v1 receipts are immediately stale against a v2 current ---
+
+test("a v1-format receipt is stale against a v2 current fingerprint without rewriting history", async () => {
+  // Set up a v2 receipt against a v2 current, so the algorithm tag is observable.
+  const v2Root = await tempRepo("voila-v2-");
+  await initState(v2Root, { displayName: "fp-v2" });
+  await updateState(v2Root, (cur) => {
+    let s = createWorkItem(
+      cur,
+      { kind: "outcome", title: "Verified thing", acceptanceCriteria: [CRITERION] },
+      "T",
+    );
+    s = createClaim(
+      s,
+      {
+        workItemId: "NF-1",
+        statement: "the suite passes",
+        confidence: "high",
+        coveredAcceptanceCriteria: [CRITERION],
+      },
+      "T",
+    );
+    return requireClaim(s, { workItemId: "NF-1", claimId: "CLM-1" }, "T");
+  });
+  const v2Run = await runVerification(v2Root, {
+    claimId: "CLM-1",
+    executable: process.execPath,
+    args: ["-e", "process.exit(0)"],
+  });
+  const v2 = await repositoryFingerprint(v2Root);
+  assert.equal(v2Run.receipt.fingerprintAlgorithm, "v2");
+  const v2State = await loadState(v2Root);
+  assert.equal(
+    evaluateClaim(v2State, findClaim(v2State, "CLM-1"), v2.value).status,
+    "supported",
+    "a v2 receipt is supported against a v2 current",
+  );
+
+  // Now a SEPARATE temp repo carries only a synthetic v1 receipt, so the proof engine sees a v1-only
+  // claim evaluated against a v2 current — no v2 receipt to mask it.
+  const v1Root = await tempRepo("voila-v1-");
+  await initState(v1Root, { displayName: "fp-v1" });
+  await updateState(v1Root, (cur) => {
+    let s = createWorkItem(
+      cur,
+      { kind: "outcome", title: "Verified thing", acceptanceCriteria: [CRITERION] },
+      "T",
+    );
+    s = createClaim(
+      s,
+      {
+        workItemId: "NF-1",
+        statement: "the suite passes",
+        confidence: "high",
+        coveredAcceptanceCriteria: [CRITERION],
+      },
+      "T",
+    );
+    return requireClaim(s, { workItemId: "NF-1", claimId: "CLM-1" }, "T");
+  });
+
+  // Synthesize a v1 receipt: a `VerificationReceiptRecord` and matching `manifest.json` written by
+  // hand, with no `fingerprintAlgorithm` field. The hex is a plausible v1 digest that cannot collide
+  // with any real v2 value (different input shape and prefix).
+  const { statePaths } = await import("../src/state/paths.ts");
+  const v1ReceiptId = "RCP-1";
+  const dir = join(v1Root, statePaths(v1Root).receiptsDir, v1ReceiptId);
+  await mkdir(dir, { recursive: true });
+  const v1Hex = "0".repeat(64);
+  const manifest = {
+    receiptId: v1ReceiptId,
+    claimId: "CLM-1",
+    result: "passed",
+    executable: process.execPath,
+    args: ["-e", "process.exit(0)"],
+    cwdRef: ".",
+    exitCode: 0,
+    signal: null,
+    startedAt: new Date().toISOString(),
+    finishedAt: new Date().toISOString(),
+    durationMs: 0,
+    timeoutMs: 1000,
+    repositoryFingerprint: v1Hex,
+    gitHead: null,
+    stdoutSha256: "0".repeat(64),
+    stderrSha256: "0".repeat(64),
+    stdoutTruncated: false,
+    stderrTruncated: false,
+    outputTruncated: false,
+    capturedEnvironment: "none",
+    pathsNormalized: "repository root -> <repo>, home directory -> ~",
+  };
+  await writeFile(join(dir, "manifest.json"), JSON.stringify(manifest, null, 2), "utf8");
+  await writeFile(join(dir, "stdout.txt"), "", "utf8");
+  await writeFile(join(dir, "stderr.txt"), "", "utf8");
+
+  // Link the synthetic receipt through the canonical store. The counter is at 0, so RCP-1 is the
+  // next allocation.
+  const { updateState: writeState, loadState: ls } = await import("../src/state/store.ts");
+  const { linkReceipt } = await import("../src/domain/proof.ts");
+  await writeState(
+    v1Root,
+    (cur) =>
+      linkReceipt(
+        cur,
+        {
+          id: v1ReceiptId,
+          claimId: "CLM-1",
+          result: "passed",
+          artifactRef: `receipts/${v1ReceiptId}`,
+          executable: process.execPath,
+          args: ["-e", "process.exit(0)"],
+          cwdRef: ".",
+          exitCode: 0,
+          startedAt: new Date().toISOString(),
+          finishedAt: new Date().toISOString(),
+          repositoryFingerprint: v1Hex,
+          outputTruncated: false,
+        },
+        "T",
+      ),
+    { type: "verification_recorded", id: v1ReceiptId, claimId: "CLM-1", result: "passed" },
+  );
+
+  // The v2 current in the v1 repo is real, the v1 hex is recognizably v1 (no algorithm field), and
+  // the proof engine reports the claim as stale because no receipt matches the v2 current value.
+  const v2OnV1 = await repositoryFingerprint(v1Root);
+  assert.notEqual(v1Hex, v2OnV1.value, "the synthetic v1 value is not a v2 digest");
+  const state = await ls(v1Root);
+  const v1Receipt = state.receipts.find((r) => r.id === v1ReceiptId);
+  assert.ok(v1Receipt);
+  assert.equal(
+    v1Receipt.fingerprintAlgorithm,
+    undefined,
+    "the synthetic receipt has no algorithm field",
+  );
+  assert.equal(
+    evaluateClaim(state, findClaim(state, "CLM-1"), v2OnV1.value).status,
+    "stale",
+    "a v1 receipt is stale against a v2 current without any code special-casing the algorithm",
+  );
 });

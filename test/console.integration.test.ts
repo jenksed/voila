@@ -50,6 +50,8 @@ function harness(cwd: string, opts: { withCustom: boolean; mode?: string }) {
     },
   };
 
+  // Resolves when the TUI factory has been invoked. Lets tests wait deterministically for the
+  // console to be mounted instead of guessing with setTimeout.
   const ctx: FakeCtx = {
     cwd,
     ...(opts.mode ? { mode: opts.mode } : {}),
@@ -135,8 +137,13 @@ test("/voila home opens the custom component and closing returns control", async
   (voilaExtension as unknown as (pi: unknown) => void)(h.host);
 
   const pending = h.commands.get("voila")!.handler("home", h.ctx);
-  // Wait for the factory to run.
-  await new Promise((r) => setTimeout(r, 20));
+  // Wait deterministically for the TUI factory to mount the component. The factory runs
+  // synchronously inside `custom()`, but only after buildModelForRoot's I/O resolves. Polling the
+  // shared component reference is bounded and removes the 20ms sleep that was the flake's surface.
+  const deadline = Date.now() + 5000;
+  while (!h.getComponent() && Date.now() < deadline) {
+    await new Promise((r) => setImmediate(r));
+  }
   const component = h.getComponent();
   assert.ok(component, "custom component was created");
 

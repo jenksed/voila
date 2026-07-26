@@ -1,0 +1,89 @@
+{
+  "intakeStyleVersion": 1,
+  "purpose": "Voila is a personal development operating system built on the Pi coding-agent harness; it preserves planning sources, holds durable project truth, requires evidence before completion, and proposes a delivery boundary a human approves. This session is a high-rigor attempt to drive NF-1..NF-4 through the protected completion transition with refreshed evidence.",
+  "instructionFiles": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "39a0aa054c49f3b37fb9a6f5d9f61ffa0b284d08f5a0fda9842490dda0db379e",
+      "note": "Harness-neutral operating instructions; takes precedence over CLAUDE.md."
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "19889c7cf4ec1162b41be9e4fc6aaf4dabb42abf9cb3c2138ada6c18e26dedc0",
+      "note": "Claude-specific refinements; defers to AGENTS.md on conflict."
+    },
+    {
+      "path": "README.md",
+      "sha256": "d2d2ab52a560a9789c717858b081a752c2157603216864eca5e9f43b24523a57",
+      "note": "Project boundary, status, and document map. SHA differs from ORI-3 (which recorded 048240f7...); staleness was the trigger for this refresh."
+    }
+  ],
+  "keyDocuments": [
+    "docs/plans/MVP_IMPLEMENTATION_PLAN.md",
+    "docs/design/PROOF_ENGINE.md",
+    "docs/design/DELIVERY_ENGINE.md",
+    "docs/design/DELIVERY_INSPECTOR.md",
+    "docs/design/PLANNING_INTAKE.md",
+    "docs/migrations/NEWFANG_TO_VOILA.md",
+    "docs/verification/PHASE_7_SELF_HOSTING_GATE.md",
+    "docs/HANDOFF.md",
+    "docs/project/PROJECT_LEDGER.md"
+  ],
+  "implementationAreas": [
+    "src/domain — pure project truth, proof, schema migrations",
+    "src/state — canonical store, receipts, intake, fingerprint, legacy migration",
+    "src/delivery-inspector — read-only observation of the working tree",
+    "src/delivery — delivery summary and commit suggestion (Phase 6)",
+    "src/tools — 30 model-callable voila_* tools",
+    "src/ui/steward-console — keyboard-first TUI",
+    ".pi/extensions/voila.ts — the single Pi boundary",
+    ".pi/skills/project-steward — the Steward skill Pi loads"
+  ],
+  "commands": [
+    {
+      "command": "mise exec -- npm run verify",
+      "basis": "declared_in_documentation",
+      "evidenceNote": "Complete automated gate: tsc --noEmit, prettier --check, node --test. Used in receipts RCP-1..RCP-28."
+    },
+    {
+      "command": "mise exec -- npm run pi",
+      "basis": "declared_in_documentation",
+      "evidenceNote": "Launches Pi with Voila loaded; requires a real TTY. Cannot be observed in this agent session (process.stdin.isTTY is undefined)."
+    },
+    {
+      "command": "git rev-parse HEAD",
+      "basis": "observed_in_session",
+      "observedResult": "passed",
+      "evidenceNote": "HEAD = b64fe162. Observed via git rev-parse HEAD."
+    }
+  ],
+  "relevantWork": [
+    "NF-1 in_progress — Complete the minimal project-operations layer (claims refreshed; DEC-12 partial-release consideration)",
+    "NF-2 ready — Build planning-document intake and repository orientation (held by DEC-12: authenticated intake not observed)",
+    "NF-3 backlog — Build claims, receipts, and completion gates (depends on NF-2)",
+    "NF-4 backlog — Add delivery behavior: commit suggestions and delivery summary (depends on NF-3)"
+  ],
+  "risks": [
+    "Fingerprint design (§5B in HANDOFF): includes gitHead, so every commit stales all receipts until a content-addressed fingerprint is approved. Needs owner sign-off; not implementable in this session.",
+    "DEC-12 policy holds NF-1..NF-4; the gate does not enforce it. Mechanical completion is possible for NF-1 once evidence is refreshed; the steward judgment is whether to override DEC-12."
+  ],
+  "unknowns": [
+    "Whether the owner considers the partial Steward Console attestation (per PHASE_7_SELF_HOSTING_GATE.md and HANDOFF §5A) sufficient to release DEC-12 for NF-1 specifically.",
+    "Whether the owner wants the fingerprint design changed before any further commits."
+  ],
+  "observedAt": "2026-07-26T05:16:17.657Z",
+  "provenance": [
+    "AGENTS.md read in full",
+    ".voila/briefs/PROJECT_BRIEF.md (via voila_get_project_context)",
+    "docs/HANDOFF.md read in full",
+    "docs/verification/PHASE_7_SELF_HOSTING_GATE.md read",
+    ".voila/project.json read (workItems, decisions, sequences)",
+    ".voila/receipts/RCP-1 and RCP-28 manifests inspected for fingerprint/gitHead comparison",
+    ".voila/orientations/ORI-3/orientation.json read for prior provenance",
+    "src/state/fingerprint.ts read to confirm fingerprint inputs"
+  ],
+  "branch": "main",
+  "head": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+  "dirty": true,
+  "dirtySummary": "Uncommitted modifications under .voila/ from this session's voila_set_focus and voila_set_next_action (project.json, events.jsonl, generated views, brief). Excluded from fingerprint."
+}
