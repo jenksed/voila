@@ -31,7 +31,8 @@ import { join, resolve } from "node:path";
 import { receiptPaths, statePaths } from "./paths.ts";
 import { loadState, updateState } from "./store.ts";
 import { VoilaStateError } from "./errors.ts";
-import { repositoryFingerprint } from "./fingerprint.ts";
+import { CURRENT_FINGERPRINT_ALGORITHM, repositoryFingerprint } from "./fingerprint.ts";
+import type { FingerprintAlgorithm } from "./fingerprint.ts";
 import { resolveRepoRelativeDir, sha256 } from "./source.ts";
 import { allocateId } from "../domain/ids.ts";
 import { ProjectOperationError } from "../domain/errors.ts";
@@ -138,6 +139,9 @@ export interface ReceiptManifest {
   durationMs: number;
   timeoutMs: number;
   repositoryFingerprint: string;
+  /** Algorithm that produced this fingerprint. v1 receipts have no such field; the proof engine
+   * recognizes them as v1 by absence. */
+  fingerprintAlgorithm?: FingerprintAlgorithm;
   gitHead: string | null;
   stdoutSha256: string;
   stderrSha256: string;
@@ -377,6 +381,7 @@ export async function runVerification(
     durationMs: outcome.durationMs,
     timeoutMs,
     repositoryFingerprint: fingerprint.value,
+    fingerprintAlgorithm: fingerprint.algorithm,
     gitHead: fingerprint.gitHead ?? null,
     stdoutSha256: sha256(outcome.stdout.text),
     stderrSha256: sha256(outcome.stderr.text),
@@ -418,6 +423,7 @@ export async function runVerification(
     startedAt: outcome.startedAt,
     finishedAt: outcome.finishedAt,
     repositoryFingerprint: fingerprint.value,
+    fingerprintAlgorithm: fingerprint.algorithm,
     ...(fingerprint.gitHead ? { gitHead: fingerprint.gitHead } : {}),
     outputTruncated: manifest.outputTruncated,
   };
