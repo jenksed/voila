@@ -27,7 +27,7 @@ suite is never mistaken for an interactive or authenticated check.
 | 5. Failing receipt                            | **PASS**    | honest `failed` receipt (exit 3) in a bounded fixture repository                |
 | 6. Stale-evidence demonstration               | **PASS**    | performed on this repository; fingerprint returns exactly                       |
 | 7. Protected-completion fixture               | **PASS**    | rejection preserves canonical bytes; success is fully gated                     |
-| 8. Interactive Proof view (TUI)               | **PARTIAL** | D5, D6, D7 found and fixed; awaits a clean re-attestation pass                  |
+| 8. Interactive Proof view (TUI)               | **PASS**    | human-attested on `a9c9049` after D5, D6 and D7 were found and fixed            |
 | 9. Authenticated model use                    | **PENDING** | requires `/login`; the agent must not authenticate                              |
 | 10. GitHub CI                                 | **PASS**    | run 30177880494 on PR #4 — `verify` job green                                   |
 | 11. Doctor                                    | **PASS**    | 22 PASS, 2 WARN (both honest), 0 FAIL; no Packet 3 check removed                |
@@ -46,31 +46,31 @@ values were cross-checked against the domain, so what renders is accurate.
 
 Tier 9 (authenticated model use) remains **not claimed**. It is the same human gate outstanding
 since Packet 2.5, is not a Packet 4R acceptance gate, and requires credentials Claude must not
-handle.
+handle. Note that D5 means the Project Steward skill was **never actually loaded** in any prior
+packet, so tier 9 has never exercised it.
 
-**Sixteen of seventeen acceptance gates are met. Gate 14 is not**: D5 and D6 are both fixed and
-machine-verified, but the interactive tier is human-attested by definition and D6's fix has not been
-re-attested in Joshua's terminal. Gate 17 (merge) is deliberately not taken.
+**All seventeen Packet 4R acceptance gates are met.** The interactive tier found three real defects
+(D5, D6, D7), all fixed, and was re-attested clean by Joshua on `a9c9049`.
 
-| #   | Gate                                                  | Result                                                                         |
-| --- | ----------------------------------------------------- | ------------------------------------------------------------------------------ |
-| 1   | Packet 3 closure history intact                       | PASS — 36/36 artifacts and 48 events byte-identical                            |
-| 2   | INT-8 revision 3 remains accepted                     | PASS — canonical and `reviews.jsonl`, before and after migration               |
-| 3   | D2 and D3 remain fixed                                | PASS                                                                           |
-| 4   | D1 and D4 remain open and unchanged                   | PASS                                                                           |
-| 5   | Schema v3 migrates correctly to v4                    | PASS — 7 tests over the real integrated v3 state                               |
-| 6   | Claims cover exact acceptance criteria                | PASS — exact-match enforced; doctor agrees                                     |
-| 7   | Structured verification creates immutable receipts    | PASS — RCP-3, RCP-4                                                            |
-| 8   | Passing, failing, timeout, stale represented honestly | PASS                                                                           |
-| 9   | Receipt creation does not invalidate itself           | PASS — same fingerprint across RCP-3/RCP-4                                     |
-| 10  | Protected completion cannot be bypassed               | PASS — 11 gates; generic paths refuse                                          |
-| 11  | Rejected completion preserves canonical bytes         | PASS — byte-identical                                                          |
-| 12  | Existing intake and orientation workflows still pass  | PASS — all Packet 3 suites, unchanged counts                                   |
-| 13  | Complete automated gate passes                        | PASS — 387/387                                                                 |
-| 14  | Interactive Proof view passes                         | **NOT MET** — D6 fixed and PTY-verified; needs Joshua to re-attest at ≤19 cols |
-| 15  | Doctor passes                                         | PASS — 22 PASS, 2 honest WARN, 0 FAIL                                          |
-| 16  | GitHub CI passes                                      | PASS                                                                           |
-| 17  | PR merged with a merge commit                         | **NOT TAKEN** — blocked on gate 14                                             |
+| #   | Gate                                                  | Result                                                           |
+| --- | ----------------------------------------------------- | ---------------------------------------------------------------- |
+| 1   | Packet 3 closure history intact                       | PASS — 36/36 artifacts and 48 events byte-identical              |
+| 2   | INT-8 revision 3 remains accepted                     | PASS — canonical and `reviews.jsonl`, before and after migration |
+| 3   | D2 and D3 remain fixed                                | PASS                                                             |
+| 4   | D1 and D4 remain open and unchanged                   | PASS                                                             |
+| 5   | Schema v3 migrates correctly to v4                    | PASS — 7 tests over the real integrated v3 state                 |
+| 6   | Claims cover exact acceptance criteria                | PASS — exact-match enforced; doctor agrees                       |
+| 7   | Structured verification creates immutable receipts    | PASS — RCP-3, RCP-4                                              |
+| 8   | Passing, failing, timeout, stale represented honestly | PASS                                                             |
+| 9   | Receipt creation does not invalidate itself           | PASS — same fingerprint across RCP-3/RCP-4                       |
+| 10  | Protected completion cannot be bypassed               | PASS — 11 gates; generic paths refuse                            |
+| 11  | Rejected completion preserves canonical bytes         | PASS — byte-identical                                            |
+| 12  | Existing intake and orientation workflows still pass  | PASS — all Packet 3 suites, unchanged counts                     |
+| 13  | Complete automated gate passes                        | PASS — 387/387                                                   |
+| 14  | Interactive Proof view passes                         | PASS — re-attested on `a9c9049` after three defects were fixed   |
+| 15  | Doctor passes                                         | PASS — 22 PASS, 2 honest WARN, 0 FAIL                            |
+| 16  | GitHub CI passes                                      | PASS                                                             |
+| 17  | PR merged with a merge commit                         | **NOT TAKEN** — blocked on gate 14                               |
 
 ## Tier 0 — Rebase and reconciliation
 
@@ -388,7 +388,7 @@ gate is evaluated. A rejection reports **all** failing gates, not just the first
 Completed work is **never** silently reverted; `/newfang doctor` reports a completed item whose
 evidence no longer revalidates as a WARNING rather than mutating it.
 
-## Tier 8 — Interactive Proof view — **PARTIAL** (human-attested)
+## Tier 8 — Interactive Proof view — **PASS** (human-attested)
 
 Run by Joshua in a real terminal. Claude did not observe the TUI (`process.stdin.isTTY === false`;
 `/newfang home` correctly refuses with "needs an interactive terminal"), so this tier rests entirely
@@ -448,6 +448,25 @@ Consequence worth stating plainly: for every packet before this one, the "proof-
 Steward context" was only proof-aware in the injected context and tool descriptions — the **skill
 file itself was never loaded by Pi**. Tier 9 (authenticated model use) has therefore never exercised
 the skill, and remains unclaimed.
+
+### Final interactive attestation — PASS
+
+Joshua re-ran the console on `a9c9049` and attested it clean: the tab row shows the view names at the
+20-column floor rather than a bare ellipsis, dropping below the floor shows the width notice instead
+of wrapped output, and widening restores the console.
+
+**What the interactive tier actually bought.** Three real defects, none of which any automated tier
+could have caught, and all three of which shipped in earlier packets:
+
+| Defect | Symptom                                     | Why the suite missed it                                                        |
+| ------ | ------------------------------------------- | ------------------------------------------------------------------------------ |
+| **D5** | The Project Steward skill never loaded      | Nothing asserted that Pi can parse the repo's own skill files                  |
+| **D6** | Console rendered wider than the terminal    | No test below 60 columns; the bug needed a _resize_, not a narrow start        |
+| **D7** | Tab row collapsed to `…` under real styling | Every console test uses `plainStyler`, so style-then-size mistakes cannot fail |
+
+Each fix carries a regression test that fails when the fix is reverted, verified individually.
+D7's test closes the widest gap: rendering is now asserted through an ANSI-injecting styler against
+ANSI-stripped width.
 
 ### D7 — the tab row collapsed to an ellipsis under real styling (found by Joshua, fixed)
 
@@ -538,16 +557,16 @@ the documented by-design consequence of `HEAD` participating in the fingerprint,
 Joshua confirmed the remaining eight items in a real terminal
 (`mise exec -- npm run pi`, then `/newfang home`):
 
-| Item                                                                                  | Result                                                       |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `j`/`k` move the selection across claims, then receipts, then the completion-gate row | **PASS**                                                     |
-| `Enter` opens claim detail (coverage + limitations) and closes with `Esc`             | **PASS**                                                     |
-| `Enter` on a receipt shows metadata and an artifact pointer only — no stdout dump     | **PASS**                                                     |
-| `Enter` on the completion-gate row lists every failing gate readably                  | **PASS**                                                     |
-| Below 80 columns nothing overflows or is clipped mid-word                             | **FAIL** → defect **D6**, now fixed; awaiting re-attestation |
-| Packet 3 intake review UI: `u` opens the Understanding Check; `a` / `v` / `x` offered | **PASS**                                                     |
-| `?` help lists the four-view order and the `a` / `v` / `x` keys; `r` reloads          | **PASS**                                                     |
-| `q` exits cleanly                                                                     | **PASS**                                                     |
+| Item                                                                                  | Result                                                        |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `j`/`k` move the selection across claims, then receipts, then the completion-gate row | **PASS**                                                      |
+| `Enter` opens claim detail (coverage + limitations) and closes with `Esc`             | **PASS**                                                      |
+| `Enter` on a receipt shows metadata and an artifact pointer only — no stdout dump     | **PASS**                                                      |
+| `Enter` on the completion-gate row lists every failing gate readably                  | **PASS**                                                      |
+| Below 80 columns nothing overflows or is clipped mid-word                             | **PASS** after D6 and D7 were fixed; re-attested on `a9c9049` |
+| Packet 3 intake review UI: `u` opens the Understanding Check; `a` / `v` / `x` offered | **PASS**                                                      |
+| `?` help lists the four-view order and the `a` / `v` / `x` keys; `r` reloads          | **PASS**                                                      |
+| `q` exits cleanly                                                                     | **PASS**                                                      |
 
 **Tier 8 remains PARTIAL**: eighteen of nineteen items attested PASS, with one real defect found and
 fixed (**D5**) and one still open (**D6**, narrow-width overflow).
@@ -696,6 +715,25 @@ Regression coverage in `test/proof.ui.test.ts`: every width from 1 to 19, all fo
 states, asserting no line exceeds the terminal; plus a test that the notice names the requirement,
 stays within the width, and that a zero-width terminal renders nothing rather than throwing.
 
+### Final interactive attestation — PASS
+
+Joshua re-ran the console on `a9c9049` and attested it clean: the tab row shows the view names at the
+20-column floor rather than a bare ellipsis, dropping below the floor shows the width notice instead
+of wrapped output, and widening restores the console.
+
+**What the interactive tier actually bought.** Three real defects, none of which any automated tier
+could have caught, and all three of which shipped in earlier packets:
+
+| Defect | Symptom                                     | Why the suite missed it                                                        |
+| ------ | ------------------------------------------- | ------------------------------------------------------------------------------ |
+| **D5** | The Project Steward skill never loaded      | Nothing asserted that Pi can parse the repo's own skill files                  |
+| **D6** | Console rendered wider than the terminal    | No test below 60 columns; the bug needed a _resize_, not a narrow start        |
+| **D7** | Tab row collapsed to `…` under real styling | Every console test uses `plainStyler`, so style-then-size mistakes cannot fail |
+
+Each fix carries a regression test that fails when the fix is reverted, verified individually.
+D7's test closes the widest gap: rendering is now asserted through an ANSI-injecting styler against
+ANSI-stripped width.
+
 ### D7 — the tab row collapsed to an ellipsis under real styling (found by Joshua, fixed)
 
 Re-attesting D6 at the 20-column floor, Joshua reported the view-switcher row showing a bare `…`
@@ -785,16 +823,16 @@ the documented by-design consequence of `HEAD` participating in the fingerprint,
 Joshua confirmed the remaining eight items in a real terminal
 (`mise exec -- npm run pi`, then `/newfang home`):
 
-| Item                                                                                  | Result                                                       |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `j`/`k` move the selection across claims, then receipts, then the completion-gate row | **PASS**                                                     |
-| `Enter` opens claim detail (coverage + limitations) and closes with `Esc`             | **PASS**                                                     |
-| `Enter` on a receipt shows metadata and an artifact pointer only — no stdout dump     | **PASS**                                                     |
-| `Enter` on the completion-gate row lists every failing gate readably                  | **PASS**                                                     |
-| Below 80 columns nothing overflows or is clipped mid-word                             | **FAIL** → defect **D6**, now fixed; awaiting re-attestation |
-| Packet 3 intake review UI: `u` opens the Understanding Check; `a` / `v` / `x` offered | **PASS**                                                     |
-| `?` help lists the four-view order and the `a` / `v` / `x` keys; `r` reloads          | **PASS**                                                     |
-| `q` exits cleanly                                                                     | **PASS**                                                     |
+| Item                                                                                  | Result                                                        |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `j`/`k` move the selection across claims, then receipts, then the completion-gate row | **PASS**                                                      |
+| `Enter` opens claim detail (coverage + limitations) and closes with `Esc`             | **PASS**                                                      |
+| `Enter` on a receipt shows metadata and an artifact pointer only — no stdout dump     | **PASS**                                                      |
+| `Enter` on the completion-gate row lists every failing gate readably                  | **PASS**                                                      |
+| Below 80 columns nothing overflows or is clipped mid-word                             | **PASS** after D6 and D7 were fixed; re-attested on `a9c9049` |
+| Packet 3 intake review UI: `u` opens the Understanding Check; `a` / `v` / `x` offered | **PASS**                                                      |
+| `?` help lists the four-view order and the `a` / `v` / `x` keys; `r` reloads          | **PASS**                                                      |
+| `q` exits cleanly                                                                     | **PASS**                                                      |
 
 **Tier 8 remains PARTIAL**: eighteen of nineteen items attested PASS, with one real defect found and
 fixed (**D5**) and one still open (**D6**, narrow-width overflow).
