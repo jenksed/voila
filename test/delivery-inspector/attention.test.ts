@@ -272,3 +272,20 @@ test("paths inside an attention item are sorted and de-duplicated", () => {
   const item = find(items, "source_without_test");
   assert.deepEqual(item.paths, ["src/a.ts", "src/m.ts", "src/z.ts"]);
 });
+
+test("a generated view changing without canonical state is flagged in a legacy repository too", () => {
+  const items = detect([file(".newfang/views/PROJECT_STATUS.md")]);
+  assert.ok(
+    items.some((item) => item.kind === "generated_view_without_state_change"),
+    "legacy generated-view drift is the same signal as current drift",
+  );
+
+  const withState = detect([
+    file(".newfang/views/PROJECT_STATUS.md"),
+    file(".newfang/project.json"),
+  ]);
+  assert.ok(
+    !withState.some((item) => item.kind === "generated_view_without_state_change"),
+    "a matching legacy canonical change clears the item",
+  );
+});

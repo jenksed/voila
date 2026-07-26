@@ -100,6 +100,15 @@ const CONFIG_EXTENSIONS: readonly string[] = [
 
 const DOC_EXTENSIONS: readonly string[] = [".adoc", ".markdown", ".md", ".mdx", ".rst"];
 
+/**
+ * The pre-rename canonical state directory (Voila was formerly NewFang).
+ *
+ * Deliberately duplicated rather than imported from `src/state/legacy.ts`: this library imports
+ * nothing from canonical state, tools, commands, context, or UI, and classification is about what a
+ * path looks like, not about what the state store can currently load.
+ */
+export const LEGACY_STATE_DIR = ".newfang";
+
 const BINARY_ASSET_EXTENSIONS: readonly string[] = [
   ".bin",
   ".bmp",
@@ -192,6 +201,10 @@ interface Rule {
  * Ordering notes that tests pin down:
  * - `generated` precedes `project_state` so a generated Voila markdown view is not mistaken for
  *   canonical state, and both precede `documentation` so `.voila/**\/*.md` is not called docs.
+ * - The legacy `.newfang/` state directory is classified alongside `.voila/`. A repository that has
+ *   not yet run `/voila migrate --apply` still holds real canonical state and generated views there,
+ *   and classifying `project.json` as generic configuration (or a generated view as prose
+ *   documentation) would be a worse answer than naming what the files actually are.
  * - `ci` precedes `configuration` so a workflow YAML is CI, not generic config.
  * - `dependency_metadata` precedes `configuration` so `package.json` is a manifest, not config.
  * - `verification_evidence` precedes `documentation` so `docs/verification/**` is evidence.
@@ -220,6 +233,12 @@ const RULES: readonly Rule[] = [
   },
   {
     category: "generated",
+    confidence: "high",
+    reason: "generated Voila view under the legacy .newfang/ state directory",
+    matches: (p) => underDirectory(p, LEGACY_STATE_DIR) && DOC_EXTENSIONS.includes(p.ext),
+  },
+  {
+    category: "generated",
     confidence: "medium",
     reason: "filename marks the file as generated or minified",
     matches: (p) =>
@@ -233,6 +252,12 @@ const RULES: readonly Rule[] = [
     confidence: "high",
     reason: "canonical Voila project state under .voila/",
     matches: (p) => underDirectory(p, ".voila"),
+  },
+  {
+    category: "project_state",
+    confidence: "high",
+    reason: "canonical Voila project state under the legacy .newfang/ state directory",
+    matches: (p) => underDirectory(p, LEGACY_STATE_DIR),
   },
   {
     category: "ci",

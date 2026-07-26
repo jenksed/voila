@@ -12,6 +12,7 @@
 // produces the same array.
 
 import {
+  LEGACY_STATE_DIR,
   dependencyFacts,
   isEnvironmentFile,
   looksLikeCredentialStore,
@@ -309,18 +310,21 @@ export function detectAttention(input: AttentionInput): DeliveryAttentionItem[] 
     "Confirm the deletion is intentional and that the claim the evidence supported is either withdrawn or re-evidenced.",
   );
 
+  // A project that has not yet run `/voila migrate --apply` still holds real state under the legacy
+  // directory, and drift there is the same signal, so both state areas count.
+  const isStateArea = (area: string): boolean => area === ".voila" || area === LEGACY_STATE_DIR;
   const generatedViews = present(
-    (file) => file.category === "generated" && file.area === ".voila" && file.status !== "deleted",
+    (file) => file.category === "generated" && isStateArea(file.area) && file.status !== "deleted",
   );
   const canonicalStateChanged = changes.some(
-    (file) => file.category === "project_state" && file.area === ".voila",
+    (file) => file.category === "project_state" && isStateArea(file.area),
   );
   if (generatedViews.length > 0 && !canonicalStateChanged) {
     add(
       "generated_view_without_state_change",
       "inspect_before_delivery",
       generatedViews.map((file) => file.path),
-      "A generated Voila view under .voila/ changed with no corresponding canonical state change. A generated view is derived output, so an independent edit is either hand-written drift or a stale regeneration.",
+      "A generated Voila view changed with no corresponding canonical state change. A generated view is derived output, so an independent edit is either hand-written drift or a stale regeneration.",
       "medium",
       "Regenerate the view from canonical state, or confirm the canonical change is genuinely absent from this change set.",
     );

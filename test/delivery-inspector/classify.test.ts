@@ -135,3 +135,24 @@ test("pathStem strips extensions and test suffixes so tests can be matched to so
   assert.equal(pathStem("pkg/thing_test.go"), "thing");
   assert.equal(pathStem("tests/test_thing.py"), "thing");
 });
+
+test("the legacy .newfang/ state directory classifies like .voila/", () => {
+  // A repository that has not yet run `/voila migrate --apply` still holds real canonical state and
+  // generated views there. Falling through to `configuration` or `documentation` would be a worse
+  // answer than naming what the files actually are.
+  assert.equal(classifyPath(".newfang/project.json").category, "project_state");
+  assert.equal(classifyPath(".newfang/events.jsonl").category, "project_state");
+  assert.equal(classifyPath(".newfang/views/PROJECT_STATUS.md").category, "generated");
+  assert.equal(classifyPath(".newfang/briefs/PROJECT_BRIEF.md").category, "generated");
+
+  // The reason names the directory as legacy, so a reader is not misled about the current layout.
+  assert.match(classifyPath(".newfang/project.json").reason, /legacy/);
+  assert.match(classifyPath(".voila/project.json").reason, /\.voila\//);
+});
+
+test("paths that merely resemble a state directory are not classified as state", () => {
+  assert.notEqual(classifyPath("newfang/project.json").category, "project_state");
+  assert.notEqual(classifyPath("docs/newfang-notes.md").category, "project_state");
+  assert.equal(classifyPath("config.json").category, "configuration");
+  assert.equal(classifyPath("docs/design/X.md").category, "documentation");
+});
