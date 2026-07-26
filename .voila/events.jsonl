@@ -274,3 +274,5 @@
 {"type":"focus_set","id":"NF-16","revision":283,"ts":"2026-07-26T19:56:20.789Z"}
 {"type":"next_action_set","revision":284,"ts":"2026-07-26T19:56:20.792Z"}
 {"type":"focus_cleared","revision":285,"ts":"2026-07-26T20:44:12.158Z"}
+{"type":"decision_marker","note":"DEC-22 acceptance marker","revision":286,"ts":"2026-07-26T21:24:34.446Z"}
+{"type":"decision_recorded","id":"DEC-22","status":"accepted","revision":287,"ts":"2026-07-26T21:25:03.685Z"}

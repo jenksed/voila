@@ -342,3 +342,55 @@ delivery; they are recorded here so R2 planning does not lose them.
 
 These belong to the R2-0 backlog and are not in R2A's critical path until the implementation selects
 a finite demonstration that exposes one of them.
+---
+
+## 9. Correction (DEC-22)
+
+The five original risk categories in §2 above are useful Steward response
+categories but **must not serve as the operation admission data model.**
+
+R2 separates five distinct concepts:
+
+1. **Effect profile** — what an operation can affect. Defined before
+   execution. Closed vocabulary:
+   `local_read`, `bounded_temporary_write`, `repository_source_write`,
+   `canonical_state_write`, `local_process_control`, `network_read`,
+   `network_write`, `external_state_mutation`, `privileged_effect`,
+   `unknown_effect`. The effect profile belongs to the accepted
+   operation definition.
+2. **Authority requirement** — why the operation may run. Resolved
+   before execution. Closed vocabulary: `accepted_project_operation`,
+   `explicit_single_use_owner_authority`, `read_only_project_access`,
+   `internal_supported_state_transition`, `not_authorized`. The
+   authority source must reference an accepted project decision or
+   operation definition. Prompt prose, model reasoning, chat history,
+   logs, and unrelated prior approval are not authority sources.
+3. **Admission decision** — whether this exact request may begin
+   now. Evaluated before process creation by a pure deterministic
+   kernel. Closed result kinds: `allow`, `reuse_existing`,
+   `deny_unknown_operation`, `deny_invalid_definition`,
+   `deny_wrong_project`, `deny_wrong_worktree`, `deny_capacity`,
+   `deny_retry_budget`, `deny_missing_authority`,
+   `deny_structural_integrity`. Model identity, prompt text, and
+   operation output are forbidden inputs.
+4. **Execution outcome** — what actually happened after the
+   admitted operation began. Closed values: `passed`, `failed`,
+   `cancelled`, `timed_out`, `supervisor_error`. A failed test,
+   timeout, port conflict, changed file, or orphaned descendant is
+   not a pre-execution risk class. It is an execution outcome.
+5. **Recovery response** — what the Steward does next. The
+   deterministic sequence is `contain`, `preserve evidence`,
+   `continue unaffected work`, `apply bounded recovery`,
+   `re-evaluate`, `escalate only when required`, `record outcome`.
+   Retry and escalation policy operate on outcomes and must not
+   retroactively redefine whether the original operation was
+   authorized.
+
+The five original risk categories may remain as Steward response
+hints; they no longer define admission.
+
+`nonzero exit` and `timeout` are **not** pre-execution risk classes.
+They are execution outcomes.
+
+This correction is recorded as DEC-22 and is the source of authority
+referenced by the R2A operation definition.
