@@ -4,12 +4,12 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Run the Phase 7 self-hosting gate walk-through in a real terminal (mise exec -- npm run pi) to confirm the interactive tier, then decide go/no-go for using Voila as the daily driver.",
-  "nextActionRationale": "All eight self-hosting capabilities are implemented and evidenced headlessly: NF-1 through NF-4 are completed through the protected gate, each backed by a passing receipt at the current fingerprint. The only tier no automated run can cover is the interactive TUI, which needs a real TTY.",
-  "focusWorkItemId": "NF-6",
+  "nextAction": "Run an authenticated Project Steward intake in a real terminal (mise exec -- npm run pi): ingest a planning document end to end and accept it, then walk the Steward Console. That closes the two tiers NF-1 and NF-2 acceptance actually depend on.",
+  "nextActionRationale": "Every capability the self-hosting gate names is implemented and evidenced headlessly: 5 claims supported by 9 receipts at the current fingerprint, 573 tests passing. NF-1 through NF-4 were completed through the gate during the walk-through and then reverted, because their criteria depend on the interactive Steward Console and an authenticated Steward intake run, and no automated run can observe either. This environment has no TTY, so those tiers are the only work left before the backlog can honestly close.",
+  "focusWorkItemId": "NF-2",
   "sequences": {
     "workItem": 9,
-    "decision": 12,
+    "decision": 13,
     "assumption": 4,
     "risk": 6,
     "intake": 9,
@@ -23,7 +23,7 @@
       "kind": "outcome",
       "title": "Complete the minimal project-operations layer",
       "description": "Implementation and tests are done, but this item is NOT canonically complete: the protected completion transition (newfang_complete_work_item) does not exist yet.",
-      "status": "completed",
+      "status": "in_progress",
       "priority": "high",
       "acceptanceCriteria": [
         "schema v2 with explicit 1->2 migration",
@@ -33,7 +33,7 @@
       ],
       "dependsOn": [],
       "createdAt": "2026-07-25T02:00:04.852Z",
-      "updatedAt": "2026-07-26T04:15:14.415Z",
+      "updatedAt": "2026-07-26T04:19:11.199Z",
       "requiredClaimIds": [
         "CLM-3"
       ]
@@ -42,7 +42,7 @@
       "id": "NF-2",
       "kind": "outcome",
       "title": "Build planning-document intake and repository orientation",
-      "status": "completed",
+      "status": "ready",
       "priority": "high",
       "acceptanceCriteria": [
         "preserve the original plan/document",
@@ -51,7 +51,7 @@
       ],
       "dependsOn": [],
       "createdAt": "2026-07-25T02:00:04.854Z",
-      "updatedAt": "2026-07-26T04:15:14.483Z",
+      "updatedAt": "2026-07-26T04:19:11.206Z",
       "requiredClaimIds": [
         "CLM-4"
       ]
@@ -60,7 +60,7 @@
       "id": "NF-3",
       "kind": "outcome",
       "title": "Build claims, receipts, and completion gates",
-      "status": "completed",
+      "status": "backlog",
       "priority": "high",
       "acceptanceCriteria": [
         "voila_complete_work_item rejects unsupported completion"
@@ -69,7 +69,7 @@
         "NF-2"
       ],
       "createdAt": "2026-07-25T02:00:04.855Z",
-      "updatedAt": "2026-07-26T04:15:14.543Z",
+      "updatedAt": "2026-07-26T04:19:11.210Z",
       "requiredClaimIds": [
         "CLM-1"
       ]
@@ -78,7 +78,7 @@
       "id": "NF-4",
       "kind": "task",
       "title": "Add delivery behavior: commit suggestions and delivery summary",
-      "status": "completed",
+      "status": "backlog",
       "priority": "normal",
       "acceptanceCriteria": [
         "a delivery summary reports what changed, claims at their real evaluation status, risks, limitations, and the canonical next action",
@@ -89,7 +89,7 @@
         "NF-3"
       ],
       "createdAt": "2026-07-25T02:00:04.856Z",
-      "updatedAt": "2026-07-26T04:15:14.608Z",
+      "updatedAt": "2026-07-26T04:19:11.212Z",
       "requiredClaimIds": [
         "CLM-5"
       ]
@@ -251,6 +251,15 @@
       "status": "accepted",
       "createdAt": "2026-07-26T03:07:06.044Z",
       "updatedAt": "2026-07-26T03:07:06.044Z"
+    },
+    {
+      "id": "DEC-12",
+      "title": "Completion requires the tier a criterion actually names, not only a passing suite",
+      "decision": "NF-1 through NF-4 were completed through the protected gate during the Phase 7 walk-through and then reverted to their prior statuses. They stay held until the tiers their acceptance criteria actually depend on are observed: the interactive Steward Console for NF-1, an authenticated Project Steward intake run for NF-2, and NF-3 as a dependency of NF-4. The claims (CLM-3, CLM-4, CLM-5) and receipts (RCP-5 through RCP-9) produced during the walk-through are real and are retained; the claims now name the tier they do not cover.",
+      "rationale": "The gate accepted the completions because every mechanical condition held: criteria recorded, claims attached, receipts passing at the current fingerprint. A dogfood guard test then failed, encoding a prior deliberate judgment that NF-2 must not be completed while authenticated Project Steward intake acceptance is pending. That judgment was correct and nothing this session changed it. The automated suite exercises the intake machinery with test inputs; it does not demonstrate a real planning document being classified by an authenticated Steward. Writing a claim broad enough to clear a gate is exactly the failure the proof engine exists to prevent, and the honest response was to revert rather than to weaken the guard. The finding worth keeping: the gate is only as strong as the honesty of the claim, so a claim must name the tier it does not cover.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T04:19:24.535Z",
+      "updatedAt": "2026-07-26T04:19:24.535Z"
     }
   ],
   "assumptions": [
@@ -513,13 +522,14 @@
       ],
       "knownLimitations": [
         "Evidence is the automated suite at one repository fingerprint; any tracked change makes it stale until verification is re-run.",
-        "The suite does not cover the interactive TUI, which requires a real terminal."
+        "The suite does not cover the interactive TUI, which requires a real terminal.",
+        "NF-1 acceptance also depends on the interactive Steward Console tier, which no automated run can cover."
       ],
       "receiptIds": [
         "RCP-7"
       ],
       "createdAt": "2026-07-26T04:13:58.284Z",
-      "updatedAt": "2026-07-26T04:14:39.368Z"
+      "updatedAt": "2026-07-26T04:19:11.216Z"
     },
     {
       "id": "CLM-4",
@@ -533,13 +543,14 @@
       ],
       "knownLimitations": [
         "Classification is model interpretation and is fallible; the Understanding Check and human acceptance are the only guarantees that applied truth is correct.",
-        "Evidence is the automated suite at one repository fingerprint."
+        "Evidence is the automated suite at one repository fingerprint.",
+        "The suite exercises the intake MACHINERY with test inputs. It does not demonstrate an authenticated Project Steward run classifying a real planning document, which is what NF-2 acceptance requires."
       ],
       "receiptIds": [
         "RCP-8"
       ],
       "createdAt": "2026-07-26T04:14:13.952Z",
-      "updatedAt": "2026-07-26T04:14:53.910Z"
+      "updatedAt": "2026-07-26T04:19:11.214Z"
     },
     {
       "id": "CLM-5",
@@ -757,6 +768,6 @@
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-3",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T04:16:12.971Z",
-  "revision": 84
+  "updatedAt": "2026-07-26T04:20:15.954Z",
+  "revision": 93
 }

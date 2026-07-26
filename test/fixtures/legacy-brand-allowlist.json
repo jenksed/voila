@@ -190,6 +190,20 @@
       "removable": false
     },
     {
+      "path": ".voila/orientations/ORI-3/ORIENTATION.md",
+      "category": "historical-evidence",
+      "reason": "Recorded repository orientation artifact. It names docs/migrations/NEWFANG_TO_VOILA.md as a key document and states the local checkout path; orientations are recorded observations and are not rewritten.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/orientations/ORI-3/orientation.json",
+      "category": "historical-evidence",
+      "reason": "Recorded repository orientation artifact. It names docs/migrations/NEWFANG_TO_VOILA.md as a key document and states the local checkout path; orientations are recorded observations and are not rewritten.",
+      "immutable": true,
+      "removable": false
+    },
+    {
       "path": ".voila/project.json",
       "category": "historical-evidence",
       "reason": "Canonical state quotes dated decision, assumption, risk, claim, and work-item records. Claim text is bound to receipt evidence; rewriting it would falsify what was verified. Current-truth fields (displayName, nextAction, nextActionRationale) are rebranded and separately asserted clean.",
@@ -221,6 +235,41 @@
       "path": ".voila/receipts/RCP-4/stdout.txt",
       "category": "historical-evidence",
       "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/receipts/RCP-5/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/receipts/RCP-6/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/receipts/RCP-7/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/receipts/RCP-8/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/receipts/RCP-9/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
       "immutable": true,
       "removable": false
     },

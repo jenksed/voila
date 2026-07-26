@@ -82,3 +82,12 @@
 {"type":"next_action_set","revision":82,"ts":"2026-07-26T04:15:26.023Z"}
 {"type":"focus_set","id":"NF-6","revision":83,"ts":"2026-07-26T04:15:26.026Z"}
 {"type":"orientation_recorded","id":"ORI-3","head":"321b90f59990c09a02a0a370a6e978dd277fa161","revision":84,"ts":"2026-07-26T04:16:12.971Z"}
+{"type":"work_item_updated","id":"NF-1","revision":85,"ts":"2026-07-26T04:19:11.203Z"}
+{"type":"work_item_updated","id":"NF-2","revision":86,"ts":"2026-07-26T04:19:11.207Z"}
+{"type":"work_item_updated","id":"NF-3","revision":87,"ts":"2026-07-26T04:19:11.211Z"}
+{"type":"work_item_updated","id":"NF-4","revision":88,"ts":"2026-07-26T04:19:11.213Z"}
+{"type":"claim_updated","id":"CLM-4","revision":89,"ts":"2026-07-26T04:19:11.215Z"}
+{"type":"claim_updated","id":"CLM-3","revision":90,"ts":"2026-07-26T04:19:11.217Z"}
+{"type":"decision_recorded","id":"DEC-12","status":"accepted","revision":91,"ts":"2026-07-26T04:19:24.538Z"}
+{"type":"focus_set","id":"NF-2","revision":92,"ts":"2026-07-26T04:20:15.949Z"}
+{"type":"next_action_set","revision":93,"ts":"2026-07-26T04:20:15.966Z"}
