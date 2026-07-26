@@ -205,3 +205,110 @@ test("the accented spelling is rejected by the same rule that accepts the plain 
   assert.ok(/^[\x20-\x7e]+$/.test("Voila"), "Voila is printable ASCII");
   assert.ok(!/^[\x20-\x7e]+$/.test("Voilà"), "the accented form is not ASCII");
 });
+
+// --- Runtime surfaces a user actually reads ---
+
+/** Drive the registered `/voila` handler with a fake ctx and collect what the UI was told. */
+function makeUi() {
+  const notifications: Array<{ message: string; level?: string }> = [];
+  const widgets: Array<{ key: string; lines: string[] | undefined }> = [];
+  return {
+    notifications,
+    widgets,
+    ctx: (cwd: string, mode?: string) => ({
+      cwd,
+      ...(mode ? { mode } : {}),
+      ui: {
+        notify: (message: string, level?: string) => notifications.push({ message, level }),
+        setWidget: (key: string, lines: string[] | undefined) => widgets.push({ key, lines }),
+      },
+    }),
+  };
+}
+
+test("the non-TUI fallback and its status output say Voila", async () => {
+  const { mkdtemp } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { initState } = await import("../src/state/store.ts");
+  const root = await mkdtemp(join(tmpdir(), "voila-id-"));
+  await initState(root, { displayName: "demo" });
+
+  const { commands } = captureRegistrations();
+  const ui = makeUi();
+  // No `custom` on the UI surface: this is the non-TUI path.
+  await commands.get("voila")!.handler("home", ui.ctx(root, "print"));
+
+  const text = ui.notifications.map((n) => n.message).join("\n");
+  assert.match(text, /interactive terminal/, "falls back rather than failing");
+  for (const forbidden of FORBIDDEN) {
+    assert.ok(!text.includes(forbidden), `fallback output mentions "${forbidden}"`);
+  }
+});
+
+test("the legacy-migration and error widgets say Voila", async () => {
+  const { mkdtemp, mkdir, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { restoreHomeView } = await import("../src/extension/register.ts");
+
+  // Legacy-only state: the widget must direct the user at /voila migrate.
+  const legacyRoot = await mkdtemp(join(tmpdir(), "voila-id-legacy-"));
+  await mkdir(join(legacyRoot, LEGACY_STATE_DIR), { recursive: true });
+  await writeFile(
+    join(legacyRoot, LEGACY_STATE_DIR, "project.json"),
+    '{"schemaVersion":4}\n',
+    "utf8",
+  );
+  const legacyUi = makeUi();
+  await restoreHomeView(legacyUi.ctx(legacyRoot) as never);
+  const legacyLines = (legacyUi.widgets.at(-1)?.lines ?? []).join(" ");
+  assert.match(legacyLines, /Voila · legacy state migration required — run \/voila migrate/);
+  for (const forbidden of FORBIDDEN) {
+    assert.ok(!legacyLines.includes(forbidden), `legacy widget mentions "${forbidden}"`);
+  }
+
+  // Conflicting state directories: the widget must direct the user at /voila doctor.
+  const conflictRoot = await mkdtemp(join(tmpdir(), "voila-id-conflict-"));
+  await mkdir(join(conflictRoot, LEGACY_STATE_DIR), { recursive: true });
+  await mkdir(join(conflictRoot, VOILA_DIR), { recursive: true });
+  const conflictUi = makeUi();
+  await restoreHomeView(conflictUi.ctx(conflictRoot) as never);
+  const conflictLines = (conflictUi.widgets.at(-1)?.lines ?? []).join(" ");
+  assert.match(conflictLines, /Voila · state directory conflict — run \/voila doctor/);
+});
+
+test("the uninitialized widget points at /voila init", async () => {
+  const { mkdtemp } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { restoreHomeView } = await import("../src/extension/register.ts");
+  const root = await mkdtemp(join(tmpdir(), "voila-id-empty-"));
+  const ui = makeUi();
+  await restoreHomeView(ui.ctx(root) as never);
+  const lines = (ui.widgets.at(-1)?.lines ?? []).join(" ");
+  assert.match(lines, /\/voila init/);
+  for (const forbidden of FORBIDDEN) {
+    assert.ok(!lines.includes(forbidden), `init widget mentions "${forbidden}"`);
+  }
+});
+
+test("the Project Steward skill loads and teaches only Voila commands and tools", async () => {
+  const text = await readFile(join(ROOT, ".pi/skills/project-steward/SKILL.md"), "utf8");
+
+  // Frontmatter must parse as a quoted single-line description (Pi fails on an unquoted colon).
+  const match = text.match(/^---\n([\s\S]*?)\n---/);
+  assert.ok(match, "SKILL.md has YAML frontmatter");
+  const frontmatter = match[1] as string;
+  assert.match(frontmatter, /^name: project-steward$/m);
+  const description = frontmatter.match(/^description: (.*)$/m)?.[1] ?? "";
+  assert.ok(
+    description.startsWith("'") && description.trimEnd().endsWith("'"),
+    "description is quoted so Pi can parse it",
+  );
+  assert.match(description, /Voila Project Steward/);
+
+  // It must not teach the old API anywhere.
+  for (const forbidden of FORBIDDEN) {
+    assert.ok(!text.includes(forbidden), `Project Steward skill mentions "${forbidden}"`);
+  }
+  assert.match(text, /voila_get_project_context/);
+  assert.match(text, /\.voila\/briefs\/PROJECT_BRIEF\.md/);
+});
