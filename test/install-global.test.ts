@@ -88,7 +88,7 @@ test("the shim registers the full surface in a project without its own adapter",
 
   const { commands, tools } = await registerFrom(root);
   assert.deepEqual(commands, ["voila"], "the command is available everywhere else");
-  assert.equal(tools.length, 30, "the full tool surface is registered");
+  assert.equal(tools.length, 34, "the full tool surface is registered");
   assert.ok(
     tools.every((name) => name.startsWith("voila_")),
     "every registered tool uses the voila_ prefix",

@@ -45,6 +45,7 @@ import { workItemLabel } from "../domain/status.ts";
 import { intakeTools } from "./intake-tools.ts";
 import { proofTools } from "./proof-tools.ts";
 import { deliveryTools } from "./delivery-tools.ts";
+import { operationTools } from "./operation-tools.ts";
 
 export interface VoilaToolResult {
   content: Array<{ type: "text"; text: string }>;
@@ -410,5 +411,6 @@ export function voilaTools(): VoilaTool[] {
     ...intakeTools(),
     ...proofTools(),
     ...deliveryTools(),
+    ...operationTools(),
   ];
 }
