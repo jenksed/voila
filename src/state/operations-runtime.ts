@@ -332,6 +332,10 @@ export class FiniteOperationSupervisor {
         }
       }, definition.timeoutContract.gracefulMs).unref();
     }, definition.timeoutContract.totalMs);
+    // Unref the total timer so a long-running test that never settles does not keep the event
+    // loop alive past the test's own resolution. The clearTimeout in the close handler still
+    // disposes of it cleanly when the run settles naturally.
+    totalTimer.unref();
 
     const settled = new Promise<OperationRun>((resolve) => {
       const finalize = async (

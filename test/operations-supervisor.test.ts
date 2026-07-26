@@ -164,12 +164,7 @@ test("passing operation produces exactly one passed settlement", async () => {
   let final = outcome.run;
   for (let i = 0; i < 400; i++) {
     final = (await supervisor.inspect(outcome.run.id))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
   assert.equal(final.lifecycleState, "passed");
@@ -192,12 +187,7 @@ test("nonzero-exit operation produces exactly one failed settlement", async () =
   let final = outcome.run;
   for (let i = 0; i < 200; i++) {
     final = (await supervisor.inspect(outcome.run.id))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
   assert.equal(final.lifecycleState, "failed");
@@ -220,12 +210,7 @@ test("start records argv exactly and never invokes a shell", async () => {
   let final = outcome.run;
   for (let i = 0; i < 200; i++) {
     final = (await supervisor.inspect(outcome.run.id))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
   // The fixture writes the absolute node path; if a shell ever ran, the argv would differ.
@@ -251,12 +236,7 @@ test("equivalent active request reuses the run without spawning a second process
   let final = first.run;
   for (let i = 0; i < 400; i++) {
     final = (await supervisor.inspect(first.run.id))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
 });
@@ -297,12 +277,7 @@ test("stdout and stderr stay attributed and are redacted when a secret is emitte
     let final = outcome.run;
     for (let i = 0; i < 200; i++) {
       final = (await supervisor.inspect(outcome.run.id))!;
-      if (
-        final.lifecycleState !== "queued" &&
-        final.lifecycleState !== "starting" &&
-        final.lifecycleState !== "running"
-      )
-        break;
+      if (final.deliveryState === "delivered") break;
       await new Promise((r) => setTimeout(r, 25));
     }
     const stdout = await supervisor.readOutput(outcome.run.id, "stdout");
@@ -340,12 +315,7 @@ test("truncated output records dropped bytes and a truncation marker", async () 
   let final = outcome.run;
   for (let i = 0; i < 200; i++) {
     final = (await supervisor.inspect(outcome.run.id))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
   assert.equal(final.outputSummary.truncated, true);
@@ -379,12 +349,7 @@ test("timeout produces a timed_out settlement and does not retry", async () => {
   let final = outcome.run;
   for (let i = 0; i < 400; i++) {
     final = (await supervisor.inspect(outcome.run.id))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
   assert.equal(final.lifecycleState, "timed_out");
@@ -426,12 +391,7 @@ test("no duplicate settlement under racing close + cancel", async () => {
   let final = outcome.run;
   for (let i = 0; i < 200; i++) {
     final = (await supervisor.inspect(outcome.run.id))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
   // The settlement is recorded exactly once; its reason reflects the close path (passed or
@@ -459,12 +419,7 @@ test("output containing instruction-like text is preserved verbatim and labelled
   let final = outcome.run;
   for (let i = 0; i < 200; i++) {
     final = (await supervisor.inspect(runId))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
   // The artifact exists and the literal injection text is present unchanged (no auto-execution).
@@ -548,12 +503,7 @@ test(
     let final = outcome.run;
     for (let i = 0; i < 400; i++) {
       final = (await supervisor.inspect(outcome.run.id))!;
-      if (
-        final.lifecycleState !== "queued" &&
-        final.lifecycleState !== "starting" &&
-        final.lifecycleState !== "running"
-      )
-        break;
+      if (final.deliveryState === "delivered") break;
       await new Promise((r) => setTimeout(r, 50));
     }
     assert.equal(final.lifecycleState, "passed");

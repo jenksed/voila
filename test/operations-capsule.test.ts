@@ -66,18 +66,14 @@ test("capsule includes one bounded active operation line while a run is in fligh
   // No output is injected.
   assert.equal(capsule.includes("stdout"), false);
   assert.equal(capsule.includes("stderr"), false);
-  // Wait for natural close before reading the after state.
+  // Wait for natural close and recorded delivery before acknowledging.
   let final = outcome.run;
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 400; i++) {
     final = (await supervisor.inspect(outcome.run.id))!;
-    if (
-      final.lifecycleState !== "queued" &&
-      final.lifecycleState !== "starting" &&
-      final.lifecycleState !== "running"
-    )
-      break;
+    if (final.deliveryState === "delivered") break;
     await new Promise((r) => setTimeout(r, 25));
   }
+  assert.equal(final.deliveryState, "delivered", "settlement delivered before acknowledgement");
   // Acknowledge to release buffered output and remove the operation line.
   await supervisor.acknowledge(outcome.run.id);
   const after = await assembleContext(root, { continuation: false });
