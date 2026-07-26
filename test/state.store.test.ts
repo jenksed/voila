@@ -192,3 +192,50 @@ test("no temporary files remain after atomic writes", async () => {
     false,
   );
 });
+
+test("concurrent updateState calls do not produce duplicate events or colliding revisions", async () => {
+  const root = await tempRoot();
+  await initState(root, { displayName: "demo" });
+  const N = 20;
+  const results = await Promise.all(
+    Array.from({ length: N }, (_, i) =>
+      updateState(root, (cur) => ({ ...cur, nextAction: `r${i}` }), {
+        type: "next_action_set",
+        focus: `NF-${i}`,
+      }),
+    ),
+  );
+  const revisions = results.map((s) => s.revision).sort((a, b) => a - b);
+  // Exactly N distinct revisions, starting at 2 and ending at N+1 (init is revision 1).
+  assert.deepEqual(
+    revisions,
+    Array.from({ length: N }, (_, i) => i + 2),
+    "revisions are distinct and strictly increasing",
+  );
+  // The event log records exactly N next_action_set entries (plus the init event).
+  const events = (await readFile(statePaths(root).eventsJsonl, "utf8"))
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as { type: string; revision: number; focus?: string });
+  const nextActionEvents = events.filter((e) => e.type === "next_action_set");
+  assert.equal(
+    nextActionEvents.length,
+    N,
+    "no duplicate events across concurrent updateState calls",
+  );
+  const eventRevisions = nextActionEvents.map((e) => e.revision).sort((a, b) => a - b);
+  assert.deepEqual(
+    eventRevisions,
+    Array.from({ length: N }, (_, i) => i + 2),
+    "each event carries its own distinct revision",
+  );
+  // Canonical state was not clobbered: it matches the last write by revision order.
+  const final = await loadState(root);
+  assert.equal(final.revision, N + 1);
+  const lastEvent = nextActionEvents[nextActionEvents.length - 1] as {
+    type: string;
+    focus: string;
+  };
+  assert.equal(final.nextAction, `r${N - 1}`);
+  assert.equal(lastEvent.focus, `NF-${N - 1}`);
+});

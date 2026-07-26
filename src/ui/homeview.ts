@@ -8,11 +8,15 @@ import { abbreviate } from "../domain/status.ts";
 /**
  * The single most severe proof problem, as one compact fragment — or null when proof is quiet.
  * Deliberately at most ONE warning: the widget's two-line contract is not negotiable.
+ *
+ * Staleness gets a quiet, non-actionable phrasing (R1 / NF-9): during development it is expected and
+ * reconciles at the boundary, so the widget must not read like a chore list. A claim contradicted by
+ * a failing receipt still gets the blunt label.
  */
 export function proofWarning(proof: ProofSummary | null | undefined): string | null {
   if (!proof || proof.total === 0) return null;
   if (proof.unsupported > 0) return `${proof.unsupported} unsupported`;
-  if (proof.stale > 0) return `${proof.stale} stale`;
+  if (proof.stale > 0) return "evidence reconciles at boundary";
   if (proof.pending > 0) return `${proof.pending} unproven`;
   return null;
 }

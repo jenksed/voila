@@ -112,25 +112,41 @@ gate is still a gate.
 
 ## Honest capability status
 
-As of 2026-07-26, the operational loop this document describes is **doctrine, not implementation**.
+As of 2026-07-26, most of the operational loop this document describes is **doctrine, not
+implementation**. R1 is the exception: it is implemented and its acceptance behavior was observed.
 
-| Capability                              | Status                          |
-| --------------------------------------- | ------------------------------- |
-| Durable per-project state               | Built                           |
-| Planning intake, orientation            | Built                           |
-| Claims, receipts, completion gate       | Built                           |
-| Delivery summary, commit suggestion     | Built                           |
-| Steward Console, ambient widget         | Built                           |
-| Focus capsule / context injection       | Partial — compact context only  |
-| Friction containment                    | Not built (R1)                  |
-| Background terminals                    | Not built (R2)                  |
-| Pi child workers                        | Not built (R3)                  |
-| Automatic settlement and integration    | Not built (R4)                  |
-| Fresh-session continuity                | Not built (R5)                  |
-| Quiet boundary reconciliation           | Not built (R6)                  |
-| Uncoached dogfood acceptance            | Not attempted (R7)              |
+| Capability                              | Status                                                       |
+| --------------------------------------- | ------------------------------------------------------------ |
+| Durable per-project state               | Built                                                        |
+| Planning intake, orientation            | Built                                                        |
+| Claims, receipts, completion gate       | Built                                                        |
+| Delivery summary, commit suggestion     | Built                                                        |
+| Steward Console, ambient widget         | Built                                                        |
+| Focus capsule / context injection       | Built (R1)                                                   |
+| Action-oriented `Continue.`             | Built (R1) — observed in a fresh Pi session                  |
+| Content-based orientation freshness     | Built (R1)                                                   |
+| Quiet development staleness             | Built (R1) — Doctor separates structure from readiness drift  |
+| Honest held readiness                   | Built (R1) — presentation only; no new gate                  |
+| Verification grouping                   | Seam only (R1) — identity and grouping; execution is R6       |
+| Background terminals                    | Not built (R2)                                               |
+| Pi child workers                        | Not built (R3)                                               |
+| Automatic settlement and integration    | Not built (R4)                                               |
+| Fresh-session continuity                | Not built (R5)                                               |
+| Quiet boundary reconciliation           | Not built (R6)                                               |
+| Uncoached dogfood acceptance            | Not attempted (R7)                                           |
 
-No document, skill, README, or canonical record may describe R1–R7 capabilities as present. The
+R1's evidence is recorded in
+[docs/verification/R1_AMBIENT_CONTINUITY.md](../verification/R1_AMBIENT_CONTINUITY.md), including what
+it does **not** establish. R1 was completed through the protected transition on `4d108fc`: criterion 5
+was aligned with R1 capability honesty under DEC-20, the canonical-event concurrency defect was
+fixed, and the five NF-9 required claims are supported by current receipts. Honest limitations remain
+visible on each claim.
+
+What R1 makes true is narrow: **invocation is immediately useful**. Nothing runs between turns. R1 is
+not background autonomy, automatic settlement, persistent execution, worker orchestration, or
+self-running project management, and no document may describe it as any of those.
+
+No document, skill, README, or canonical record may describe R2–R7 capabilities as present. The
 Steward skill currently instructs the model **not** to spawn subagents, because there is no runtime
 delegation to spawn them with. That instruction is a statement of current fact and gets revised when
 R3 lands — not before.

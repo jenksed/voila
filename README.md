@@ -54,9 +54,13 @@ had become responsible for operating Voila. The active roadmap is
 toward **Project Steward Operational Loop v1**. Delegation and background execution moved from
 "deferred, optional" to product-critical. Approval-bundle self-hosting is **paused**.
 
-**Not built yet:** friction containment (R1), background terminals (R2), Pi child workers (R3),
-automatic settlement (R4), fresh-session continuity (R5), quiet boundary reconciliation (R6). None of
-it exists today. See the doctrine's built/not-built table.
+**Not built yet:** background terminals (R2), Pi child workers (R3), automatic settlement (R4),
+fresh-session continuity (R5), quiet boundary reconciliation (R6). None of it exists today. See the
+doctrine's built/not-built table. R1 (friction containment and ambient continuity) is implemented on
+`feat/r1-ambient-continuity`: its automated and interactive tiers pass and NF-9 was completed through
+the protected transition with five required claims covered by current receipts. Approval bundles
+remain paused. The behavioral evidence and criterion-level limitations are recorded in
+[docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md).
 
 **What is built — Phase 0 + Packets 1–4 + Phase 6.** Voila is a runnable Pi extension:
 a thin adapter (`.pi/extensions/voila.ts`), canonical `.voila/` state with **explicit schema
@@ -67,11 +71,14 @@ executable verification recorded as immutable receipts, evidence freshness deriv
 fingerprint, a **protected completion transition**, and a **delivery engine** that proposes
 commit boundaries and an evidence-backed delivery summary (`/voila deliver`, `/voila commit`) without
 ever committing, staging, or pushing. 30 LLM-callable tools, a real **Project
-Steward** Pi skill, and compact automatic context injection (**partial** — the full focus capsule is
-R1 work, per the doctrine's capability table). Evidence freshness is **content-addressed**
-([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so committing receipts no
-longer invalidates them. Pinned to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via
-mise), tested (**588 tests**). The repo **dogfoods its own** `.voila/` state.
+Steward** Pi skill, and a **focus capsule** injected before every Steward turn: canonical truth,
+bounded repository observation, and a directive that turns `Continue.` into work instead of a status
+report ([docs/design/FOCUS_CAPSULE.md](docs/design/FOCUS_CAPSULE.md)). Evidence freshness is
+**content-addressed** ([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so
+committing receipts no longer invalidates them; orientation freshness follows the content it inspected,
+not git HEAD. Doctor separates structural health from expected development drift. Pinned to
+`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**626 tests**). The repo
+**dogfoods its own** `.voila/` state.
 
 **The boundary is explicit**: the model interprets (fallibly), Voila enforces (preservation,
 schemas, provenance, gating, persistence, idempotency), and *you* accept. Nothing enters canonical
@@ -141,9 +148,11 @@ doctrine has not superseded them; its status banner marks exactly what changed.
 | Setup | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, pinned versions, commands, smoke test |
 | Verification | [docs/verification/PACKET_1_FOUNDATION.md](docs/verification/PACKET_1_FOUNDATION.md) | Packet 1 foundation verification record |
 | Verification | [docs/verification/PACKET_2_PROJECT_OPERATIONS.md](docs/verification/PACKET_2_PROJECT_OPERATIONS.md) | Packet 2 project-operations verification record |
+| Verification | [docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md) | R1 ambient continuity: both evidence tiers, and what they do not establish |
 | Design | [docs/design/STEWARD_CONSOLE.md](docs/design/STEWARD_CONSOLE.md) | Steward Console design and alternatives |
 | Design | [docs/design/PLANNING_INTAKE.md](docs/design/PLANNING_INTAKE.md) | Intake lifecycle, provenance, and apply semantics |
-| Design | [docs/design/REPOSITORY_ORIENTATION.md](docs/design/REPOSITORY_ORIENTATION.md) | Bounded orientation and staleness |
+| Design | [docs/design/REPOSITORY_ORIENTATION.md](docs/design/REPOSITORY_ORIENTATION.md) | Bounded orientation and content-based freshness |
+| Design | [docs/design/FOCUS_CAPSULE.md](docs/design/FOCUS_CAPSULE.md) | The injected continuation capsule and `Continue.` semantics |
 | Design | [docs/design/PROOF_ENGINE.md](docs/design/PROOF_ENGINE.md) | Claims, receipts, freshness, protected completion |
 | Design | [docs/design/DELIVERY_INSPECTOR.md](docs/design/DELIVERY_INSPECTOR.md) | Read-only inspection: what changed, scope, attention |
 | Design | [docs/design/DELIVERY_ENGINE.md](docs/design/DELIVERY_ENGINE.md) | Delivery summary, commit suggestion, and the delivery boundary |

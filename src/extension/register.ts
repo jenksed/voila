@@ -23,6 +23,7 @@ import {
 import { runClaims, runComplete, runProof, runVerify } from "../commands/proof.ts";
 import { runCommitSuggestion, runDeliver } from "../commands/deliver.ts";
 import { assembleContext } from "../context/assemble.ts";
+import { isContinuationRequest } from "../context/continuation.ts";
 import { formatDoctor, runDoctor, worstLevel } from "../commands/doctor.ts";
 import type { CommandResult } from "../commands/types.ts";
 import { loadState } from "../state/store.ts";
@@ -162,10 +163,17 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
     await restoreHomeView(ctx);
   });
 
-  // Inject compact, deterministic Voila context before agent work. Read-only: never mutates state.
-  host.on("before_agent_start", async (_event, ctx) => {
+  // Inject the deterministic focus capsule before agent work. Read-only: never mutates state.
+  //
+  // The turn's prompt is read here, at the single host boundary, so an explicit "Continue." produces
+  // an action-oriented directive instead of a bare context dump. Anything that is not an explicit
+  // continuation request is left alone.
+  host.on("before_agent_start", async (event, ctx) => {
     try {
-      const content = await assembleContext(ctx.cwd);
+      const prompt = (event as { prompt?: unknown } | null | undefined)?.prompt;
+      const content = await assembleContext(ctx.cwd, {
+        continuation: isContinuationRequest(typeof prompt === "string" ? prompt : undefined),
+      });
       return { message: { customType: "voila-context", content, display: false } };
     } catch {
       return undefined;

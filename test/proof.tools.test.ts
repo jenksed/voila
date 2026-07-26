@@ -17,7 +17,7 @@ import {
   runVerify,
   parseVerifyArgs,
 } from "../src/commands/proof.ts";
-import { runDoctor, type DoctorCheck } from "../src/commands/doctor.ts";
+import { formatDoctor, runDoctor, worstLevel, type DoctorCheck } from "../src/commands/doctor.ts";
 import { createWorkItem, setFocusWorkItem, updateWorkItem } from "../src/domain/operations.ts";
 import { CompletionRejectedError } from "../src/domain/proof.ts";
 import { readReceiptManifest } from "../src/state/receipt-store.ts";
@@ -354,10 +354,17 @@ test("voila_get_proof reports counts and, for an item, every gate", async () => 
 
   const forItem = await run(tool("voila_get_proof"), { workItemId: "NF-1" }, root);
   const text = textOf(forItem);
-  assert.match(text, /NF-1 \[in_progress\] — completion READY/);
+  // Every gate passes, but CLM-1 records a limitation, so the model is told HELD — not READY.
+  assert.match(text, /NF-1 \[in_progress\] — completion HELD/);
+  assert.match(text, /outstanding: CLM-1: automated only; no interactive check/);
   assert.match(text, /\[pass\] every required claim supported by current passing evidence/);
-  const details = forItem.details as { assessment: { ready: boolean }; coverage: unknown[] };
-  assert.equal(details.assessment.ready, true);
+  const details = forItem.details as {
+    assessment: { ready: boolean };
+    readiness: { kind: string };
+    coverage: unknown[];
+  };
+  assert.equal(details.assessment.ready, true, "the gates themselves still pass");
+  assert.equal(details.readiness.kind, "held");
   assert.equal(details.coverage.length, 1);
 
   const missing = await run(tool("voila_get_proof"), { workItemId: "NF-9" }, root);
@@ -501,11 +508,12 @@ test("/voila proof shows an overview, a work item's gates, and a receipt without
   const overview = await runProof(root);
   assert.match(overview.lines.join("\n"), /Proof — 1 claim\(s\)/);
   assert.match(overview.lines.join("\n"), /Receipts: 1/);
-  assert.match(overview.lines.join("\n"), /NF-1 — READY to complete/);
+  assert.match(overview.lines.join("\n"), /NF-1 — HELD: /);
 
   const item = await runProof(root, "NF-1");
   const itemText = item.lines.join("\n");
-  assert.match(itemText, /completion: READY/);
+  assert.match(itemText, /completion: HELD/);
+  assert.match(itemText, /outstanding acceptance:/);
   assert.match(itemText, /\[covered\] the recorded command passes \(CLM-1\)/);
   assert.match(itemText, /\[pass\] dependencies completed/);
 
@@ -648,14 +656,38 @@ test("doctor detects a modified receipt output file via its hash", async () => {
   assert.match(hashes.detail, /RCP-1: stdout\.txt hash mismatch/);
 });
 
-test("doctor warns about stale evidence without changing anything", async () => {
+test("doctor treats development staleness as informational, not structural", async () => {
   const root = await proveRoot();
   const before = await readFile(statePaths(root).projectJson, "utf8");
   await writeFile(join(root, "tracked.txt"), "changed\n", "utf8");
+
+  const checks = await runDoctor(doctorInput(root));
+  const reconciliation = check(checks, "evidence reconciliation");
+  assert.equal(reconciliation.level, "info", "editing files is not a structural fault");
+  assert.match(reconciliation.detail, /1 claim\(s\) affected by current development changes/);
+  assert.match(reconciliation.detail, /reconciles at the completion boundary/);
+  // Nothing tells the developer to go refresh anything, and the run is read-only.
+  assert.doesNotMatch(reconciliation.detail, /re-run|refresh/i);
+  assert.equal(await readFile(statePaths(root).projectJson, "utf8"), before, "doctor is read-only");
+
+  // Structural health is reported separately from readiness drift.
+  const formatted = formatDoctor(checks).join("\n");
+  assert.match(formatted, /\[INFO\] evidence reconciliation/);
+  assert.match(formatted, /Structural health: OK/);
+  assert.equal(worstLevel(checks), "info", "an INFO item never escalates the notification");
+});
+
+test("doctor still warns when current evidence actually contradicts a claim", async () => {
+  const root = await proveRoot();
+  // A receipt recorded at the CURRENT repository state that failed: not staleness, a real failure.
+  await run(
+    tool("voila_run_verification"),
+    { claimId: "CLM-1", executable: NODE, args: ["-e", "process.exit(3)"] },
+    root,
+  );
   const freshness = check(await runDoctor(doctorInput(root)), "evidence freshness");
   assert.equal(freshness.level, "warn");
-  assert.match(freshness.detail, /CLM-1 is stale/);
-  assert.equal(await readFile(statePaths(root).projectJson, "utf8"), before, "doctor is read-only");
+  assert.match(freshness.detail, /CLM-1 is unsupported/);
 });
 
 test("doctor detects duplicate claim IDs through canonical validation", async () => {
@@ -692,7 +724,7 @@ test("doctor reports leftover receipt staging directories", async () => {
   assert.match(leftovers.detail, /safe to delete/);
 });
 
-test("doctor WARNS (never reverts) when completed work no longer revalidates", async () => {
+test("completed work whose evidence merely went stale is informational, never reverted", async () => {
   const root = await proveRoot();
   await run(tool("voila_complete_work_item"), { workItemId: "NF-1" }, root);
   // The repository moves: the receipt that justified completion is no longer current.
@@ -700,13 +732,39 @@ test("doctor WARNS (never reverts) when completed work no longer revalidates", a
 
   const before = await readFile(statePaths(root).projectJson, "utf8");
   const checks = await runDoctor(doctorInput(root));
-  const revalidation = check(checks, "completed work revalidation");
+  const evidence = check(checks, "completed work evidence");
+  assert.equal(evidence.level, "info", "ordinary staleness is not a structural fault");
+  assert.match(evidence.detail, /NF-1/);
+  assert.match(evidence.detail, /completion record stands/);
+  assert.equal(
+    checks.find((c) => c.name === "completed work revalidation"),
+    undefined,
+    "staleness alone does not raise the revalidation warning",
+  );
+
+  // The completed status is untouched and no bytes changed.
+  assert.equal(await readFile(statePaths(root).projectJson, "utf8"), before);
+  assert.equal((await loadState(root)).workItems[0]?.status, "completed");
+});
+
+test("doctor WARNS (never reverts) when a completed item's evidence actually fails now", async () => {
+  const root = await proveRoot();
+  await run(tool("voila_complete_work_item"), { workItemId: "NF-1" }, root);
+  // A receipt at the CURRENT state that failed: the completion record is no longer supportable, and
+  // that is not ordinary development drift.
+  await run(
+    tool("voila_run_verification"),
+    { claimId: "CLM-1", executable: NODE, args: ["-e", "process.exit(4)"] },
+    root,
+  );
+
+  const before = await readFile(statePaths(root).projectJson, "utf8");
+  const revalidation = check(await runDoctor(doctorInput(root)), "completed work revalidation");
   assert.equal(revalidation.level, "warn", "a warning, never a failure that implies reversion");
   assert.match(revalidation.detail, /current evidence no longer supports revalidating/);
   assert.match(revalidation.detail, /NF-1/);
-  assert.match(revalidation.detail, /completion record stands/);
+  assert.match(revalidation.detail, /not ordinary staleness/);
 
-  // The completed status is untouched and no bytes changed.
   assert.equal(await readFile(statePaths(root).projectJson, "utf8"), before);
   assert.equal((await loadState(root)).workItems[0]?.status, "completed");
 });

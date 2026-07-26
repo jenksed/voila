@@ -526,31 +526,61 @@ export async function initState(root: string, input: InitStateInput): Promise<Pr
  */
 export type EventOrBuilder = VoilaEvent | ((next: ProjectState) => VoilaEvent);
 
+// --- Per-root write serialization ---
+//
+// `updateState` is the only path that mutates project.json, the append-only event log, and the
+// generated view together. Without serialization, two concurrent calls would each load the same
+// pre-mutation state, both increment the same revision, and the second canonical write would silently
+// overwrite the first while leaving two duplicate events for one transition. We guard the entire
+// load → reduce → write → append → view sequence with a per-root async mutex so two concurrent
+// callers see distinct revisions, append distinct events, and never duplicate history.
+
+interface WriteLock {
+  chain: Promise<unknown>;
+}
+
+const writeLocks = new Map<string, WriteLock>();
+
+function acquireWriteLock(root: string): Promise<() => void> {
+  const previous = writeLocks.get(root)?.chain ?? Promise.resolve();
+  let release: () => void = () => {};
+  const next = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  writeLocks.set(root, { chain: previous.then(() => next) });
+  return previous.then(() => release);
+}
+
 export async function updateState(
   root: string,
   reducer: (current: Readonly<ProjectState>) => ProjectState,
   event?: EventOrBuilder,
 ): Promise<ProjectState> {
-  const current = await loadState(root);
-  const frozenInput = deepFreeze(structuredClone(current));
-  const candidate = reducer(frozenInput);
+  const release = await acquireWriteLock(root);
+  try {
+    const current = await loadState(root);
+    const frozenInput = deepFreeze(structuredClone(current));
+    const candidate = reducer(frozenInput);
 
-  const next: ProjectState = {
-    ...candidate,
-    schemaVersion: SCHEMA_VERSION,
-    projectId: current.projectId,
-    createdAt: current.createdAt,
-    revision: current.revision + 1,
-    updatedAt: new Date().toISOString(),
-  };
+    const next: ProjectState = {
+      ...candidate,
+      schemaVersion: SCHEMA_VERSION,
+      projectId: current.projectId,
+      createdAt: current.createdAt,
+      revision: current.revision + 1,
+      updatedAt: new Date().toISOString(),
+    };
 
-  const validated = validateProjectState(next);
+    const validated = validateProjectState(next);
 
-  await writeCanonical(root, validated);
-  if (event) {
-    const evt = typeof event === "function" ? event(validated) : event;
-    await appendEvent(root, { ...evt, revision: validated.revision });
+    await writeCanonical(root, validated);
+    if (event) {
+      const evt = typeof event === "function" ? event(validated) : event;
+      await appendEvent(root, { ...evt, revision: validated.revision });
+    }
+    await writeStatusView(root, validated);
+    return validated;
+  } finally {
+    release();
   }
-  await writeStatusView(root, validated);
-  return validated;
 }

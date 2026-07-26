@@ -244,6 +244,11 @@ function proofReadinessLines(model: ConsoleModel, width: number, st: Styler): st
     out.push(
       st.fg("muted", truncate("No focused work item, so no completion gate to report.", width)),
     );
+  } else if (readiness.ready && proof.focusHold) {
+    // Every gate passes, but acceptance is still owed something. Never render this as ready.
+    out.push(
+      st.fg("warning", truncate(`${readiness.workItemId} HELD — ${proof.focusHold.detail}`, width)),
+    );
   } else if (readiness.ready) {
     out.push(
       st.fg(
@@ -330,8 +335,17 @@ function proofView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
     out.push("");
     out.push(heading("Completion gate", width, st));
     const marker = selectionMarker(refEq({ kind: "gate", id: readiness.workItemId }, selected), st);
-    const body = `${readiness.workItemId}: ${readiness.ready ? "all gates pass" : `${readiness.failing.length} gate(s) failing`}`;
-    out.push(marker + st.fg(readiness.ready ? "success" : "warning", padRight(body, width - 2)));
+    const held = proof.focusHold !== null;
+    const body = `${readiness.workItemId}: ${
+      readiness.ready
+        ? held
+          ? "all gates pass, but HELD"
+          : "all gates pass"
+        : `${readiness.failing.length} gate(s) failing`
+    }`;
+    out.push(
+      marker + st.fg(readiness.ready && !held ? "success" : "warning", padRight(body, width - 2)),
+    );
     out.push(st.fg("muted", truncate("      Enter for the full gate list", width)));
   }
 
@@ -581,16 +595,30 @@ function detailView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: 
     );
   } else if (ref.kind === "gate") {
     const readiness = model.proof?.focusReadiness;
+    const hold = model.proof?.focusHold ?? null;
     if (!readiness || readiness.workItemId !== ref.id) {
       return [...out, st.fg("muted", "Not found.")];
     }
     out.push(
       st.fg("accent", truncate(`${readiness.workItemId} completion gate`, width)),
       readiness.ready
-        ? st.fg("success", truncate("All gates pass; completion is permitted.", width))
+        ? hold
+          ? st.fg(
+              "warning",
+              truncate("All gates pass, but acceptance is still owed something — HELD.", width),
+            )
+          : st.fg("success", truncate("All gates pass; completion is permitted.", width))
         : st.fg("error", truncate(`${readiness.failing.length} gate(s) failing.`, width)),
       "",
     );
+    if (hold) {
+      for (const o of hold.outstanding) {
+        for (const l of wrapText(`outstanding: ${o.claimId}: ${o.limitation}`, width)) {
+          out.push(st.fg("warning", l));
+        }
+      }
+      out.push("");
+    }
     for (const g of readiness.gates) {
       const mark = g.passed ? "pass" : "FAIL";
       for (const l of wrapText(`[${mark}] ${g.label}: ${g.detail}`, width)) {
