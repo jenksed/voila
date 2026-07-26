@@ -19,7 +19,9 @@ versioning/migration** (now v4), a compact **project-operations layer** (work it
 assumptions, risks), a keyboard-first **Steward Console** (`/voila home`), **planning intake +
 repository orientation**, and the **proof engine**: claims tied to exact acceptance criteria,
 executable verification recorded as immutable receipts, evidence freshness derived from a repository
-fingerprint, and a **protected completion transition**. 27 LLM-callable tools, a real **Project
+fingerprint, a **protected completion transition**, and a **delivery engine** that proposes
+commit boundaries and an evidence-backed delivery summary (`/voila deliver`, `/voila commit`) without
+ever committing, staging, or pushing. 30 LLM-callable tools, a real **Project
 Steward** Pi skill, and compact automatic context injection. Pinned to
 `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**355 tests**). The
 repo **dogfoods its own** `.voila/` state.
@@ -77,6 +79,8 @@ The authoritative product statement is [docs/product/PRODUCT_DIRECTION.md](docs/
 | Design | [docs/design/PLANNING_INTAKE.md](docs/design/PLANNING_INTAKE.md) | Intake lifecycle, provenance, and apply semantics |
 | Design | [docs/design/REPOSITORY_ORIENTATION.md](docs/design/REPOSITORY_ORIENTATION.md) | Bounded orientation and staleness |
 | Design | [docs/design/PROOF_ENGINE.md](docs/design/PROOF_ENGINE.md) | Claims, receipts, freshness, protected completion |
+| Design | [docs/design/DELIVERY_INSPECTOR.md](docs/design/DELIVERY_INSPECTOR.md) | Read-only inspection: what changed, scope, attention |
+| Design | [docs/design/DELIVERY_ENGINE.md](docs/design/DELIVERY_ENGINE.md) | Delivery summary, commit suggestion, and the delivery boundary |
 | Verification | [docs/verification/PACKET_4_PROOF_ENGINE.md](docs/verification/PACKET_4_PROOF_ENGINE.md) | Packet 4 proof-engine verification record |
 | Verification | [docs/verification/PACKET_2_5_STEWARD_CONSOLE.md](docs/verification/PACKET_2_5_STEWARD_CONSOLE.md) | Packet 2.5 console verification record |
 | Verification | [docs/verification/PACKET_3_INTAKE_ORIENTATION.md](docs/verification/PACKET_3_INTAKE_ORIENTATION.md) | Packet 3 intake/orientation verification record |

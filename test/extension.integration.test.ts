@@ -80,7 +80,7 @@ test("extension registers the voila command, tools, and session_start", async ()
 
   assert.ok(h.commands.has("voila"));
   assert.ok(h.events.has("session_start"));
-  assert.equal(h.tools.size, 28);
+  assert.equal(h.tools.size, 30);
   assert.ok(h.tools.has("voila_create_work_item"));
   assert.ok(h.tools.has("voila_request_intake_revision"));
   assert.ok(h.tools.has("voila_complete_work_item"));
