@@ -471,6 +471,26 @@ parallel `updateState` calls on a fresh root and asserts:
 - exactly 20 distinct `next_action_set` events with the same revision ordering;
 - the final canonical state matches the last write by revision order.
 
+The implemented mutex establishes only:
+
+> Canonical state mutations are serialized per project root within the current Node process and
+> current state-tool path.
+
+It does **not** yet prove safety across:
+
+- multiple Pi processes;
+- multiple Node processes;
+- future worker processes;
+- crashes between canonical write and event append;
+- network filesystems;
+- external writers;
+- stale lock recovery.
+
+The historical duplicate `claim_created` events for `CLM-6` at the same revision remain preserved
+in the append-only log. Replay and audit consumers must handle the historical invalid duplicates
+explicitly; the log is **not** cleanly replayable as-is, and that limitation is recorded in the
+R2-0 follow-up.
+
 ### Final completion
 
 - Five fresh `voila_run_verification` runs (`RCP-99..RCP-103`) all pass at fingerprint `5b343b20…`.
@@ -482,10 +502,15 @@ parallel `updateState` calls on a fresh root and asserts:
   completed` (the natural gate for an already-completed item).
 - `/voila doctor` reports structural health `OK` and informational development drift only.
 
+The final pre-completion fresh-session acceptance for NF-9 was recorded at SHA `37ae7fd`. Its purpose
+was to prove that while NF-9 was active, `Continue.` recovered NF-9 and began useful work. After
+protected completion, `Continue.` is no longer expected to identify NF-9 as the active item.
+
 ### Stop conditions
 
 None. The duplicate event history was classified as a structural integrity defect that was fixed
 before completion. Criterion 5 was amended through supported operations. CLM-10 was made honest. All
-five required claims are supported by current receipts. The final behavioral acceptance from
+five required claims are supported by current receipts.
+ The final behavioral acceptance from
 `37ae7fd` remains valid because the post-completion changes (criterion wording, CLM-10 wording, event
 fix, focus reset) do not alter the injected capsule, active focus, or directive that drove it.

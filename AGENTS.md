@@ -36,6 +36,9 @@ Delegation and background execution are no longer optional, but **they do not ex
 describe them, in any document or skill, as though they do. R1's ambient continuity **does** exist
 (focus capsule, action-oriented `Continue.`, content-based orientation freshness, quiet development
 staleness, honest held readiness, verification-grouping seam); its evidence and limitations are in
+[docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md). R1's ambient continuity **does** exist
+(focus capsule, action-oriented `Continue.`, content-based orientation freshness, quiet development
+staleness, honest held readiness, verification-grouping seam); its evidence and limitations are in
 [docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md).
 
 ## Core doctrine
