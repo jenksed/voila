@@ -1,9 +1,16 @@
 # Voila
 
-Voila is a personal development operating system for Joshua Jenks, built on top of the
-[Pi coding-agent harness](https://github.com/earendil-works/pi). Its central responsibility is
-maintaining ownership of work from intent through implementation, verification, and delivery —
-not merely generating code.
+Voila is a **project-aware agentic development environment** built on the
+[Pi coding-agent harness](https://github.com/earendil-works/pi). Its **Project Steward** keeps
+models, agents, tools, terminals, and handoffs aligned with durable project intent, coordinates their
+work, preserves continuity, and quietly assembles the evidence needed to justify delivery.
+
+**Delegate work, retain the thread.** The developer provides intent, consequential judgment,
+credentials, and final authority. The Steward provides coordination, continuity, execution leverage,
+recovery, and forward motion — without becoming another system the developer has to manage.
+
+The authoritative product statement is
+[docs/product/PROJECT_STEWARD_DOCTRINE.md](docs/product/PROJECT_STEWARD_DOCTRINE.md).
 
 > **Rename note.** Voila was developed under the working name NewFang through the Proof Engine
 > milestone. Historical verification records retain that name intentionally. Existing `NF-n`,
@@ -13,9 +20,9 @@ not merely generating code.
 
 ## Picking this up cold
 
-[`docs/HANDOFF.md`](docs/HANDOFF.md) is a self-contained brief: where the project stands, the
-doctrine that is enforced by tests, the two open decisions, and the gotchas that will bite you. Read
-it before making changes after a break, or hand it to another assistant.
+[`docs/HANDOFF.md`](docs/HANDOFF.md) is a self-contained brief. It records the current direction, the
+active focus, open human-required work, the exact next justified action, and the gotchas that will
+bite you. Read it before making changes after a break, or hand it to another assistant.
 
 ## Using Voila on other projects
 
@@ -39,7 +46,19 @@ nothing is created until you ask for it.
 
 ## Status
 
-**Phase 0 + Packets 1–4 complete — evidence-gated completion.** Voila is a runnable Pi extension:
+**Roadmap reset 2026-07-26 — building the Project Steward operational loop.**
+[ADR-0009](docs/decisions/0009-project-steward-operational-realignment.md) superseded Phases 5–8 of
+the old plan. The foundation below is real and stays; the daily experience was wrong — the developer
+had become responsible for operating Voila. The active roadmap is
+[docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md), R1 through R7,
+toward **Project Steward Operational Loop v1**. Delegation and background execution moved from
+"deferred, optional" to product-critical. Approval-bundle self-hosting is **paused**.
+
+**Not built yet:** friction containment (R1), background terminals (R2), Pi child workers (R3),
+automatic settlement (R4), fresh-session continuity (R5), quiet boundary reconciliation (R6). None of
+it exists today. See the doctrine's built/not-built table.
+
+**What is built — Phase 0 + Packets 1–4 + Phase 6.** Voila is a runnable Pi extension:
 a thin adapter (`.pi/extensions/voila.ts`), canonical `.voila/` state with **explicit schema
 versioning/migration** (now v4), a compact **project-operations layer** (work items, decisions,
 assumptions, risks), a keyboard-first **Steward Console** (`/voila home`), **planning intake +
@@ -48,9 +67,11 @@ executable verification recorded as immutable receipts, evidence freshness deriv
 fingerprint, a **protected completion transition**, and a **delivery engine** that proposes
 commit boundaries and an evidence-backed delivery summary (`/voila deliver`, `/voila commit`) without
 ever committing, staging, or pushing. 30 LLM-callable tools, a real **Project
-Steward** Pi skill, and compact automatic context injection. Pinned to
-`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**355 tests**). The
-repo **dogfoods its own** `.voila/` state.
+Steward** Pi skill, and compact automatic context injection (**partial** — the full focus capsule is
+R1 work, per the doctrine's capability table). Evidence freshness is **content-addressed**
+([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so committing receipts no
+longer invalidates them. Pinned to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via
+mise), tested (**588 tests**). The repo **dogfoods its own** `.voila/` state.
 
 **The boundary is explicit**: the model interprets (fallibly), Voila enforces (preservation,
 schemas, provenance, gating, persistence, idempotency), and *you* accept. Nothing enters canonical
@@ -64,40 +85,59 @@ by hand into `project.json` is still schema-valid (`/voila doctor` reports when 
 longer revalidates). Verification runs a real command with a bounded timeout and no shell; it is
 **not a sandbox**. See [docs/design/PROOF_ENGINE.md](docs/design/PROOF_ENGINE.md).
 
-This is **not** the full MVP. There are no approval bundles, delegation, background processes,
-sandboxing, remote execution, model routing, cost tracking, or release automation. NF-1 and NF-2
-remain open honestly: the interactive Steward Console check and the authenticated Project-Steward
-acceptance run are still **pending**, so daily-use readiness is not yet claimed. See
+This is **not** the full product. There is no delegation, no background processes, no automatic
+settlement, no approval bundles, no sandboxing, no remote execution, no model routing, no cost
+tracking, and no release automation. NF-2 remains open honestly: the authenticated Project-Steward
+acceptance run is still **pending**, so daily-use readiness is not yet claimed. See
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
-[docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) for what comes next.
+[docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md) for what comes next.
 
 ## What Voila is (and is not)
 
-Voila is intended to become a personal development operating system: it takes a natural-language
-request, planning document, existing repository, or interrupted project and moves it toward an
-evidence-backed delivery state, while a primary agent (the **Project Steward**) retains
-accountability for intent, decisions, state, delegation, evidence, and completion claims.
+Voila takes a natural-language request, planning document, existing repository, or interrupted project
+and moves it toward an evidence-backed delivery state — with the **Project Steward** acting as a
+persistent technical lead that coordinates the work rather than a ledger the developer maintains. It
+retains accountability for intent, decisions, state, delegation, evidence, and completion claims, and
+it retains the thread across models, workers, and sessions.
 
 Voila is **not** a Pi theme, a loose collection of extensions, a subagent demo, a chat interface,
-or an OpenCode replacement.
+an OpenCode replacement, or a project-management system that happens to sit near a coding agent.
 
-The authoritative product statement is [docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md).
+The authoritative product statement is
+[docs/product/PROJECT_STEWARD_DOCTRINE.md](docs/product/PROJECT_STEWARD_DOCTRINE.md).
+[docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) is the preserved v0.1 authored
+source; where the two disagree, the doctrine wins.
 
 ## Document map
 
+**Authority chain.** Three documents govern, in this order:
+
+```text
+PROJECT_REALIGNMENT_PLAN    controls current implementation sequencing
+PROJECT_STEWARD_DOCTRINE    controls Steward operating behavior and the product tests
+PRODUCT_DIRECTION           remains authoritative where it has not been superseded
+```
+
+The plan is the authored source, so it wins over the doctrine on sequencing. The doctrine wins over
+the v0.1 product direction on how the Steward behaves and what Voila is for. `PRODUCT_DIRECTION.md`
+is **not** obsolete — its vocabulary, role model, principles, and lifecycle still hold wherever the
+doctrine has not superseded them; its status banner marks exactly what changed.
+
 | Area | Document | Purpose |
 |------|----------|---------|
-| Product | [docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) | Canonical product direction (v0.1) |
+| Product | [docs/product/PROJECT_STEWARD_DOCTRINE.md](docs/product/PROJECT_STEWARD_DOCTRINE.md) | **Authoritative** product statement, doctrine, No Managing the Manager gate |
+| Plans | [docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md) | **Active roadmap** — R0–R7 toward Operational Loop v1 |
+| Product | [docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) | Preserved v0.1 authored source; superseded as the operational statement |
 | Research | [docs/research/PI_CAPABILITY_AUDIT.md](docs/research/PI_CAPABILITY_AUDIT.md) | What current Pi natively provides |
 | Research | [docs/research/BEN_SETUP_AUDIT.md](docs/research/BEN_SETUP_AUDIT.md) | Audit of `davis7dotsh/my-pi-setup` |
 | Research | [docs/research/VOILA_CAPABILITY_MATRIX.md](docs/research/VOILA_CAPABILITY_MATRIX.md) | Requirement-by-requirement matrix |
 | Architecture | [docs/architecture/ARCHITECTURE_OPTIONS.md](docs/architecture/ARCHITECTURE_OPTIONS.md) | Five architecture options compared |
 | Architecture | [docs/architecture/RECOMMENDED_ARCHITECTURE.md](docs/architecture/RECOMMENDED_ARCHITECTURE.md) | The recommendation |
 | Plans | [docs/plans/MVP_VERTICAL_SLICE.md](docs/plans/MVP_VERTICAL_SLICE.md) | Smallest proof slice |
-| Plans | [docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) | Phased plan with gates |
+| Plans | [docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) | Phases 0–8. Phases 5–8 superseded; retained as history |
 | Plans | [docs/plans/SELF_HOSTING_ACCEPTANCE_PROJECT.md](docs/plans/SELF_HOSTING_ACCEPTANCE_PROJECT.md) | `voila-approval-bundles` self-hosting project |
 | Project | [docs/project/PROJECT_LEDGER.md](docs/project/PROJECT_LEDGER.md) | Manual project ledger during bootstrap |
-| Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records (0001–0007) |
+| Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records (0001–0009) |
 | Setup | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, pinned versions, commands, smoke test |
 | Verification | [docs/verification/PACKET_1_FOUNDATION.md](docs/verification/PACKET_1_FOUNDATION.md) | Packet 1 foundation verification record |
 | Verification | [docs/verification/PACKET_2_PROJECT_OPERATIONS.md](docs/verification/PACKET_2_PROJECT_OPERATIONS.md) | Packet 2 project-operations verification record |

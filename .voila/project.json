@@ -4,18 +4,18 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "In a real authenticated Pi terminal, the owner should use the Project Steward workflow to ingest a real planning document for NF-2, review the generated Understanding Check, and explicitly accept or request revision; record only the actually observed result. Do not complete NF-2 until that evidence exists.",
-  "nextActionRationale": "Canonical state keeps NF-2 focused and ready, and DEC-17 explicitly holds NF-2 pending this authenticated owner-run intake. NF-3 depends on NF-2 and NF-4 depends on NF-3, so neither may be completed first. ORI-5 re-established current repository orientation at HEAD e2835bd7780198c0ecf65401a8bd0cbad95c82db without supplying the missing authenticated intake evidence.",
-  "focusWorkItemId": "NF-2",
+  "nextAction": "Deliver R0 first: mark draft PR #9 ('Realign Voila around the Project Steward operational loop') ready for review and merge it into main. Do NOT begin R1 on this documentation branch. After the merge, create a new implementation branch for NF-9 and build R1's first bounded slice -- the focus capsule and the orientation-freshness change.",
+  "nextActionRationale": "R0 is documentation and canonical direction only and is complete on docs/project-steward-realignment: the doctrine is authoritative, Phases 5-8 are explicitly superseded, the product documents agree, canonical state points to the new priority, and no runtime capability is falsely claimed. The cold-reader acceptance test returned PASS at high confidence, and its material findings are corrected or explicitly assigned to R1 (docs/verification/R0_COLD_READER_ACCEPTANCE.md). The realignment plan section 16 sequences delivery before implementation, so starting NF-9 here would mix runtime work into a documentation packet and leave R0 undelivered. NF-9 remains the canonical focus across both steps. NF-2 stays held for the authenticated owner-run Project Steward intake that DEC-17 requires; its misleading 'ready' presentation is NF-9 acceptance criterion 4, not an R0 fix.",
+  "focusWorkItemId": "NF-9",
   "sequences": {
-    "workItem": 9,
-    "decision": 18,
+    "workItem": 16,
+    "decision": 19,
     "assumption": 4,
     "risk": 6,
     "intake": 9,
     "orientation": 6,
     "claim": 6,
-    "receipt": 69
+    "receipt": 94
   },
   "workItems": [
     {
@@ -150,6 +150,141 @@
       "createdAt": "2026-07-25T04:51:01.991Z",
       "updatedAt": "2026-07-25T04:51:01.991Z",
       "requiredClaimIds": []
+    },
+    {
+      "id": "NF-9",
+      "kind": "outcome",
+      "title": "R1: contain existing friction and make continuation ambient",
+      "description": "Stop existing Voila machinery from interrupting ordinary development while the operational loop is built. Evidence staleness becomes expected during active development (one quiet ambient indicator; no instruction to refresh claims; doctor stops treating ordinary staleness as structural failure). Orientation freshness moves from git-HEAD-only to relevant-content freshness, with HEAD retained as provenance. Verification grouping is prepared so one identical command can serve every applicable claim. The focus capsule is injected before every meaningful Steward turn. Narrow scope: correct the specific READY-to-complete inconsistency; do not build a universal gate-policy system.",
+      "status": "ready",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "In a fresh Pi session the user says only 'Continue.' and the Steward identifies the correct work and begins useful action without asking for a recap or requiring state maintenance",
+        "A commit that changes no orientation-relevant content does not mark orientation stale",
+        "One identical verification command can serve every applicable claim without being re-executed per claim",
+        "A work item does not display READY to complete while a known required human or authenticated activity remains pending",
+        "The focus capsule injected before a Steward turn contains the accepted objective, active work item, current slice, relevant decisions and non-goals, known blocker, next justified action, and active workers and terminals -- and not the entire ledger"
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [],
+      "createdAt": "2026-07-26T14:59:55.461Z",
+      "updatedAt": "2026-07-26T14:59:55.461Z"
+    },
+    {
+      "id": "NF-10",
+      "kind": "outcome",
+      "title": "R2: one supervised background terminal",
+      "description": "Let the Steward launch and supervise one long-running local process without blocking the parent conversation. Operations: start, list, inspect, read output, stop, wait. Structured executable and args only -- no shell string execution. Each process records an operation ID, associated work item, executable and args, working directory, owner, start time, status, exit result, bounded output, and settlement result. Non-goals: remote processes, persistence across machine restart, arbitrary shell sessions, terminal multiplexing, concurrency beyond what proves the loop.",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [
+        "The Steward launches a test process, continues useful parent work while it runs, receives the result automatically without the developer checking, and acts on the outcome",
+        "The ordinary Pi surface shows an active-terminal indicator while a process runs, and a deeper view shows the process, its elapsed time, and the work item that owns it",
+        "A process result is delivered as one completion event and is never injected into an active stream"
+      ],
+      "dependsOn": [
+        "NF-9"
+      ],
+      "requiredClaimIds": [],
+      "createdAt": "2026-07-26T15:00:18.268Z",
+      "updatedAt": "2026-07-26T15:00:18.268Z"
+    },
+    {
+      "id": "NF-11",
+      "kind": "outcome",
+      "title": "R3: one bounded read-only Pi child worker",
+      "description": "Let the Steward delegate one useful task to another Pi session and integrate the result without developer coordination. Operations: spawn, inspect, wait, steer, cancel, receive result. Concurrency begins at one. Read-only mode is the v1 default (repository scouting, architecture review, test review, debugging analysis, dependency research, adversarial review). Isolated-write workers come only after the read-only loop is reliable, in a dedicated worktree with explicit path scope, with the parent Steward still responsible for integration. Every assignment carries the project objective, active work item, bounded task, relevant decisions and constraints, permitted scope, expected result, known uncertainty, and return format -- never the full project history.",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [
+        "The Steward identifies a task worth delegating, creates a bounded assignment, continues parent work, receives the result automatically, evaluates it, integrates or rejects it, and proceeds without asking the developer to carry the result",
+        "The developer can inspect the worker transcript, steer it, cancel it, and take over -- as escape hatches, not as normal management requirements",
+        "Delegation does not add more elapsed time or coordination than doing the work directly"
+      ],
+      "dependsOn": [
+        "NF-10"
+      ],
+      "requiredClaimIds": [],
+      "createdAt": "2026-07-26T15:00:18.273Z",
+      "updatedAt": "2026-07-26T15:00:18.273Z"
+    },
+    {
+      "id": "NF-12",
+      "kind": "outcome",
+      "title": "R4: operational integration and automatic settlement",
+      "description": "Turn terminals, workers, project state, and the parent Steward into one coherent loop via the smallest durable representation of active work (operation ID, type, work item, assignment, status, owner, model or executable, working directory or worktree, started and settled times, result summary, artifact references). Explicitly avoid a generalized workflow DSL. Includes drift correction (remind, request justification, cancel if necessary, preserve partial results, escalate only a material plan decision) and failure recovery (inspect, decide on retry, reduce or revise the assignment, switch execution path, continue unaffected work, escalate only a real blocker).",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [
+        "The loop delegate -> observe -> settle -> evaluate -> integrate -> continue completes without developer orchestration",
+        "The Steward avoids issuing a duplicate assignment for work already active",
+        "A worker that moves outside its assignment is corrected or cancelled with useful partial results preserved, and the developer is involved only when the drift exposes a material plan decision",
+        "A failed worker or process is inspected and handled without escalating anything that is not a real blocker"
+      ],
+      "dependsOn": [
+        "NF-11"
+      ],
+      "requiredClaimIds": [],
+      "createdAt": "2026-07-26T15:00:18.275Z",
+      "updatedAt": "2026-07-26T15:00:18.275Z"
+    },
+    {
+      "id": "NF-13",
+      "kind": "outcome",
+      "title": "R5: fresh-session continuity",
+      "description": "Make the Steward resilient across context compaction, exit, restart, and a genuinely fresh session, via a persisted continuation record: accepted objective, active work item, current slice, completed actions, changed files, commands and actual results, active or interrupted operations, worker findings, unresolved decisions, failures, and the exact next action. On startup a live process may be reattached when reliable, a dead process previously marked running becomes interrupted, and an abandoned child session is marked honestly.",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [
+        "A real session is closed mid-work, a new session starts, and 'Continue.' resumes the correct work with no user reconstruction",
+        "The Steward reconciles repository state and active or abandoned operations on resume without asking the user to explain what happened",
+        "No interrupted operation is silently assumed successful"
+      ],
+      "dependsOn": [
+        "NF-12"
+      ],
+      "requiredClaimIds": [],
+      "createdAt": "2026-07-26T15:00:18.277Z",
+      "updatedAt": "2026-07-26T15:00:18.277Z"
+    },
+    {
+      "id": "NF-14",
+      "kind": "outcome",
+      "title": "R6: quiet boundary reconciliation",
+      "description": "Preserve evidence honesty while removing the verification treadmill. Reconciliation triggers automatically when a slice appears finished, when completion is requested, when delivery is requested, or when the developer asks for evidence -- not after every source edit. The Steward identifies verification contracts, groups identical ones, runs each unique command once, records deterministic execution, applies results to applicable claims, refreshes derived views, and reports real failures and limitations. Doctor narrows to structural and integrity health; readiness moves to home, proof detail, completion, and delivery.",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [
+        "A normal source change reaches the completion boundary without the developer managing receipts, claims, or orientation",
+        "Reconciliation runs each unique verification command once and applies the result to every claim that command covers",
+        "The developer is never instructed to refresh claims individually",
+        "Doctor reports structural and integrity health only, and does not report readiness"
+      ],
+      "dependsOn": [
+        "NF-13"
+      ],
+      "requiredClaimIds": [],
+      "createdAt": "2026-07-26T15:00:18.280Z",
+      "updatedAt": "2026-07-26T15:00:18.280Z"
+    },
+    {
+      "id": "NF-15",
+      "kind": "outcome",
+      "title": "R7: uncoached dogfood acceptance of the operational loop",
+      "description": "Prove the Steward behaves like an additional capable teammate, using a real Voila work item involving repository investigation, implementation, a long-running test or build, one delegable review task, at least one recoverable failure, and a completion boundary. Not a toy fixture. Procedure: fresh Pi session, say only 'Continue.', do not coach the internal workflow. Record the operational success metrics from the realignment plan section 14. Milestone gate for Project Steward Operational Loop v1; approval-bundle self-hosting resumes only after this passes.",
+      "status": "backlog",
+      "priority": "normal",
+      "acceptanceCriteria": [
+        "From a fresh session and the single word 'Continue.', the Steward selects the correct work, starts useful parent action, delegates appropriately, launches a useful background process, monitors both, handles settlement, corrects drift, recovers from failure, integrates results, preserves scope, continues automatically, reconciles evidence once at the boundary, and surfaces only a real decision or final acceptance",
+        "The developer did not have to repeatedly state the active task, tell it to inspect state, tell it to delegate, tell it to run tests, ask whether workers finished, carry outputs between agents, repair routine state, refresh evidence, or say what to do next",
+        "The recorded answer to 'did the Project Steward feel like an additional capable teammate, or like a project-management process that required supervision?' is the former"
+      ],
+      "dependsOn": [
+        "NF-14"
+      ],
+      "requiredClaimIds": [],
+      "createdAt": "2026-07-26T15:00:18.284Z",
+      "updatedAt": "2026-07-26T15:00:18.284Z"
     }
   ],
   "decisions": [
@@ -310,6 +445,15 @@
       "status": "accepted",
       "createdAt": "2026-07-26T05:39:31.379Z",
       "updatedAt": "2026-07-26T05:39:31.379Z"
+    },
+    {
+      "id": "DEC-18",
+      "title": "Realign around the Project Steward operational loop",
+      "decision": "The Project Steward Operational Loop is the active product priority. Voila is a project-aware agentic development environment whose Steward coordinates models, agents, tools, terminals, and handoffs against durable project intent; the operative doctrine is 'delegate work, retain the thread'. Delegation and background execution are promoted from deferred prototypes to product-critical. Proof and delivery are retained as subordinate foundations: evidence still gates canonical completion and historical evidence stays immutable, but the Proof Engine becomes a quiet boundary service rather than a maintenance obligation. Approval-bundle self-hosting is paused until the operational loop passes uncoached acceptance. Phases 5-8 of the MVP implementation plan are superseded by the R0-R7 sequence toward Project Steward Operational Loop v1. A general policy engine is rejected for this realignment. Every capability must pass the No Managing the Manager gate, retroactively included.",
+      "rationale": "Phase 0, Packets 1-4, and Phase 6 delivered a strong foundation and a daily experience that made the developer operate Voila: refreshing claims, interpreting stale evidence, re-running identical verification, refreshing orientation, reconciling proof against doctor, and repeatedly saying continue. The system became excellent at recording whether work was justified and weak at using AI to perform and coordinate it, while every capability that would make the Steward feel like a teammate was classified as optional. ADR-0008 is the concrete evidence: a maintenance treadmill created entirely by internal design. Authority: owner direction 2026-07-26, recorded as ADR-0009, sourced from docs/plans/PROJECT_REALIGNMENT_PLAN.md.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T14:59:55.449Z",
+      "updatedAt": "2026-07-26T14:59:55.449Z"
     }
   ],
   "assumptions": [
@@ -559,10 +703,15 @@
         "RCP-48",
         "RCP-53",
         "RCP-54",
-        "RCP-64"
+        "RCP-64",
+        "RCP-69",
+        "RCP-74",
+        "RCP-79",
+        "RCP-84",
+        "RCP-89"
       ],
       "createdAt": "2026-07-25T16:38:42.263Z",
-      "updatedAt": "2026-07-26T07:58:57.146Z"
+      "updatedAt": "2026-07-26T15:57:07.597Z"
     },
     {
       "id": "CLM-2",
@@ -595,10 +744,15 @@
         "RCP-55",
         "RCP-56",
         "RCP-57",
-        "RCP-65"
+        "RCP-65",
+        "RCP-70",
+        "RCP-75",
+        "RCP-80",
+        "RCP-85",
+        "RCP-90"
       ],
       "createdAt": "2026-07-25T22:26:09.232Z",
-      "updatedAt": "2026-07-26T07:59:13.680Z"
+      "updatedAt": "2026-07-26T15:57:26.121Z"
     },
     {
       "id": "CLM-3",
@@ -630,10 +784,15 @@
         "RCP-50",
         "RCP-58",
         "RCP-59",
-        "RCP-66"
+        "RCP-66",
+        "RCP-71",
+        "RCP-76",
+        "RCP-81",
+        "RCP-86",
+        "RCP-91"
       ],
       "createdAt": "2026-07-26T04:13:58.284Z",
-      "updatedAt": "2026-07-26T07:59:37.304Z"
+      "updatedAt": "2026-07-26T15:57:44.263Z"
     },
     {
       "id": "CLM-4",
@@ -663,10 +822,15 @@
         "RCP-60",
         "RCP-61",
         "RCP-62",
-        "RCP-67"
+        "RCP-67",
+        "RCP-72",
+        "RCP-77",
+        "RCP-82",
+        "RCP-87",
+        "RCP-92"
       ],
       "createdAt": "2026-07-26T04:14:13.952Z",
-      "updatedAt": "2026-07-26T07:59:54.134Z"
+      "updatedAt": "2026-07-26T15:58:01.896Z"
     },
     {
       "id": "CLM-5",
@@ -693,10 +857,15 @@
         "RCP-46",
         "RCP-52",
         "RCP-63",
-        "RCP-68"
+        "RCP-68",
+        "RCP-73",
+        "RCP-78",
+        "RCP-83",
+        "RCP-88",
+        "RCP-93"
       ],
       "createdAt": "2026-07-26T04:14:13.958Z",
-      "updatedAt": "2026-07-26T08:00:48.216Z"
+      "updatedAt": "2026-07-26T15:58:19.432Z"
     }
   ],
   "receipts": [
@@ -2153,11 +2322,561 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "e2835bd7780198c0ecf65401a8bd0cbad95c82db",
       "outputTruncated": true
+    },
+    {
+      "id": "RCP-69",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-69",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:02:39.852Z",
+      "finishedAt": "2026-07-26T15:02:56.035Z",
+      "repositoryFingerprint": "c5a5672d978f500f2dfd92b68358825b18090f2ef7ae6d5c5aa88e400645d919",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0d07e1bee5947f2e0a74b2903a8392577537be21",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-70",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-70",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:02:56.126Z",
+      "finishedAt": "2026-07-26T15:03:12.231Z",
+      "repositoryFingerprint": "c5a5672d978f500f2dfd92b68358825b18090f2ef7ae6d5c5aa88e400645d919",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0d07e1bee5947f2e0a74b2903a8392577537be21",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-71",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-71",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:03:12.317Z",
+      "finishedAt": "2026-07-26T15:03:27.953Z",
+      "repositoryFingerprint": "c5a5672d978f500f2dfd92b68358825b18090f2ef7ae6d5c5aa88e400645d919",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0d07e1bee5947f2e0a74b2903a8392577537be21",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-72",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-72",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:03:28.035Z",
+      "finishedAt": "2026-07-26T15:03:43.881Z",
+      "repositoryFingerprint": "c5a5672d978f500f2dfd92b68358825b18090f2ef7ae6d5c5aa88e400645d919",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0d07e1bee5947f2e0a74b2903a8392577537be21",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-73",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-73",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:03:43.972Z",
+      "finishedAt": "2026-07-26T15:03:59.352Z",
+      "repositoryFingerprint": "c5a5672d978f500f2dfd92b68358825b18090f2ef7ae6d5c5aa88e400645d919",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0d07e1bee5947f2e0a74b2903a8392577537be21",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-74",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-74",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:06:40.629Z",
+      "finishedAt": "2026-07-26T15:06:56.333Z",
+      "repositoryFingerprint": "94013a24c750eef87920225e4988d4ee2fd48054d6e28cf20c840e5891215737",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "2e50723632bedeab857b8eb38af2a444f7ff1f77",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-75",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-75",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:06:56.422Z",
+      "finishedAt": "2026-07-26T15:07:12.588Z",
+      "repositoryFingerprint": "94013a24c750eef87920225e4988d4ee2fd48054d6e28cf20c840e5891215737",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "2e50723632bedeab857b8eb38af2a444f7ff1f77",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-76",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-76",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:07:12.673Z",
+      "finishedAt": "2026-07-26T15:07:28.266Z",
+      "repositoryFingerprint": "94013a24c750eef87920225e4988d4ee2fd48054d6e28cf20c840e5891215737",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "2e50723632bedeab857b8eb38af2a444f7ff1f77",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-77",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-77",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:07:28.348Z",
+      "finishedAt": "2026-07-26T15:07:44.186Z",
+      "repositoryFingerprint": "94013a24c750eef87920225e4988d4ee2fd48054d6e28cf20c840e5891215737",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "2e50723632bedeab857b8eb38af2a444f7ff1f77",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-78",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-78",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:07:44.269Z",
+      "finishedAt": "2026-07-26T15:08:00.199Z",
+      "repositoryFingerprint": "94013a24c750eef87920225e4988d4ee2fd48054d6e28cf20c840e5891215737",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "2e50723632bedeab857b8eb38af2a444f7ff1f77",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-79",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-79",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:52:44.354Z",
+      "finishedAt": "2026-07-26T15:53:02.580Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-80",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-80",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:53:02.679Z",
+      "finishedAt": "2026-07-26T15:53:20.729Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-81",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-81",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:53:20.828Z",
+      "finishedAt": "2026-07-26T15:53:37.775Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-82",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-82",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:53:37.882Z",
+      "finishedAt": "2026-07-26T15:53:55.788Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-83",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-83",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:53:55.891Z",
+      "finishedAt": "2026-07-26T15:54:14.823Z",
+      "repositoryFingerprint": "1fa2461525b0bf754a20207ba5b065908bfcedb6e373ca1e8cd416baad64125c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-84",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-84",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:54:50.091Z",
+      "finishedAt": "2026-07-26T15:55:07.758Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-85",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-85",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:55:07.862Z",
+      "finishedAt": "2026-07-26T15:55:26.005Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-86",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-86",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:55:26.095Z",
+      "finishedAt": "2026-07-26T15:55:43.597Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-87",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-87",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:55:43.694Z",
+      "finishedAt": "2026-07-26T15:56:00.996Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-88",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-88",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:56:01.094Z",
+      "finishedAt": "2026-07-26T15:56:18.914Z",
+      "repositoryFingerprint": "5febd7f205aaba55567ef426651f4f51763671493c92de74d526346a7f7a4fd2",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-89",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-89",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:56:50.438Z",
+      "finishedAt": "2026-07-26T15:57:07.593Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-90",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-90",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:57:07.701Z",
+      "finishedAt": "2026-07-26T15:57:26.118Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-91",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-91",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:57:26.215Z",
+      "finishedAt": "2026-07-26T15:57:44.259Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-92",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-92",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:57:44.367Z",
+      "finishedAt": "2026-07-26T15:58:01.893Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-93",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-93",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T15:58:01.996Z",
+      "finishedAt": "2026-07-26T15:58:19.428Z",
+      "repositoryFingerprint": "767e516cbbc1629e443cfeeceeedd291b22146e6ac108ef9bd261ea9376679b3",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "62bc43449579967314d7e3e02c5f4cfdbd57b46d",
+      "outputTruncated": false
     }
   ],
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T08:22:52.408Z",
-  "revision": 177
+  "updatedAt": "2026-07-26T15:58:19.432Z",
+  "revision": 212
 }

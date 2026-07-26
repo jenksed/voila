@@ -15,11 +15,19 @@ If this file ever conflicts with `AGENTS.md`, follow `AGENTS.md` and flag the co
 
 ## Claude-specific guidance
 
-- **Phase gate.** This repository is at Phase 0 (research and architecture). Do not begin building
-  the Voila runtime or production Pi extensions. Producing or editing documents under `docs/` is
-  the expected work until a plan phase is explicitly approved.
-- **Product direction is canonical and preserved verbatim.** `docs/product/PRODUCT_DIRECTION.md`
-  is the authored v0.1 source. Do not silently rewrite it; propose edits explicitly.
+- **Phase gate.** The runtime exists and is under active development. As of 2026-07-26 the active
+  roadmap is `docs/plans/PROJECT_REALIGNMENT_PLAN.md` (R0 complete, **R1 next**), governed by
+  `docs/product/PROJECT_STEWARD_DOCTRINE.md` and ADR-0009. Build only what the accepted R-packet
+  calls for. Do **not** start approval bundles, broad model routing, arbitrary workflow scripting,
+  remote execution, or release automation before R7 passes.
+  (This entry previously said "Phase 0, docs only" — that was stale by six packets.)
+- **Doctrine is authoritative; the v0.1 direction is preserved.**
+  `docs/product/PROJECT_STEWARD_DOCTRINE.md` is the operational product statement.
+  `docs/product/PRODUCT_DIRECTION.md` is the authored v0.1 source: its body stays verbatim, and only
+  the status banner recording ADR-0009 was added. Do not silently rewrite the body; propose edits
+  explicitly.
+- **Never claim capability that does not exist.** R1–R7 are unbuilt. No document, skill, README, or
+  canonical record may describe delegation, background terminals, or automatic settlement as present.
 - **CodeGraph.** There is no `.codegraph/` index here yet; use ordinary Read/Grep/Glob. Indexing is
   the user's decision.
 - **Memory.** Durable facts about this project belong in your file-based memory and in the

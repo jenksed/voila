@@ -5,15 +5,31 @@ state; its format is intentionally provisional and must not be treated as the pe
 schema (that is a Phase 2 prototype decision). Update this file by hand until Voila manages it.
 
 - **Maintained by**: bootstrap (Claude-driven) until the self-hosting gate.
-- **Last updated**: 2026-07-24.
+- **Last updated**: 2026-07-26.
 
 ## Objective
 
-Build Voila: a personal development operating system on the Pi coding-agent harness that maintains
-ownership from intent through implementation, verification, and delivery. Canonical direction:
-[../product/PRODUCT_DIRECTION.md](../product/PRODUCT_DIRECTION.md).
+Build Voila: a **project-aware agentic development environment** on the Pi coding-agent harness,
+whose **Project Steward** keeps models, agents, tools, terminals, and handoffs aligned with durable
+project intent, coordinates their work, preserves continuity, and quietly assembles the evidence
+needed to justify delivery. Authoritative direction:
+[../product/PROJECT_STEWARD_DOCTRINE.md](../product/PROJECT_STEWARD_DOCTRINE.md); active roadmap:
+[../plans/PROJECT_REALIGNMENT_PLAN.md](../plans/PROJECT_REALIGNMENT_PLAN.md).
+
+> **Objective restated 2026-07-26** by
+> [ADR-0009](../decisions/0009-project-steward-operational-realignment.md) / DEC-18. It previously
+> read "a personal development operating system... that maintains ownership from intent through
+> implementation, verification, and delivery," pointing at the v0.1
+> [PRODUCT_DIRECTION.md](../product/PRODUCT_DIRECTION.md). Ownership was never the wrong idea; the
+> gap was coordination. The phases recorded below are the accurate history of how the foundation was
+> built and are not restated.
 
 ## Current phase
+
+**R0 complete (2026-07-26); R1 next.** The roadmap below is superseded from Phase 5 onward — see
+[../plans/PROJECT_REALIGNMENT_PLAN.md](../plans/PROJECT_REALIGNMENT_PLAN.md). Canonical state now
+carries R1–R7 as NF-9..NF-15, focused on NF-9. The packet history that follows is retained as an
+accurate record of how the foundation was built.
 
 Phase 0 and Packets 1, 2, 2.5, 3 complete. **Packet 4 (claims, verification receipts, protected
 completion) — complete** as of 2026-07-25 on `feat/proof-engine` (not pushed): schema v4 with an
