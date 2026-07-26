@@ -8,7 +8,7 @@ import { SCHEMA_VERSION } from "./types.ts";
 /** Derive a reasonable project display name from the repository directory name. */
 export function deriveDisplayName(root: string): string {
   const name = basename(resolve(root)).trim();
-  return name.length > 0 ? name : "newfang-project";
+  return name.length > 0 ? name : "voila-project";
 }
 
 export interface CreateInitialStateInput {
@@ -32,7 +32,7 @@ export function createInitialState(input: CreateInitialStateInput): ProjectState
     displayName: input.displayName,
     phase: "research",
     health: "unknown",
-    nextAction: "Define the first work boundary, then run /newfang status.",
+    nextAction: "Define the first work boundary, then run /voila status.",
     focusWorkItemId: null,
     sequences: {
       workItem: 1,

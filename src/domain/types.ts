@@ -1,4 +1,4 @@
-// Canonical NewFang project-state types (schema version 4). Pure domain — no Pi, no I/O.
+// Canonical Voila project-state types (schema version 4). Pure domain — no Pi, no I/O.
 
 /**
  * Current schema version. Earlier versions are migrated explicitly and never silently:
@@ -126,7 +126,7 @@ export type IntakeStatus = (typeof INTAKE_STATUSES)[number];
 
 /**
  * Compact canonical metadata about an intake. The preserved source, the structured draft, and the
- * generated understanding view live as artifacts under `.newfang/intakes/<id>/` — never inline here.
+ * generated understanding view live as artifacts under `.voila/intakes/<id>/` — never inline here.
  */
 export interface IntakeRecord {
   id: string; // e.g. "INT-1"
@@ -189,7 +189,7 @@ export type ReceiptResult = (typeof RECEIPT_RESULTS)[number];
 
 /**
  * Compact canonical metadata for one verification receipt. The full artifact
- * (`manifest.json`, `stdout.txt`, `stderr.txt`) lives under `.newfang/receipts/<id>/` and is
+ * (`manifest.json`, `stdout.txt`, `stderr.txt`) lives under `.voila/receipts/<id>/` and is
  * immutable. Canonical state never holds command output, environment values, absolute paths, or
  * diffs.
  */
@@ -226,7 +226,7 @@ export interface Sequences {
   receipt: number;
 }
 
-/** The authoritative current-state snapshot persisted to `.newfang/project.json`. */
+/** The authoritative current-state snapshot persisted to `.voila/project.json`. */
 export interface ProjectState {
   schemaVersion: number;
   projectId: string;

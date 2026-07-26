@@ -4,7 +4,7 @@
 // Boundary this file enforces:
 //   - "source-derived" findings must cite the preserved source.
 //   - "model inference" findings must say so explicitly (`origin: "model_inference"`).
-// NewFang validates the structure; it never decides that an interpretation is correct.
+// Voila validates the structure; it never decides that an interpretation is correct.
 
 import { ProjectOperationError } from "./errors.ts";
 import type { ProjectState, WorkItemKind, WorkItemPriority } from "./types.ts";

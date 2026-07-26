@@ -119,12 +119,12 @@ function workItemRow(w: WorkItem, width: number, selected: boolean, st: Styler):
 
 function header(model: ConsoleModel, width: number, st: Styler): string[] {
   const id = model.identity;
-  const name = id ? id.displayName : "NewFang";
+  const name = id ? id.displayName : "Voila";
   const right = id ? `${id.phase} · ${st.fg(healthToken(id.health), id.health)}` : "";
   const rightPlain = id ? `${id.phase} · ${id.health}` : "";
   const leftW = width - len(rightPlain) - 1;
-  const left = st.bold(padRight(`NEWFANG · ${name}`, Math.max(0, leftW)));
-  const line1 = leftW > 0 ? `${left} ${right}` : truncate(`NEWFANG · ${name}`, width);
+  const left = st.bold(padRight(`VOILA · ${name}`, Math.max(0, leftW)));
+  const line1 = leftW > 0 ? `${left} ${right}` : truncate(`VOILA · ${name}`, width);
 
   const r = model.runtime;
   const bits: string[] = [];
@@ -249,7 +249,7 @@ function proofReadinessLines(model: ConsoleModel, width: number, st: Styler): st
       st.fg(
         "success",
         truncate(
-          `${readiness.workItemId} passes every completion gate — /newfang complete ${readiness.workItemId}`,
+          `${readiness.workItemId} passes every completion gate — /voila complete ${readiness.workItemId}`,
           width,
         ),
       ),
@@ -287,7 +287,7 @@ function proofView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
       st.fg("muted", truncate("No claims yet. Nothing can be completed without proof.", width)),
       st.fg(
         "muted",
-        truncate("Create one with newfang_create_claim, then run newfang_run_verification.", width),
+        truncate("Create one with voila_create_claim, then run voila_run_verification.", width),
       ),
     );
     return out;
@@ -459,7 +459,7 @@ function workView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: St
   const selected = selectableRefs(model, "work")[ui.selection];
   const out: string[] = [];
   if (model.work.groups.length === 0) {
-    out.push(st.fg("muted", "No work items yet. Create one with newfang_create_work_item."));
+    out.push(st.fg("muted", "No work items yet. Create one with voila_create_work_item."));
     return out;
   }
   for (const g of model.work.groups) {
@@ -572,7 +572,7 @@ function detailView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: 
     out.push(field("evidence", r.matchesCurrent ? "current" : "stale (repository changed)"));
     out.push(field("output", r.outputTruncated ? "TRUNCATED at cap" : "stored within cap"));
     for (const l of wrapText(`command: ${r.command}`, width)) out.push(l);
-    out.push(st.fg("muted", truncate(`artifact: .newfang/${r.artifactRef}/`, width)));
+    out.push(st.fg("muted", truncate(`artifact: .voila/${r.artifactRef}/`, width)));
     out.push(
       st.fg(
         "muted",
@@ -656,18 +656,18 @@ function footer(width: number, st: Styler): string {
 function statusScreen(model: ConsoleModel, width: number, st: Styler): string[] {
   const title =
     model.status === "uninitialized"
-      ? "NewFang is not initialized here."
+      ? "Voila is not initialized here."
       : model.status === "migration"
-        ? "NewFang state needs migration."
-        : "NewFang state problem.";
+        ? "Voila state needs migration."
+        : "Voila state problem.";
   const hint =
     model.status === "uninitialized"
-      ? "Run /newfang init to create canonical state."
+      ? "Run /voila init to create canonical state."
       : model.status === "migration"
-        ? "Run /newfang migrate --apply to migrate to the current schema."
-        : (model.message ?? "Run /newfang doctor for details.");
+        ? "Run /voila migrate --apply to migrate to the current schema."
+        : (model.message ?? "Run /voila doctor for details.");
   return [
-    st.bold(truncate("NEWFANG · STEWARD CONSOLE", width)),
+    st.bold(truncate("VOILA · STEWARD CONSOLE", width)),
     rule(width, st),
     st.fg("warning", truncate(title, width)),
     ...wrapText(hint, width).map((l) => st.fg("muted", l)),
@@ -690,7 +690,7 @@ export const MIN_CONSOLE_WIDTH = 20;
 function tooNarrowScreen(width: number, st: Styler): string[] {
   if (width <= 0) return [];
   return [
-    st.fg("warning", truncate("NewFang", width)),
+    st.fg("warning", truncate("Voila", width)),
     st.fg("muted", truncate(`needs ${MIN_CONSOLE_WIDTH} cols`, width)),
     st.fg("muted", truncate("widen · q quit", width)),
   ];

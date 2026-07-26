@@ -10,16 +10,16 @@ stops and enforcement begins.
 | **Source facts** | the file or text itself | Preserved byte-for-byte with a SHA-256; never rewritten |
 | **Model interpretation** | the language model, under the Project Steward skill | Structured, provenance-carrying, and explicitly fallible |
 | **User-accepted truth** | Joshua, at the review step | Nothing enters canonical state without explicit confirmation |
-| **NewFang-enforced state** | NewFang | Schemas, lifecycle transitions, atomic persistence, idempotency, duplicate suppression |
+| **Voila-enforced state** | Voila | Schemas, lifecycle transitions, atomic persistence, idempotency, duplicate suppression |
 
-NewFang makes **no claim** that document interpretation is deterministic. It guarantees the parts that
+Voila makes **no claim** that document interpretation is deterministic. It guarantees the parts that
 can be guaranteed: what the source said, where each finding came from, what would change, that nothing
 changes before you accept, and that applying twice does not duplicate.
 
 ## Artifact layout
 
 ```text
-.newfang/
+.voila/
 ├── intakes/
 │   └── INT-1/
 │       ├── manifest.json          # source metadata + the CURRENT draft revision pointer
@@ -43,7 +43,7 @@ output is stored in canonical state.**
 
 - **File intake** accepts only repository-relative paths. Absolute paths, `~`, `..` traversal, and
   symlinks resolving outside the repository are rejected (`realpath` is compared against the
-  repository root). NewFang **reads the bytes from disk** — the model never reproduces the source.
+  repository root). Voila **reads the bytes from disk** — the model never reproduces the source.
 - **Conversation / pasted text** preserves the exact supplied string and records the source type
   honestly; `sourceRef` is `text:…`, so nothing claims byte-identity with a file.
 - `source.md` is written once. A revised interpretation produces a **new `draftRevision`**, never an
@@ -86,7 +86,7 @@ rather than "correcting" it.
 
 A conflict names the findings involved, explains the problem, carries a severity
 (`blocking` / `warning` / `info`), and states whether user resolution is required. `blocking` implies
-`requiresUserResolution`. NewFang **refuses to apply** a draft with any blocking conflict — it does not
+`requiresUserResolution`. Voila **refuses to apply** a draft with any blocking conflict — it does not
 resolve material conflicts itself.
 
 ## Lifecycle
@@ -96,16 +96,16 @@ source_preserved → review_required → accepted
                                    ↘ rejected
 ```
 
-1. **Preserve** (`newfang_create_intake`, `/newfang intake <path>`) — bytes + hash + metadata.
+1. **Preserve** (`voila_create_intake`, `/voila intake <path>`) — bytes + hash + metadata.
    Status `source_preserved`. Nothing is interpreted.
-2. **Stage** (`newfang_stage_intake_draft`) — validate the draft, verify source references and
+2. **Stage** (`voila_stage_intake_draft`) — validate the draft, verify source references and
    referenced existing IDs, enforce unique finding IDs, store `draft.json`, increment
    `draftRevision`, regenerate `UNDERSTANDING.md`, set `review_required`. **No project truth changes.**
-3. **Review** (`/newfang intake review`, or `u` in the Steward Console) — the user sees what the source
+3. **Review** (`/voila intake review`, or `u` in the Steward Console) — the user sees what the source
    states, what the model inferred, open questions, conflicts, and the exact canonical changes
    proposed. Outcomes: accept, reject, or ask for a revision (which stages a new revision).
-4. **Apply** (`/newfang intake apply confirm`, `newfang_apply_intake`) — see below.
-5. **Reject** (`/newfang intake reject`) — source and drafts are retained for the record.
+4. **Apply** (`/voila intake apply confirm`, `voila_apply_intake`) — see below.
+5. **Reject** (`/voila intake reject`) — source and drafts are retained for the record.
 
 ## Apply semantics (exact)
 
@@ -136,7 +136,7 @@ confirmation cannot drift from the effect.
 
 ## Project brief
 
-`.newfang/briefs/PROJECT_BRIEF.md` is generated from canonical state: phase/health, focus, next action
+`.voila/briefs/PROJECT_BRIEF.md` is generated from canonical state: phase/health, focus, next action
 and rationale, key accepted decisions, open assumptions, open risks, work in flight, and source intake
 references (id, type, ref, short hash). It is **non-authoritative** and deliberately compact enough to
 inject into model context. It never copies source documents.

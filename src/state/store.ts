@@ -1,4 +1,4 @@
-// Canonical `.newfang/` state store (current schema): init, load, validate, immutable update,
+// Canonical `.voila/` state store (current schema): init, load, validate, immutable update,
 // append-only events, generated view, and migration primitives. Pure Node I/O — no Pi.
 //
 // Invariants (ADR-0003):
@@ -44,6 +44,7 @@ import { createInitialState } from "../domain/defaults.ts";
 import { renderStatusView } from "../domain/status.ts";
 import { migrationPlan } from "../domain/migrate.ts";
 import { statePaths } from "./paths.ts";
+import { assertUsableStateDirectory } from "./legacy.ts";
 import {
   MigrationRequiredError,
   StateExistsError,
@@ -52,7 +53,7 @@ import {
   UnknownSchemaVersionError,
 } from "./errors.ts";
 
-export interface NewfangEvent {
+export interface VoilaEvent {
   type: string;
   ts?: string;
   [key: string]: unknown;
@@ -411,8 +412,11 @@ export interface RawState {
 /** Read and parse project.json without schema validation (for migration and doctor). */
 export async function readRawState(root: string): Promise<RawState> {
   const paths = statePaths(root);
+  // Single chokepoint: a legacy-only or conflicting state directory must never be operated on
+  // implicitly, so every command that reads state inherits the explicit refusal.
+  assertUsableStateDirectory(root);
   if (!existsSync(paths.projectJson)) {
-    throw new StateNotFoundError(`No NewFang state at ${paths.projectJson}. Run /newfang init.`);
+    throw new StateNotFoundError(`No Voila state at ${paths.projectJson}. Run /voila init.`);
   }
   let bytes: string;
   try {
@@ -453,7 +457,7 @@ export async function backupProjectJson(
   return dest;
 }
 
-export async function appendEvent(root: string, event: NewfangEvent): Promise<void> {
+export async function appendEvent(root: string, event: VoilaEvent): Promise<void> {
   const paths = statePaths(root);
   await mkdir(paths.dir, { recursive: true });
   const line = `${JSON.stringify({ ...event, ts: event.ts ?? new Date().toISOString() })}\n`;
@@ -489,7 +493,7 @@ export async function initState(root: string, input: InitStateInput): Promise<Pr
   const paths = statePaths(root);
   if (existsSync(paths.projectJson)) {
     throw new StateExistsError(
-      `NewFang is already initialized at ${paths.projectJson}. Refusing to overwrite.`,
+      `Voila is already initialized at ${paths.projectJson}. Refusing to overwrite.`,
     );
   }
   await mkdir(paths.receiptsDir, { recursive: true });
@@ -520,7 +524,7 @@ export async function initState(root: string, input: InitStateInput): Promise<Pr
  * store-owned fields (revision, updatedAt) are enforced by the store. Validation happens before the
  * canonical write; a rejected update leaves canonical and prior in-memory state untouched.
  */
-export type EventOrBuilder = NewfangEvent | ((next: ProjectState) => NewfangEvent);
+export type EventOrBuilder = VoilaEvent | ((next: ProjectState) => VoilaEvent);
 
 export async function updateState(
   root: string,

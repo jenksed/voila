@@ -8,29 +8,45 @@
 //   - the staged diff,
 //   - untracked, non-ignored repository files by sorted path + content hash.
 //
-// Deliberate exclusion: everything under `.newfang/`. Recording a receipt necessarily rewrites
+// Deliberate exclusion: everything under `.voila/`. Recording a receipt necessarily rewrites
 // `project.json`, `events.jsonl`, the generated view, and the receipt artifact itself, so including
-// NewFang's own bookkeeping would make every receipt stale the instant it was created. The tradeoff is
-// stated plainly: a change confined entirely to `.newfang/` does not invalidate existing evidence.
+// Voila's own bookkeeping would make every receipt stale the instant it was created. The tradeoff is
+// stated plainly: a change confined entirely to `.voila/` does not invalidate existing evidence.
+//
+// The legacy `.newfang/` directory is excluded on the same grounds while it still exists, so a
+// pre-rename project's fingerprint does not change merely by migrating its state directory. The
+// exclusion is exactly these two state directories — nothing else is weakened.
 //
 // Raw diffs are hashed, never stored. No absolute paths enter the digest.
 
 import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { NewfangStateError } from "./errors.ts";
+import { VoilaStateError } from "./errors.ts";
+import { LEGACY_STATE_DIR } from "./legacy.ts";
+import { VOILA_DIR } from "./paths.ts";
 import { sha256, sha256Bytes } from "./source.ts";
 
 /** Git is unavailable, or this is not a git repository. Callers must fail clearly, never guess. */
-export class FingerprintUnavailableError extends NewfangStateError {
+export class FingerprintUnavailableError extends VoilaStateError {
   constructor(message: string) {
     super(message);
     this.name = "FingerprintUnavailableError";
   }
 }
 
-/** Pathspec excluding NewFang's own state from every git query used by the fingerprint. */
-const EXCLUDE_NEWFANG = [".", `:(exclude,glob)${".newfang"}/**`, `:(exclude)${".newfang"}`];
+/**
+ * Pathspec excluding Voila's own state from every git query used by the fingerprint. Both the
+ * current and the legacy state directory are excluded, so migrating one to the other is invisible
+ * to evidence freshness.
+ */
+const EXCLUDE_STATE_DIRS = [
+  ".",
+  ...[VOILA_DIR, LEGACY_STATE_DIR].flatMap((dir) => [
+    `:(exclude,glob)${dir}/**`,
+    `:(exclude)${dir}`,
+  ]),
+];
 
 /** Hard cap on untracked bytes hashed per file, so a stray large artifact cannot stall verification. */
 const MAX_UNTRACKED_BYTES = 2 * 1024 * 1024;
@@ -80,8 +96,14 @@ export async function repositoryFingerprint(root: string): Promise<RepositoryFin
   const gitHead = headResult.ok ? headResult.stdout.trim() : "";
 
   // Tracked changes. On an unborn branch these calls may fail; an empty diff is then correct.
-  const trackedDiff = await git(root, ["diff", "--no-color", "--", ...EXCLUDE_NEWFANG]);
-  const stagedDiff = await git(root, ["diff", "--no-color", "--cached", "--", ...EXCLUDE_NEWFANG]);
+  const trackedDiff = await git(root, ["diff", "--no-color", "--", ...EXCLUDE_STATE_DIRS]);
+  const stagedDiff = await git(root, [
+    "diff",
+    "--no-color",
+    "--cached",
+    "--",
+    ...EXCLUDE_STATE_DIRS,
+  ]);
 
   const untrackedList = await git(root, [
     "ls-files",
@@ -89,7 +111,7 @@ export async function repositoryFingerprint(root: string): Promise<RepositoryFin
     "--exclude-standard",
     "-z",
     "--",
-    ...EXCLUDE_NEWFANG,
+    ...EXCLUDE_STATE_DIRS,
   ]);
   const untrackedPaths = untrackedList.stdout
     .split("\0")

@@ -9,8 +9,8 @@ import { loadState } from "../src/state/store.ts";
 import { leftoverReceiptTempDirs, OUTPUT_CAP_BYTES } from "../src/state/receipt-store.ts";
 import { runDoctor } from "../src/commands/doctor.ts";
 
-// The NewFang repository dogfoods its own canonical state. These assertions load the committed
-// .newfang/project.json from the repo root (the test runner's cwd).
+// The Voila repository dogfoods its own canonical state. These assertions load the committed
+// .voila/project.json from the repo root (the test runner's cwd).
 
 test("repository loads its own dogfooded v4 canonical state", async () => {
   const state = await loadState(process.cwd());
@@ -70,8 +70,8 @@ test("dogfooded proof state is real: a claim exists with a linked receipt artifa
     const receipt = state.receipts.find((r) => r.id === receiptId);
     assert.ok(receipt, `${receiptId} resolves`);
     assert.equal(receipt.claimId, claim.id);
-    assert.ok(existsSync(join(process.cwd(), ".newfang", receipt.artifactRef, "manifest.json")));
-    assert.ok(existsSync(join(process.cwd(), ".newfang", receipt.artifactRef, "stdout.txt")));
+    assert.ok(existsSync(join(process.cwd(), ".voila", receipt.artifactRef, "manifest.json")));
+    assert.ok(existsSync(join(process.cwd(), ".voila", receipt.artifactRef, "stdout.txt")));
   }
 });
 
@@ -79,7 +79,7 @@ test("dogfooded receipt artifacts leak no credentials, env values, or absolute p
   const state = await loadState(process.cwd());
   const home = homedir();
   for (const receipt of state.receipts) {
-    const dir = join(process.cwd(), ".newfang", receipt.artifactRef);
+    const dir = join(process.cwd(), ".voila", receipt.artifactRef);
     const manifest = await readFile(join(dir, "manifest.json"), "utf8");
     const stdout = await readFile(join(dir, "stdout.txt"), "utf8");
     const stderr = await readFile(join(dir, "stderr.txt"), "utf8");
@@ -129,7 +129,7 @@ test("Pi loads the Project Steward skill from this repository with no diagnostic
 
   // agentDir points at an empty temp directory so the machine's global skills cannot influence the
   // result: this test is about THIS repository's project-local skills only.
-  const emptyAgentDir = await mkdtemp(join(tmpdir(), "newfang-agentdir-"));
+  const emptyAgentDir = await mkdtemp(join(tmpdir(), "voila-agentdir-"));
   const result = loadSkills({
     cwd: process.cwd(),
     agentDir: emptyAgentDir,
@@ -146,8 +146,8 @@ test("Pi loads the Project Steward skill from this repository with no diagnostic
   const steward = result.skills.find((s) => s.name === "project-steward");
   assert.ok(steward, "the project-steward skill loaded");
   // The description survives quoting intact, including its colons and embedded double quotes.
-  assert.match(steward.description, /^Act as the NewFang Project Steward\./);
-  assert.match(steward.description, /NewFang-managed project: reading project context/);
+  assert.match(steward.description, /^Act as the Voila Project Steward\./);
+  assert.match(steward.description, /Voila-managed project: reading project context/);
   assert.match(steward.description, /asks "where is this project\?"\.$/);
   // Pi's spec caps the description at 1024 characters; a longer one is rejected outright.
   assert.ok(

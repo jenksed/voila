@@ -1,11 +1,11 @@
 {
   "schemaVersion": 3,
   "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
-  "displayName": "newfang",
+  "displayName": "voila",
   "phase": "build",
   "health": "green",
   "nextAction": "Define and build claims, reproducible verification receipts, and the protected completion transition for NF-3.",
-  "nextActionRationale": "INT-8 preserves bytes identical to the already-accepted Packet 3 source (verified across authoritative intake manifests .newfang/intakes/INT-1|2|8/manifest.json), so it justifies no repeat Packet 3 implementation. The current focus pointer remains NF-2 (verified against authoritative .newfang/project.json focusWorkItemId); NF-3 is the next destination named in the next-action text because Packet 3's stopping condition has been satisfied.",
+  "nextActionRationale": "INT-8 preserves bytes identical to the already-accepted Packet 3 source (verified across authoritative intake manifests .voila/intakes/INT-1|2|8/manifest.json), so it justifies no repeat Packet 3 implementation. The current focus pointer remains NF-2 (verified against authoritative .voila/project.json focusWorkItemId); NF-3 is the next destination named in the next-action text because Packet 3's stopping condition has been satisfied.",
   "focusWorkItemId": "NF-2",
   "sequences": {
     "workItem": 9,
@@ -20,7 +20,7 @@
       "id": "NF-1",
       "kind": "outcome",
       "title": "Complete the minimal project-operations layer",
-      "description": "Implementation and tests are done, but this item is NOT canonically complete: the protected completion transition (newfang_complete_work_item) does not exist yet.",
+      "description": "Implementation and tests are done, but this item is NOT canonically complete: the protected completion transition (voila_complete_work_item) does not exist yet.",
       "status": "in_progress",
       "priority": "high",
       "acceptanceCriteria": [
@@ -55,7 +55,7 @@
       "status": "backlog",
       "priority": "high",
       "acceptanceCriteria": [
-        "newfang_complete_work_item rejects unsupported completion"
+        "voila_complete_work_item rejects unsupported completion"
       ],
       "dependsOn": [
         "NF-2"
@@ -105,7 +105,7 @@
     {
       "id": "NF-7",
       "kind": "outcome",
-      "title": "Build newfang-approval-bundles under NewFang's own process",
+      "title": "Build voila-approval-bundles under Voila's own process",
       "status": "backlog",
       "priority": "normal",
       "acceptanceCriteria": [],
@@ -134,7 +134,7 @@
     {
       "id": "DEC-1",
       "title": "Extensions-first architecture",
-      "decision": "Ship NewFang as project-local Pi extensions first; package second; SDK/RPC held in reserve.",
+      "decision": "Ship Voila as project-local Pi extensions first; package second; SDK/RPC held in reserve.",
       "rationale": "See ADR-0002.",
       "status": "accepted",
       "createdAt": "2026-07-25T02:00:04.861Z",
@@ -142,7 +142,7 @@
     },
     {
       "id": "DEC-2",
-      "title": "Canonical repository state in .newfang/",
+      "title": "Canonical repository state in .voila/",
       "decision": "project.json is authoritative; events.jsonl is append-only history; PROJECT_STATUS.md is generated.",
       "rationale": "See ADR-0003.",
       "status": "accepted",
@@ -152,7 +152,7 @@
     {
       "id": "DEC-3",
       "title": "Thin Pi adapter, modular src/",
-      "decision": ".pi/extensions/newfang.ts is a thin adapter; domain/state/tools/ui live in src/ and are Pi-free.",
+      "decision": ".pi/extensions/voila.ts is a thin adapter; domain/state/tools/ui live in src/ and are Pi-free.",
       "rationale": "See ADR-0007.",
       "status": "accepted",
       "createdAt": "2026-07-25T02:00:04.863Z",
@@ -187,8 +187,8 @@
     },
     {
       "id": "DEC-7",
-      "title": "The language model performs interpretation; NewFang owns preservation, schema...",
-      "decision": "The language model performs interpretation; NewFang owns preservation, schemas, lifecycle, review, application, persistence, provenance, and resumability.",
+      "title": "The language model performs interpretation; Voila owns preservation, schema...",
+      "decision": "The language model performs interpretation; Voila owns preservation, schemas, lifecycle, review, application, persistence, provenance, and resumability.",
       "rationale": "From intake INT-1 finding F2.",
       "status": "accepted",
       "createdAt": "2026-07-25T04:51:01.991Z",
@@ -225,7 +225,7 @@
   "assumptions": [
     {
       "id": "ASM-1",
-      "statement": "The Pi extension/TUI surfaces NewFang uses are stable at the pinned 0.82.0.",
+      "statement": "The Pi extension/TUI surfaces Voila uses are stable at the pinned 0.82.0.",
       "confidence": "medium",
       "status": "open",
       "createdAt": "2026-07-25T02:00:04.873Z",
@@ -261,7 +261,7 @@
     },
     {
       "id": "RSK-2",
-      "statement": "Single-writer assumption for .newfang/ could race under concurrent writers.",
+      "statement": "Single-writer assumption for .voila/ could race under concurrent writers.",
       "likelihood": "low",
       "impact": "high",
       "status": "open",

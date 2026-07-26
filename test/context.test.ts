@@ -45,7 +45,7 @@ test("initialized project yields a compact deterministic block", () => {
   const first = buildContextBlock({ status: "ok", state });
   const second = buildContextBlock({ status: "ok", state });
   assert.equal(first, second, "deterministic for identical input");
-  assert.match(first, /\[NewFang project context\]/);
+  assert.match(first, /\[Voila project context\]/);
   assert.match(first, /Project: ctx-demo · phase research/);
   assert.match(first, /Focus: NF-1/);
   assert.match(first, /Next action: Do the next thing\./);
@@ -59,7 +59,7 @@ test("initialized project yields a compact deterministic block", () => {
 test("uninitialized and migration states inject exactly one concise hint", () => {
   const uninit = buildContextBlock({ status: "uninitialized" });
   assert.equal(uninit.split("\n").length, 1);
-  assert.match(uninit, /\/newfang init/);
+  assert.match(uninit, /\/voila init/);
 
   const migration = buildContextBlock({ status: "migration" });
   assert.equal(migration.split("\n").length, 1);
@@ -133,7 +133,7 @@ test("the hard clamp truncates when a single field is enormous", () => {
 });
 
 test("no source content or event history is injected", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-ctx-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-ctx-"));
   await initState(root, { displayName: "ctx-demo" });
   const secret = "SOURCE_MARKER_SHOULD_NOT_APPEAR";
   await writeFile(join(root, "brief.md"), `# Brief\n\n${secret}\n`, "utf8");
@@ -159,7 +159,7 @@ test("no source content or event history is injected", async () => {
 });
 
 test("assembling context does not mutate canonical state", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-ctx-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-ctx-"));
   await initState(root, { displayName: "ctx-demo" });
   await updateState(root, (s) => createWorkItem(s, { kind: "task", title: "A" }, "T"));
   const before = await readFile(statePaths(root).projectJson, "utf8");
@@ -173,10 +173,10 @@ test("assembling context does not mutate canonical state", async () => {
 });
 
 test("assembleContext reports uninitialized and migration-required projects", async () => {
-  const empty = await mkdtemp(join(tmpdir(), "newfang-ctx-"));
-  assert.match(await assembleContext(empty), /\/newfang init/);
+  const empty = await mkdtemp(join(tmpdir(), "voila-ctx-"));
+  assert.match(await assembleContext(empty), /\/voila init/);
 
-  const legacy = await mkdtemp(join(tmpdir(), "newfang-ctx-"));
+  const legacy = await mkdtemp(join(tmpdir(), "voila-ctx-"));
   await mkdir(statePaths(legacy).dir, { recursive: true });
   await writeFile(statePaths(legacy).projectJson, JSON.stringify(V1_FIXTURE), "utf8");
   assert.match(await assembleContext(legacy), /migrate/);

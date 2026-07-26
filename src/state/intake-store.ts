@@ -11,7 +11,7 @@ import { appendFile, mkdir, readdir, readFile, rename, rm, writeFile } from "nod
 import { randomBytes } from "node:crypto";
 import { intakePaths, revisionPaths, revisionSlug, statePaths } from "./paths.ts";
 import { loadState, updateState, writeStatusView } from "./store.ts";
-import { NewfangStateError } from "./errors.ts";
+import { VoilaStateError } from "./errors.ts";
 import { resolveRepoRelativeSource, sha256, sha256Bytes } from "./source.ts";
 import { allocateId } from "../domain/ids.ts";
 import { ProjectOperationError } from "../domain/errors.ts";
@@ -22,7 +22,7 @@ import { renderUnderstanding } from "../domain/understanding.ts";
 import { renderProjectBrief } from "../domain/brief.ts";
 import type { IntakeRecord, IntakeSourceType, ProjectState } from "../domain/types.ts";
 
-export class IntakeNotFoundError extends NewfangStateError {
+export class IntakeNotFoundError extends VoilaStateError {
   constructor(id: string) {
     super(`Intake not found: ${id}.`);
     this.name = "IntakeNotFoundError";
@@ -305,7 +305,7 @@ export async function stageIntakeDraft(
     if (!requested) {
       throw new ProjectOperationError(
         `Draft revision ${record.draftRevision} of ${intakeId} is awaiting review. Record a revision ` +
-          `request against it (/newfang intake revise "<feedback>") before staging revision ${
+          `request against it (/voila intake revise "<feedback>") before staging revision ${
             record.draftRevision + 1
           }.`,
       );
@@ -378,7 +378,7 @@ export async function stageIntakeDraft(
   return { intake: updated, draft: stored, summary, blocked };
 }
 
-/** Regenerate `.newfang/briefs/PROJECT_BRIEF.md` from canonical state. */
+/** Regenerate `.voila/briefs/PROJECT_BRIEF.md` from canonical state. */
 export async function writeProjectBrief(root: string, state: ProjectState): Promise<void> {
   const paths = statePaths(root);
   await mkdir(paths.briefsDir, { recursive: true });

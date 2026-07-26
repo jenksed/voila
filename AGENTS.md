@@ -1,26 +1,26 @@
 # AGENTS.md
 
-Harness-neutral operating instructions for the NewFang repository. Any coding agent (Claude Code,
+Harness-neutral operating instructions for the Voila repository. Any coding agent (Claude Code,
 Pi, or other) working here follows this file. Harness-specific notes may live in sibling files such
 as `CLAUDE.md`, but must not duplicate or contradict this one.
 
 ## Repository purpose and current phase
 
-NewFang is a personal development operating system built on the Pi coding-agent harness. See
+Voila is a personal development operating system built on the Pi coding-agent harness. See
 [docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) for the canonical product
 statement.
 
 Phase 0 (research/architecture) is complete. Through **Packet 3** the repository has a runnable Pi
-extension (`.pi/extensions/newfang.ts` + modular `src/`) with canonical `.newfang/` state (schema v3),
+extension (`.pi/extensions/voila.ts` + modular `src/`) with canonical `.voila/` state (schema v3),
 a compact project-operations layer, a Steward Console, and the first daily-use workflow: planning
 intake with preserved sources and provenance, repository orientation, a Project Steward skill, and
 automatic context injection. Build only what the accepted plan phase calls for; do not add features
 outside the current packet's scope. The next phase is **claims, verification receipts, and the
-protected completion transition** — NewFang cannot yet mark work complete.
+protected completion transition** — Voila cannot yet mark work complete.
 
 ## Core doctrine
 
-These four principles govern how work is done, both on NewFang and by NewFang once it exists.
+These four principles govern how work is done, both on Voila and by Voila once it exists.
 
 1. **Delegate work, never ownership.** A primary steward retains accountability for intent,
    accepted decisions, current state, delegation, integration, evidence, risks, completion claims,

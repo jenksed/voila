@@ -17,7 +17,7 @@ import { createInitialState } from "../src/domain/defaults.ts";
 import { V1_FIXTURE } from "./helpers.ts";
 
 async function tempRoot(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "newfang-cmd-"));
+  return mkdtemp(join(tmpdir(), "voila-cmd-"));
 }
 
 async function seededRoot(): Promise<string> {

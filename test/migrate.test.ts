@@ -14,7 +14,7 @@ import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import { V1_FIXTURE } from "./helpers.ts";
 
 async function withV1(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-migrate-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-migrate-"));
   const paths = statePaths(root);
   await mkdir(paths.dir, { recursive: true });
   await writeFile(paths.projectJson, `${JSON.stringify(V1_FIXTURE, null, 2)}\n`, "utf8");
@@ -68,14 +68,14 @@ test("applying migration produces valid current state, backup, identity, event, 
 });
 
 test("rerunning migration on the current version is a safe no-op", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-migrate-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-migrate-"));
   await initState(root, { displayName: "demo" });
   const report = await runMigration(root, { apply: true });
   assert.equal(report.status, "noop");
 });
 
 test("unknown source version is rejected", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-migrate-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-migrate-"));
   const paths = statePaths(root);
   await mkdir(paths.dir, { recursive: true });
   await writeFile(paths.projectJson, JSON.stringify({ schemaVersion: 7 }), "utf8");
@@ -83,7 +83,7 @@ test("unknown source version is rejected", async () => {
 });
 
 test("malformed v1 is refused and leaves canonical bytes intact", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-migrate-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-migrate-"));
   const paths = statePaths(root);
   await mkdir(paths.dir, { recursive: true });
   const bad = JSON.stringify({ schemaVersion: 1, displayName: "x" }); // missing required fields

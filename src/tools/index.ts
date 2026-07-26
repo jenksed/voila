@@ -45,16 +45,16 @@ import { workItemLabel } from "../domain/status.ts";
 import { intakeTools } from "./intake-tools.ts";
 import { proofTools } from "./proof-tools.ts";
 
-export interface NewfangToolResult {
+export interface VoilaToolResult {
   content: Array<{ type: "text"; text: string }>;
   details?: unknown;
 }
 
-export interface NewfangToolCtx {
+export interface VoilaToolCtx {
   cwd: string;
 }
 
-export interface NewfangTool {
+export interface VoilaTool {
   name: string;
   label: string;
   description: string;
@@ -66,13 +66,13 @@ export interface NewfangTool {
     params: Record<string, unknown>,
     signal: unknown,
     onUpdate: unknown,
-    ctx: NewfangToolCtx,
-  ) => Promise<NewfangToolResult>;
+    ctx: VoilaToolCtx,
+  ) => Promise<VoilaToolResult>;
 }
 
 const CREATABLE_STATUSES = WORK_ITEM_STATUSES.filter((s) => s !== "completed");
 
-function text(line: string, details?: unknown): NewfangToolResult {
+function text(line: string, details?: unknown): VoilaToolResult {
   return { content: [{ type: "text", text: line }], details };
 }
 
@@ -80,16 +80,16 @@ function now(): string {
   return new Date().toISOString();
 }
 
-export function newfangTools(): NewfangTool[] {
+export function voilaTools(): VoilaTool[] {
   return [
     {
-      name: "newfang_create_work_item",
+      name: "voila_create_work_item",
       label: "Create Work Item",
       description:
         "Create a backlog work item (outcome, task, or defect). Cannot create completed items.",
-      promptSnippet: "Create a NewFang work item (outcome/task/defect) in the project backlog",
+      promptSnippet: "Create a Voila work item (outcome/task/defect) in the project backlog",
       promptGuidelines: [
-        "Use newfang_create_work_item to add durable backlog items instead of tracking work only in prose.",
+        "Use voila_create_work_item to add durable backlog items instead of tracking work only in prose.",
       ],
       parameters: Type.Object(
         {
@@ -121,13 +121,13 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_update_work_item",
+      name: "voila_update_work_item",
       label: "Update Work Item",
       description:
         "Update fields, status (not completion), priority, blocked reason, or dependencies of a work item.",
-      promptSnippet: "Update a NewFang work item's fields, status, or dependencies",
+      promptSnippet: "Update a Voila work item's fields, status, or dependencies",
       promptGuidelines: [
-        "Use newfang_update_work_item to change work-item status/priority/dependencies; it cannot mark items completed.",
+        "Use voila_update_work_item to change work-item status/priority/dependencies; it cannot mark items completed.",
       ],
       parameters: Type.Object(
         {
@@ -155,10 +155,10 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_list_work_items",
+      name: "voila_list_work_items",
       label: "List Work Items",
       description: "List work items, optionally filtered by status, kind, or priority.",
-      promptSnippet: "List NewFang work items with optional filters",
+      promptSnippet: "List Voila work items with optional filters",
       parameters: Type.Object(
         {
           status: Type.Optional(StringEnum(WORK_ITEM_STATUSES)),
@@ -176,10 +176,10 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_record_decision",
+      name: "voila_record_decision",
       label: "Record Decision",
       description: "Record a project decision (proposed, accepted, or superseded).",
-      promptSnippet: "Record a durable NewFang decision",
+      promptSnippet: "Record a durable Voila decision",
       parameters: Type.Object(
         {
           title: Type.String(),
@@ -205,10 +205,10 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_record_assumption",
+      name: "voila_record_assumption",
       label: "Record Assumption",
       description: "Record a project assumption with a confidence level.",
-      promptSnippet: "Record a NewFang assumption with confidence",
+      promptSnippet: "Record a Voila assumption with confidence",
       parameters: Type.Object(
         {
           statement: Type.String(),
@@ -234,10 +234,10 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_record_risk",
+      name: "voila_record_risk",
       label: "Record Risk",
       description: "Record a project risk with likelihood and impact.",
-      promptSnippet: "Record a NewFang risk with likelihood and impact",
+      promptSnippet: "Record a Voila risk with likelihood and impact",
       parameters: Type.Object(
         {
           statement: Type.String(),
@@ -270,10 +270,10 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_list_project_operations",
+      name: "voila_list_project_operations",
       label: "List Project Operations",
       description: "Summarize decisions, assumptions, and risks in the project.",
-      promptSnippet: "Summarize NewFang decisions, assumptions, and risks",
+      promptSnippet: "Summarize Voila decisions, assumptions, and risks",
       parameters: Type.Object({}, { additionalProperties: false }),
       async execute(_id, _params, _signal, _onUpdate, ctx) {
         const state = await loadState(ctx.cwd);
@@ -291,11 +291,11 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_set_focus",
+      name: "voila_set_focus",
       label: "Set Focus",
       description:
         "Set or clear the focus pointer (the work item currently receiving attention). Focus is not lifecycle status; completed/cancelled items cannot be focused.",
-      promptSnippet: "Set or clear the NewFang focus work item",
+      promptSnippet: "Set or clear the Voila focus work item",
       parameters: Type.Object(
         {
           workItemId: Type.Optional(
@@ -322,11 +322,11 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_update_decision",
+      name: "voila_update_decision",
       label: "Update Decision",
       description:
         "Update a decision along supported transitions: proposed->accepted, proposed->superseded, accepted->superseded (supersededById required).",
-      promptSnippet: "Update a NewFang decision (accept or supersede)",
+      promptSnippet: "Update a Voila decision (accept or supersede)",
       parameters: Type.Object(
         {
           id: Type.String(),
@@ -351,11 +351,11 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_update_assumption",
+      name: "voila_update_assumption",
       label: "Update Assumption",
       description:
         "Update an assumption along supported transitions: open->validated, open->invalidated. Terminal states are not reopened. Notes may be updated.",
-      promptSnippet: "Update a NewFang assumption (validate/invalidate)",
+      promptSnippet: "Update a Voila assumption (validate/invalidate)",
       parameters: Type.Object(
         {
           id: Type.String(),
@@ -379,11 +379,11 @@ export function newfangTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_update_risk",
+      name: "voila_update_risk",
       label: "Update Risk",
       description:
         "Update a risk along supported transitions: open->mitigated/accepted/closed, mitigated->closed, accepted->closed. Closing requires a mitigation/resolution. Terminal states are not reopened.",
-      promptSnippet: "Update a NewFang risk (mitigate/accept/close)",
+      promptSnippet: "Update a Voila risk (mitigate/accept/close)",
       parameters: Type.Object(
         {
           id: Type.String(),

@@ -9,7 +9,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import newfangExtension from "../.pi/extensions/newfang.ts";
+import voilaExtension from "../.pi/extensions/voila.ts";
 import { initState, loadState } from "../src/state/store.ts";
 import {
   applyIntake,
@@ -24,7 +24,7 @@ import {
 } from "../src/state/intake-store.ts";
 import { revisionPaths } from "../src/state/paths.ts";
 import { runIntakeRevise } from "../src/commands/intake.ts";
-import { newfangTools } from "../src/tools/index.ts";
+import { voilaTools } from "../src/tools/index.ts";
 import { handleKey, INITIAL_UI } from "../src/ui/steward-console/navigation.ts";
 import { ProjectOperationError } from "../src/domain/errors.ts";
 
@@ -49,7 +49,7 @@ function draftFor(intakeId: string, over: Record<string, unknown> = {}) {
 }
 
 async function repoWithStagedDraft() {
-  const root = await mkdtemp(join(tmpdir(), "newfang-rev-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-rev-"));
   await initState(root, { displayName: "rev-demo" });
   await writeFile(join(root, "brief.md"), SOURCE, "utf8");
   const created = await createIntake(root, { path: "brief.md" });
@@ -145,7 +145,7 @@ test("feedback is stored trimmed and verbatim", async () => {
 });
 
 test("an intake with no staged draft cannot receive a revision request", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-rev-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-rev-"));
   await initState(root, { displayName: "rev-demo" });
   await writeFile(join(root, "brief.md"), SOURCE, "utf8");
   const created = await createIntake(root, { path: "brief.md" });
@@ -260,7 +260,7 @@ test("the review log survives a restart in order", async () => {
 test("the review log stores no reasoning or transcript", async () => {
   const { root, intakeId } = await repoWithStagedDraft();
   await requestIntakeRevision(root, intakeId, { reviewedDraftRevision: 1, feedback: FEEDBACK });
-  const raw = await readFile(join(root, ".newfang/intakes", intakeId, "reviews.jsonl"), "utf8");
+  const raw = await readFile(join(root, ".voila/intakes", intakeId, "reviews.jsonl"), "utf8");
   assert.ok(!/thinking|chain[- ]of[- ]thought|transcript/i.test(raw));
   const record = JSON.parse(raw.trim());
   assert.deepEqual(Object.keys(record).sort(), [
@@ -296,8 +296,8 @@ test("the command path records a request and refuses empty feedback", async () =
 
 test("the tool path records a request and cannot bypass the revision check", async () => {
   const { root, intakeId } = await repoWithStagedDraft();
-  const tool = newfangTools().find((t) => t.name === "newfang_request_intake_revision");
-  assert.ok(tool, "newfang_request_intake_revision is registered");
+  const tool = voilaTools().find((t) => t.name === "voila_request_intake_revision");
+  assert.ok(tool, "voila_request_intake_revision is registered");
 
   await assert.rejects(
     () =>
@@ -353,10 +353,10 @@ test("D2 regression: an intake ID routes to that intake instead of becoming the 
     on: () => {},
   };
   const ctx = { cwd: root, ui: { notify: () => {}, setWidget: () => {} } };
-  (newfangExtension as unknown as (pi: unknown) => void)(host);
+  (voilaExtension as unknown as (pi: unknown) => void)(host);
 
   // Reject the NON-current intake by ID.
-  await commands.get("newfang")!.handler(`intake reject ${intakeId} not needed`, ctx);
+  await commands.get("voila")!.handler(`intake reject ${intakeId} not needed`, ctx);
 
   const state = await loadState(root);
   assert.equal(
@@ -374,5 +374,5 @@ test("D2 regression: an intake ID routes to that intake instead of becoming the 
 });
 
 test.after(async () => {
-  await rm(join(tmpdir(), "newfang-rev-"), { recursive: true, force: true });
+  await rm(join(tmpdir(), "voila-rev-"), { recursive: true, force: true });
 });

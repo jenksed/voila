@@ -1,0 +1,424 @@
+{
+  "note": "Every legacy-brand occurrence permitted to survive Packet 4.5. Exact paths only - no globs, no directory prefixes. The rename guard (test/rename-guard.test.ts) fails on any occurrence not listed here, and also fails when a listed path no longer contains one, so this file cannot rot.",
+  "categories": {
+    "legacy-migration-compatibility": "Code or tests implementing .newfang/ detection and migration. Removable when legacy state support is dropped.",
+    "historical-migration-doc": "Documentation whose purpose is explaining the transition.",
+    "historical-evidence": "Records that describe the product as it was. Rewriting them would falsify history.",
+    "generated-projection": "Regenerated from canonical state; quotes records verbatim."
+  },
+  "entries": [
+    {
+      "path": ".voila/briefs/PROJECT_BRIEF.md",
+      "category": "generated-projection",
+      "reason": "Generated projection of canonical state; quotes decision/assumption/risk records verbatim. Its banner, header, and project identity say Voila and are separately asserted clean.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": ".voila/events.jsonl",
+      "category": "historical-evidence",
+      "reason": "Append-only event history; prior records are never edited.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-1/drafts/0001.json",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-1/source.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-1/understandings/0001.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-2/drafts/0001.json",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-2/drafts/0002.json",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-2/source.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-2/understandings/0001.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-2/understandings/0002.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-3/source.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-4/source.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-5/source.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-6/source.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-7/source.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-8/drafts/0001.json",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-8/drafts/0002.json",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-8/drafts/0003.json",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-8/source.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-8/understandings/0001.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-8/understandings/0002.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/intakes/INT-8/understandings/0003.md",
+      "category": "historical-evidence",
+      "reason": "Preserved intake source, draft revision, understanding check, or append-only review log.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/orientations/ORI-1/ORIENTATION.md",
+      "category": "historical-evidence",
+      "reason": "Recorded repository orientation artifact.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/orientations/ORI-1/orientation.json",
+      "category": "historical-evidence",
+      "reason": "Recorded repository orientation artifact.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/orientations/ORI-2/ORIENTATION.md",
+      "category": "historical-evidence",
+      "reason": "Recorded repository orientation artifact.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/orientations/ORI-2/orientation.json",
+      "category": "historical-evidence",
+      "reason": "Recorded repository orientation artifact.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/project.json",
+      "category": "historical-evidence",
+      "reason": "Canonical state quotes dated decision, assumption, risk, claim, and work-item records. Claim text is bound to receipt evidence; rewriting it would falsify what was verified. Current-truth fields (displayName, nextAction, nextActionRationale) are rebranded and separately asserted clean.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": ".voila/receipts/RCP-1/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/receipts/RCP-2/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/receipts/RCP-3/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": ".voila/receipts/RCP-4/stdout.txt",
+      "category": "historical-evidence",
+      "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "README.md",
+      "category": "historical-migration-doc",
+      "reason": "Rename note telling readers why historical records say NewFang.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "docs/decisions/0001-adopt-pi-as-harness-foundation.md",
+      "category": "historical-evidence",
+      "reason": "Dated architecture decision record; decision text is preserved, with an additive rename note appended.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/decisions/0002-extensions-first-architecture.md",
+      "category": "historical-evidence",
+      "reason": "Dated architecture decision record; decision text is preserved, with an additive rename note appended.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/decisions/0003-authoritative-state-is-human-readable-ledger.md",
+      "category": "historical-evidence",
+      "reason": "Dated architecture decision record; decision text is preserved, with an additive rename note appended.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/decisions/0004-no-vendoring-of-reference-repositories.md",
+      "category": "historical-evidence",
+      "reason": "Dated architecture decision record; decision text is preserved, with an additive rename note appended.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/decisions/0007-thin-adapter-modular-src.md",
+      "category": "historical-evidence",
+      "reason": "Dated architecture decision record; decision text is preserved, with an additive rename note appended.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/migrations/NEWFANG_TO_VOILA.md",
+      "category": "historical-migration-doc",
+      "reason": "The document whose subject is the NewFang -> Voila transition. Its filename and body name the old brand deliberately; this is the one intentional active filename that contains NEWFANG.",
+      "immutable": false,
+      "removable": false
+    },
+    {
+      "path": "docs/migrations/VOILA_RENAME_INVENTORY.md",
+      "category": "historical-migration-doc",
+      "reason": "Documents the NewFang -> Voila transition; naming the old brand is its purpose.",
+      "immutable": false,
+      "removable": false
+    },
+    {
+      "path": "docs/plans/PHASE_3_INTAKE_BRIEF.md",
+      "category": "historical-evidence",
+      "reason": "Intake source behind INT-1..INT-8; its preserved snapshots are hash-recorded, so its bytes must not change.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/product/PRODUCT_DIRECTION.md",
+      "category": "historical-evidence",
+      "reason": "Authored v0.1 product direction preserved verbatim per CLAUDE.md; re-authoring under the Voila name is separate, explicit work.",
+      "immutable": true,
+      "removable": true
+    },
+    {
+      "path": "docs/research/BEN_SETUP_AUDIT.md",
+      "category": "historical-evidence",
+      "reason": "Dated research audit; quotes external source material and records findings as written.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/research/PI_CAPABILITY_AUDIT.md",
+      "category": "historical-evidence",
+      "reason": "Dated research audit; quotes external source material and records findings as written.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/verification/PACKET_1_FOUNDATION.md",
+      "category": "historical-evidence",
+      "reason": "Closed verification record describing the product under the name it had when the evidence was produced.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/verification/PACKET_2_5_STEWARD_CONSOLE.md",
+      "category": "historical-evidence",
+      "reason": "Closed verification record describing the product under the name it had when the evidence was produced.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/verification/PACKET_2_PROJECT_OPERATIONS.md",
+      "category": "historical-evidence",
+      "reason": "Closed verification record describing the product under the name it had when the evidence was produced.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/verification/PACKET_3_INTAKE_ORIENTATION.md",
+      "category": "historical-evidence",
+      "reason": "Closed verification record describing the product under the name it had when the evidence was produced.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "docs/verification/PACKET_4_5_VOILA_RENAME.md",
+      "category": "historical-migration-doc",
+      "reason": "Verification record for the rename packet itself; it necessarily names the old brand while describing what was renamed and what was preserved.",
+      "immutable": false,
+      "removable": false
+    },
+    {
+      "path": "docs/verification/PACKET_4_PROOF_ENGINE.md",
+      "category": "historical-evidence",
+      "reason": "Closed verification record describing the product under the name it had when the evidence was produced.",
+      "immutable": true,
+      "removable": false
+    },
+    {
+      "path": "src/commands/loaderror.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "src/commands/migrate.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "src/state/fingerprint.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "src/state/legacy-migration.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "src/state/legacy.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "test/fixtures/legacy-brand-allowlist.json",
+      "category": "legacy-migration-compatibility",
+      "reason": "This allowlist itself. It must name the prohibited spellings and the paths that carry them in order to do its job.",
+      "immutable": false,
+      "removable": false
+    },
+    {
+      "path": "test/legacy-migration.test.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "test/product-identity.test.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "test/proof.fingerprint.test.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "Implements or tests legacy .newfang/ detection and migration; the only code allowed to name the old directory.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "test/rename-guard.test.ts",
+      "category": "legacy-migration-compatibility",
+      "reason": "The rename guard. It must spell out every prohibited form in order to search for it.",
+      "immutable": false,
+      "removable": false
+    }
+  ]
+}

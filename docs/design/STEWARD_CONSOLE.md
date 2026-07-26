@@ -1,6 +1,6 @@
 # Steward Console — Design
 
-The Steward Console is NewFang's first distinctive Pi-native interface. It answers, in order: what am
+The Steward Console is Voila's first distinctive Pi-native interface. It answers, in order: what am
 I responsible for now, what is the next justified action, why is that next, what needs attention, and
 which decisions and risks matter now. ("What has not yet been proven" becomes real once claims and
 verification exist — this packet reserves space for it but invents no proof data.)
@@ -9,7 +9,7 @@ verification exist — this packet reserves space for it but invents no proof da
 
 - Feel like a **Steward's console**, not a task manager or an agent-activity dashboard.
 - Linear-like clarity and speed; selected Jira-like durability (decisions, risks, relationships);
-  Nolte-inspired end-to-end ownership; NewFang's verification-first direction.
+  Nolte-inspired end-to-end ownership; Voila's verification-first direction.
 - Keyboard-first; usable at ordinary terminal sizes; theme-token styling (no hardcoded ANSI).
 - Read-mostly in this packet. State and rendering strictly separated (one immutable view model).
 
@@ -53,7 +53,7 @@ Selected: **Delivery Desk organization with a Focus-Board-first primary screen**
 a separate map.
 
 Rationale: Joshua's daily workflow needs "what now / why now" to dominate (Focus Board's strength),
-but NewFang's identity is end-to-end ownership and verification (Delivery Desk). The Delivery Desk
+but Voila's identity is end-to-end ownership and verification (Delivery Desk). The Delivery Desk
 gives a first-class insertion point for the future **Proof / Delivery rail** without pretending it
 exists today. Radar's full relationship visualization is deferred — its value (dependency/risk
 awareness) is delivered through the Attention list and Work grouping at far lower complexity and much

@@ -51,3 +51,11 @@ rule — thin Pi adapter, modular package-ready implementation — is fixed.
 
 - [../architecture/RECOMMENDED_ARCHITECTURE.md](../architecture/RECOMMENDED_ARCHITECTURE.md).
 - Packet 1 Parts A2, C1, C7.
+
+## Rename note
+
+This ADR is preserved as written. The product was later renamed from NewFang to Voila
+(Packet 4.5): the canonical state directory is now `.voila/`, the Pi adapter is
+`.pi/extensions/voila.ts`, the command is `/voila`, and the package scope under consideration is
+`@voila`. The decision recorded above is unchanged; only the names are. See
+[../migrations/NEWFANG_TO_VOILA.md](../migrations/NEWFANG_TO_VOILA.md).

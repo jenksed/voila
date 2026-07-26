@@ -510,7 +510,7 @@ export function assessCompletion(
       "required claims attached",
       item.requiredClaimIds.length > 0,
       item.requiredClaimIds.length === 0
-        ? "no required claims; attach one with newfang_require_claim"
+        ? "no required claims; attach one with voila_require_claim"
         : `${item.requiredClaimIds.join(", ")}`,
     ),
   );

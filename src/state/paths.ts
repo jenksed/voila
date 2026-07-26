@@ -1,15 +1,15 @@
-// Filesystem layout for canonical `.newfang/` state. Pure path construction.
+// Filesystem layout for canonical `.voila/` state. Pure path construction.
 
 import { join } from "node:path";
 
-export const NEWFANG_DIR = ".newfang";
+export const VOILA_DIR = ".voila";
 
 export interface StatePaths {
   dir: string;
   projectJson: string;
   eventsJsonl: string;
   receiptsDir: string;
-  /** NewFang-owned staging area for receipts under construction (atomically promoted, then gone). */
+  /** Voila-owned staging area for receipts under construction (atomically promoted, then gone). */
   receiptsTempDir: string;
   backupsDir: string;
   viewsDir: string;
@@ -20,9 +20,9 @@ export interface StatePaths {
   projectBrief: string;
 }
 
-/** Artifact directory for one intake, e.g. `.newfang/intakes/INT-1/`. */
+/** Artifact directory for one intake, e.g. `.voila/intakes/INT-1/`. */
 export function intakePaths(root: string, intakeId: string) {
-  const dir = join(root, NEWFANG_DIR, "intakes", intakeId);
+  const dir = join(root, VOILA_DIR, "intakes", intakeId);
   return {
     dir,
     manifest: join(dir, "manifest.json"),
@@ -49,12 +49,12 @@ export function revisionPaths(root: string, intakeId: string, revision: number) 
 }
 
 /**
- * Artifact directory for one verification receipt, e.g. `.newfang/receipts/RCP-1/`.
- * Written once and never modified; `.newfang/receipts/.tmp/<token>/` is the staging directory that is
+ * Artifact directory for one verification receipt, e.g. `.voila/receipts/RCP-1/`.
+ * Written once and never modified; `.voila/receipts/.tmp/<token>/` is the staging directory that is
  * atomically renamed into place.
  */
 export function receiptPaths(root: string, receiptId: string) {
-  const dir = join(root, NEWFANG_DIR, "receipts", receiptId);
+  const dir = join(root, VOILA_DIR, "receipts", receiptId);
   return {
     dir,
     manifest: join(dir, "manifest.json"),
@@ -65,9 +65,9 @@ export function receiptPaths(root: string, receiptId: string) {
   };
 }
 
-/** Artifact directory for one orientation, e.g. `.newfang/orientations/ORI-1/`. */
+/** Artifact directory for one orientation, e.g. `.voila/orientations/ORI-1/`. */
 export function orientationPaths(root: string, orientationId: string) {
-  const dir = join(root, NEWFANG_DIR, "orientations", orientationId);
+  const dir = join(root, VOILA_DIR, "orientations", orientationId);
   return {
     dir,
     orientation: join(dir, "orientation.json"),
@@ -76,7 +76,7 @@ export function orientationPaths(root: string, orientationId: string) {
 }
 
 export function statePaths(root: string): StatePaths {
-  const dir = join(root, NEWFANG_DIR);
+  const dir = join(root, VOILA_DIR);
   return {
     dir,
     projectJson: join(dir, "project.json"),

@@ -39,12 +39,12 @@ function git(root: string, args: string[]): string {
     .trim();
 }
 
-/** A temp git repo with NewFang state and one claim (CLM-1) on NF-1. */
+/** A temp git repo with Voila state and one claim (CLM-1) on NF-1. */
 async function claimRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-rcp-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-rcp-"));
   git(root, ["init", "-q"]);
   git(root, ["config", "user.email", "test@example.invalid"]);
-  git(root, ["config", "user.name", "NewFang Test"]);
+  git(root, ["config", "user.name", "Voila Test"]);
   await writeFile(join(root, "tracked.txt"), "original\n", "utf8");
   git(root, ["add", "-A"]);
   git(root, ["commit", "-q", "-m", "initial"]);
@@ -137,7 +137,7 @@ test("a receipt artifact contains no absolute repository or home path", async ()
 // --- Execution outcomes ---
 
 test("a zero exit is passed; a non-zero exit is failed", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "newfang-exec-"));
+  const cwd = await mkdtemp(join(tmpdir(), "voila-exec-"));
   const ok = await executeVerification(cwd, NODE, ["-e", "process.exit(0)"], 30_000);
   assert.equal(ok.result, "passed");
   assert.equal(ok.exitCode, 0);
@@ -148,7 +148,7 @@ test("a zero exit is passed; a non-zero exit is failed", async () => {
 });
 
 test("a missing executable is an error result, not a thrown exception", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "newfang-exec-"));
+  const cwd = await mkdtemp(join(tmpdir(), "voila-exec-"));
   const outcome = await executeVerification(cwd, "definitely-not-a-real-binary-xyz", [], 30_000);
   assert.equal(outcome.result, "error");
   assert.equal(outcome.exitCode, null);
@@ -156,7 +156,7 @@ test("a missing executable is an error result, not a thrown exception", async ()
 });
 
 test("a command exceeding its timeout is represented honestly as timed_out", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "newfang-exec-"));
+  const cwd = await mkdtemp(join(tmpdir(), "voila-exec-"));
   const outcome = await executeVerification(
     cwd,
     NODE,
@@ -168,7 +168,7 @@ test("a command exceeding its timeout is represented honestly as timed_out", asy
 });
 
 test("stdout and stderr are captured separately and stripped of ANSI", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "newfang-exec-"));
+  const cwd = await mkdtemp(join(tmpdir(), "voila-exec-"));
   const script =
     'process.stdout.write("\\u001B[32mOUT-MARKER\\u001B[0m\\n"); process.stderr.write("ERR-MARKER\\n");';
   const outcome = await executeVerification(cwd, NODE, ["-e", script], 30_000);
@@ -180,7 +180,7 @@ test("stdout and stderr are captured separately and stripped of ANSI", async () 
 });
 
 test("each stream is capped independently and truncation is recorded honestly", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "newfang-exec-"));
+  const cwd = await mkdtemp(join(tmpdir(), "voila-exec-"));
   // Far more than the cap on stdout; a small amount on stderr.
   const script = `process.stdout.write("x".repeat(${OUTPUT_CAP_BYTES * 3})); process.stderr.write("small");`;
   const outcome = await executeVerification(cwd, NODE, ["-e", script], 60_000);
@@ -292,7 +292,7 @@ test("cwdRef must be repository-relative; traversal, absolute, and symlink escap
   );
 
   // A symlink pointing outside the repository is refused even though it lives inside.
-  const outside = await mkdtemp(join(tmpdir(), "newfang-outside-"));
+  const outside = await mkdtemp(join(tmpdir(), "voila-outside-"));
   await symlink(outside, join(root, "escape"));
   await assert.rejects(
     () =>
@@ -459,7 +459,7 @@ test("the manifest agrees with canonical metadata and the stored output hashes",
 
 test("the artifact records no environment values and no private absolute paths", async () => {
   const root = await claimRoot();
-  process.env.NEWFANG_TEST_SECRET = "SUPER-SECRET-VALUE";
+  process.env.VOILA_TEST_SECRET = "SUPER-SECRET-VALUE";
   try {
     const result = await runVerification(root, {
       claimId: "CLM-1",
@@ -469,7 +469,7 @@ test("the artifact records no environment values and no private absolute paths",
     const manifest = await readReceiptManifest(root, result.receipt.id);
     const serialized = JSON.stringify(manifest);
     assert.equal(serialized.includes("SUPER-SECRET-VALUE"), false, "no env values are captured");
-    assert.equal(serialized.includes("NEWFANG_TEST_SECRET"), false, "no env names are captured");
+    assert.equal(serialized.includes("VOILA_TEST_SECRET"), false, "no env names are captured");
     assert.equal(manifest.capturedEnvironment, "none");
     assert.equal(serialized.includes(root), false, "no absolute repository path is stored");
     assert.equal(manifest.cwdRef, ".", "the working directory is repository-relative");
@@ -480,7 +480,7 @@ test("the artifact records no environment values and no private absolute paths",
     assert.equal(canonical.includes(root), false);
     assert.equal(canonical.includes("stdout"), false, "no command output in project.json");
   } finally {
-    delete process.env.NEWFANG_TEST_SECRET;
+    delete process.env.VOILA_TEST_SECRET;
   }
 });
 
@@ -572,7 +572,7 @@ test("reading a missing receipt artifact throws rather than reconstructing it", 
   await assert.rejects(() => readReceiptOutput(root, "RCP-99"), ReceiptNotFoundError);
 });
 
-test("artifacts live under .newfang/receipts/<id>/ with exactly the expected files", async () => {
+test("artifacts live under .voila/receipts/<id>/ with exactly the expected files", async () => {
   const root = await claimRoot();
   const result = await runVerification(root, {
     claimId: "CLM-1",

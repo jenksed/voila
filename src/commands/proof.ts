@@ -1,4 +1,4 @@
-// `/newfang claims`, `/newfang proof`, `/newfang verify`, `/newfang complete` logic. Pure of Pi.
+// `/voila claims`, `/voila proof`, `/voila verify`, `/voila complete` logic. Pure of Pi.
 //
 // Display discipline: these commands never dump unbounded command output or raw JSON. A receipt shows
 // curated metadata and points at its artifact directory; reading stdout is a deliberate act.
@@ -8,7 +8,7 @@ import { loadProofOverview } from "../state/proof-store.ts";
 import { readReceiptManifest, runVerification } from "../state/receipt-store.ts";
 import { FingerprintUnavailableError } from "../state/fingerprint.ts";
 import { tryRepositoryFingerprint } from "../state/fingerprint.ts";
-import { NewfangStateError } from "../state/errors.ts";
+import { VoilaStateError } from "../state/errors.ts";
 import { updateState } from "../state/store.ts";
 import {
   assessCompletion,
@@ -28,7 +28,7 @@ function operationError(error: unknown): CommandResult | null {
   if (
     error instanceof FingerprintUnavailableError ||
     error instanceof ProjectOperationError ||
-    error instanceof NewfangStateError
+    error instanceof VoilaStateError
   ) {
     return { level: "warning", lines: [error.message] };
   }
@@ -42,7 +42,7 @@ const STATUS_MARK: Record<ClaimEvaluationStatus, string> = {
   pending: "pending",
 };
 
-/** `/newfang claims [CLM-n|NF-n]` — claims with derived evidence status. */
+/** `/voila claims [CLM-n|NF-n]` — claims with derived evidence status. */
 export async function runClaims(root: string, target?: string): Promise<CommandResult> {
   let overview;
   try {
@@ -72,7 +72,7 @@ export async function runClaims(root: string, target?: string): Promise<CommandR
       lines.push(
         `  receipts:   ${c.receiptIds.length > 0 ? c.receiptIds.join(", ") : "none"}`,
         "",
-        `Inspect a receipt with /newfang proof <RCP-n>.`,
+        `Inspect a receipt with /voila proof <RCP-n>.`,
       );
       return { level: "info", lines, state: overview.state };
     }
@@ -127,7 +127,7 @@ export async function runClaims(root: string, target?: string): Promise<CommandR
   };
 }
 
-/** `/newfang proof [NF-n|CLM-n|RCP-n]` — curated proof status. Never dumps stdout or raw JSON. */
+/** `/voila proof [NF-n|CLM-n|RCP-n]` — curated proof status. Never dumps stdout or raw JSON. */
 export async function runProof(root: string, target?: string): Promise<CommandResult> {
   let overview;
   try {
@@ -151,7 +151,7 @@ export async function runProof(root: string, target?: string): Promise<CommandRe
       `  head:     ${receipt.gitHead ? receipt.gitHead.slice(0, 12) : "(none)"}`,
       `  evidence: ${current ? "matches the current repository state" : "does NOT match the current repository state (stale)"}`,
       `  output:   ${receipt.outputTruncated ? "TRUNCATED at the per-stream cap" : "stored in full (within cap)"}`,
-      `  artifact: .newfang/${receipt.artifactRef}/`,
+      `  artifact: .voila/${receipt.artifactRef}/`,
     ];
     try {
       const manifest = await readReceiptManifest(root, receipt.id);
@@ -160,11 +160,11 @@ export async function runProof(root: string, target?: string): Promise<CommandRe
         `  duration: ${manifest.durationMs} ms (timeout ${manifest.timeoutMs} ms)`,
       );
     } catch {
-      lines.push("  hashes:   manifest missing — run /newfang doctor");
+      lines.push("  hashes:   manifest missing — run /voila doctor");
     }
     lines.push(
       "",
-      `Full output is not shown here. Read .newfang/${receipt.artifactRef}/stdout.txt deliberately if you need it.`,
+      `Full output is not shown here. Read .voila/${receipt.artifactRef}/stdout.txt deliberately if you need it.`,
     );
     return { level: current ? "info" : "warning", lines, state };
   }
@@ -219,10 +219,7 @@ export async function runProof(root: string, target?: string): Promise<CommandRe
       );
     }
   }
-  lines.push(
-    "",
-    "Detail: /newfang proof <NF-n|CLM-n|RCP-n> · /newfang claims · /newfang complete NF-n",
-  );
+  lines.push("", "Detail: /voila proof <NF-n|CLM-n|RCP-n> · /voila claims · /voila complete NF-n");
   return { level: s.unsupported > 0 ? "warning" : "info", lines, state };
 }
 
@@ -239,21 +236,21 @@ export interface ParsedVerify {
 export function parseVerifyArgs(tokens: string[]): ParsedVerify | string {
   const claimId = tokens[0];
   if (!claimId) {
-    return "Usage: /newfang verify CLM-n -- executable [args...]";
+    return "Usage: /voila verify CLM-n -- executable [args...]";
   }
   const sep = tokens.indexOf("--", 1);
   if (sep < 0) {
-    return `Usage: /newfang verify ${claimId} -- executable [args...]  (the -- separator is required; NewFang runs a program with an argument array, never a shell string)`;
+    return `Usage: /voila verify ${claimId} -- executable [args...]  (the -- separator is required; Voila runs a program with an argument array, never a shell string)`;
   }
   const command = tokens.slice(sep + 1);
   const executable = command[0];
   if (!executable) {
-    return "No executable given after --. Usage: /newfang verify CLM-n -- executable [args...]";
+    return "No executable given after --. Usage: /voila verify CLM-n -- executable [args...]";
   }
   return { claimId, executable, args: command.slice(1) };
 }
 
-/** `/newfang verify CLM-n -- executable [args...]` — echo the exact structured command, then run it. */
+/** `/voila verify CLM-n -- executable [args...]` — echo the exact structured command, then run it. */
 export async function runVerify(root: string, tokens: string[]): Promise<CommandResult> {
   const parsed = parseVerifyArgs(tokens);
   if (typeof parsed === "string") return { level: "warning", lines: [parsed] };
@@ -279,7 +276,7 @@ export async function runVerify(root: string, tokens: string[]): Promise<Command
     const lines = [
       ...echo,
       `Recorded ${r.id}: ${r.result}${r.exitCode !== undefined ? ` (exit ${r.exitCode})` : ""}.`,
-      `  artifact:    .newfang/${r.artifactRef}/`,
+      `  artifact:    .voila/${r.artifactRef}/`,
       `  fingerprint: ${r.repositoryFingerprint.slice(0, 12)}…`,
       ...(r.outputTruncated ? ["  output:      TRUNCATED at the per-stream cap"] : []),
       "",
@@ -295,10 +292,10 @@ export async function runVerify(root: string, tokens: string[]): Promise<Command
   }
 }
 
-/** `/newfang complete NF-n` — the protected transition. Lists every failing gate on rejection. */
+/** `/voila complete NF-n` — the protected transition. Lists every failing gate on rejection. */
 export async function runComplete(root: string, id?: string): Promise<CommandResult> {
   if (!id) {
-    return { level: "warning", lines: ["Usage: /newfang complete NF-n"] };
+    return { level: "warning", lines: ["Usage: /voila complete NF-n"] };
   }
   let fingerprint: string | null;
   try {
@@ -320,7 +317,7 @@ export async function runComplete(root: string, id?: string): Promise<CommandRes
       "Every completion gate passed; the transition is recorded in canonical state and history.",
     ];
     if (state.focusWorkItemId === null) {
-      lines.push("Focus was cleared. Choose the next focus deliberately with /newfang focus <ID>.");
+      lines.push("Focus was cleared. Choose the next focus deliberately with /voila focus <ID>.");
     }
     return { level: "info", lines, state };
   } catch (error) {

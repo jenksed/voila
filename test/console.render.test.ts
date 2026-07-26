@@ -177,8 +177,8 @@ test("empty project renders without crashing and invites creation", () => {
 });
 
 test("uninitialized, migration, and error states render actionable screens", () => {
-  assert.match(render(uninitializedModel(), ui(), 80).join("\n"), /\/newfang init/);
-  assert.match(render(migrationModel(), ui(), 80).join("\n"), /\/newfang migrate --apply/);
+  assert.match(render(uninitializedModel(), ui(), 80).join("\n"), /\/voila init/);
+  assert.match(render(migrationModel(), ui(), 80).join("\n"), /\/voila migrate --apply/);
   assert.match(render(errorModel(), ui(), 80).join("\n"), /malformed project\.json/);
 });
 

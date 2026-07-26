@@ -46,7 +46,7 @@ function draftFor(intakeId: string, over: Record<string, unknown> = {}) {
 }
 
 async function repoWithSource() {
-  const root = await mkdtemp(join(tmpdir(), "newfang-hist-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-hist-"));
   await initState(root, { displayName: "hist-demo" });
   await writeFile(join(root, "brief.md"), SOURCE, "utf8");
   const created = await createIntake(root, { path: "brief.md" });

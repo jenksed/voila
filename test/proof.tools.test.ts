@@ -7,7 +7,7 @@ import { mkdtemp, readFile, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { newfangTools, type NewfangTool } from "../src/tools/index.ts";
+import { voilaTools, type VoilaTool } from "../src/tools/index.ts";
 import { initState, loadState, updateState } from "../src/state/store.ts";
 import { receiptPaths, statePaths } from "../src/state/paths.ts";
 import {
@@ -31,13 +31,13 @@ function git(root: string, args: string[]): string {
     .trim();
 }
 
-function tool(name: string): NewfangTool {
-  const found = newfangTools().find((t) => t.name === name);
+function tool(name: string): VoilaTool {
+  const found = voilaTools().find((t) => t.name === name);
   assert.ok(found, `tool ${name} exists`);
   return found;
 }
 
-async function run(t: NewfangTool, params: Record<string, unknown>, cwd: string) {
+async function run(t: VoilaTool, params: Record<string, unknown>, cwd: string) {
   return t.execute("call-1", params, undefined, undefined, { cwd });
 }
 
@@ -45,12 +45,12 @@ function textOf(result: { content: Array<{ text: string }> }): string {
   return result.content.map((c) => c.text).join("\n");
 }
 
-/** A temp git repo with NewFang state and one work item carrying one acceptance criterion. */
+/** A temp git repo with Voila state and one work item carrying one acceptance criterion. */
 async function projectRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-ptools-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-ptools-"));
   git(root, ["init", "-q"]);
   git(root, ["config", "user.email", "test@example.invalid"]);
-  git(root, ["config", "user.name", "NewFang Test"]);
+  git(root, ["config", "user.name", "Voila Test"]);
   await writeFile(join(root, "tracked.txt"), "original\n", "utf8");
   git(root, ["add", "-A"]);
   git(root, ["commit", "-q", "-m", "initial"]);
@@ -74,7 +74,7 @@ async function projectRoot(): Promise<string> {
 async function proveRoot(): Promise<string> {
   const root = await projectRoot();
   await run(
-    tool("newfang_create_claim"),
+    tool("voila_create_claim"),
     {
       workItemId: "NF-1",
       statement: "the recorded command passes",
@@ -84,9 +84,9 @@ async function proveRoot(): Promise<string> {
     },
     root,
   );
-  await run(tool("newfang_require_claim"), { workItemId: "NF-1", claimId: "CLM-1" }, root);
+  await run(tool("voila_require_claim"), { workItemId: "NF-1", claimId: "CLM-1" }, root);
   await run(
-    tool("newfang_run_verification"),
+    tool("voila_run_verification"),
     { claimId: "CLM-1", executable: NODE, args: ["-e", "process.stdout.write('ok')"] },
     root,
   );
@@ -112,16 +112,16 @@ function doctorInput(root: string) {
 // --- Tool registration ---
 
 test("the eight proof tools are registered with strict schemas", () => {
-  const names = newfangTools().map((t) => t.name);
+  const names = voilaTools().map((t) => t.name);
   for (const expected of [
-    "newfang_create_claim",
-    "newfang_update_claim",
-    "newfang_require_claim",
-    "newfang_list_claims",
-    "newfang_run_verification",
-    "newfang_get_receipt",
-    "newfang_complete_work_item",
-    "newfang_get_proof",
+    "voila_create_claim",
+    "voila_update_claim",
+    "voila_require_claim",
+    "voila_list_claims",
+    "voila_run_verification",
+    "voila_get_receipt",
+    "voila_complete_work_item",
+    "voila_get_proof",
   ]) {
     assert.ok(names.includes(expected), `${expected} is registered`);
     const schema = tool(expected).parameters as { additionalProperties?: boolean };
@@ -131,14 +131,14 @@ test("the eight proof tools are registered with strict schemas", () => {
 
 test("no proof tool accepts a filesystem path outside the repository or a support flag", () => {
   for (const name of [
-    "newfang_create_claim",
-    "newfang_update_claim",
-    "newfang_require_claim",
-    "newfang_list_claims",
-    "newfang_run_verification",
-    "newfang_get_receipt",
-    "newfang_complete_work_item",
-    "newfang_get_proof",
+    "voila_create_claim",
+    "voila_update_claim",
+    "voila_require_claim",
+    "voila_list_claims",
+    "voila_run_verification",
+    "voila_get_receipt",
+    "voila_complete_work_item",
+    "voila_get_proof",
   ]) {
     const properties =
       (tool(name).parameters as { properties?: Record<string, unknown> }).properties ?? {};
@@ -146,7 +146,7 @@ test("no proof tool accepts a filesystem path outside the repository or a suppor
     assert.equal(keys.includes("root"), false, `${name} takes no root`);
     assert.equal(keys.includes("cwd"), false, `${name} takes no absolute cwd`);
     for (const forbidden of ["supported", "isSupported", "markSupported", "status"]) {
-      if (name === "newfang_list_claims" && forbidden === "status") continue; // read-only filter
+      if (name === "voila_list_claims" && forbidden === "status") continue; // read-only filter
       assert.equal(keys.includes(forbidden), false, `${name} has no ${forbidden} field`);
     }
   }
@@ -154,10 +154,10 @@ test("no proof tool accepts a filesystem path outside the repository or a suppor
 
 // --- Claim tools ---
 
-test("newfang_create_claim persists a pending claim and says so", async () => {
+test("voila_create_claim persists a pending claim and says so", async () => {
   const root = await projectRoot();
   const result = await run(
-    tool("newfang_create_claim"),
+    tool("voila_create_claim"),
     {
       workItemId: "NF-1",
       statement: "it works",
@@ -173,12 +173,12 @@ test("newfang_create_claim persists a pending claim and says so", async () => {
   assert.deepEqual(state.claims[0]?.receiptIds, []);
 });
 
-test("newfang_create_claim rejects a criterion the work item does not state", async () => {
+test("voila_create_claim rejects a criterion the work item does not state", async () => {
   const root = await projectRoot();
   await assert.rejects(
     () =>
       run(
-        tool("newfang_create_claim"),
+        tool("voila_create_claim"),
         {
           workItemId: "NF-1",
           statement: "x",
@@ -192,11 +192,11 @@ test("newfang_create_claim rejects a criterion the work item does not state", as
   assert.equal((await loadState(root)).claims.length, 0);
 });
 
-test("newfang_update_claim revises fields without touching receipts", async () => {
+test("voila_update_claim revises fields without touching receipts", async () => {
   const root = await proveRoot();
   const before = await loadState(root);
   const result = await run(
-    tool("newfang_update_claim"),
+    tool("voila_update_claim"),
     { id: "CLM-1", confidence: "low", knownLimitations: ["narrower than before"] },
     root,
   );
@@ -208,13 +208,13 @@ test("newfang_update_claim revises fields without touching receipts", async () =
   assert.deepEqual(after.receipts, before.receipts);
 });
 
-test("newfang_require_claim reports remaining uncovered criteria", async () => {
+test("voila_require_claim reports remaining uncovered criteria", async () => {
   const root = await projectRoot();
   await updateState(root, (cur) =>
     updateWorkItem(cur, { id: "NF-1", acceptanceCriteria: [CRITERION, "a second criterion"] }, "T"),
   );
   await run(
-    tool("newfang_create_claim"),
+    tool("voila_create_claim"),
     {
       workItemId: "NF-1",
       statement: "x",
@@ -224,7 +224,7 @@ test("newfang_require_claim reports remaining uncovered criteria", async () => {
     root,
   );
   const result = await run(
-    tool("newfang_require_claim"),
+    tool("voila_require_claim"),
     { workItemId: "NF-1", claimId: "CLM-1" },
     root,
   );
@@ -232,25 +232,25 @@ test("newfang_require_claim reports remaining uncovered criteria", async () => {
   assert.match(textOf(result), /Uncovered acceptance criteria remaining: 1/);
 });
 
-test("newfang_list_claims reports derived status and limitations", async () => {
+test("voila_list_claims reports derived status and limitations", async () => {
   const root = await proveRoot();
-  const result = await run(tool("newfang_list_claims"), {}, root);
+  const result = await run(tool("voila_list_claims"), {}, root);
   const text = textOf(result);
   assert.match(text, /CLM-1 \[supported\] \(required\) NF-1/);
   assert.match(text, /limitations: automated only; no interactive check/);
   const details = result.details as { summary: { supported: number } };
   assert.equal(details.summary.supported, 1);
 
-  const filtered = await run(tool("newfang_list_claims"), { status: "pending" }, root);
+  const filtered = await run(tool("voila_list_claims"), { status: "pending" }, root);
   assert.match(textOf(filtered), /no matching claims/);
 });
 
 // --- Verification tool ---
 
-test("newfang_run_verification records a receipt and says success != passed", async () => {
+test("voila_run_verification records a receipt and says success != passed", async () => {
   const root = await projectRoot();
   await run(
-    tool("newfang_create_claim"),
+    tool("voila_create_claim"),
     {
       workItemId: "NF-1",
       statement: "x",
@@ -260,7 +260,7 @@ test("newfang_run_verification records a receipt and says success != passed", as
     root,
   );
   const failing = await run(
-    tool("newfang_run_verification"),
+    tool("voila_run_verification"),
     { claimId: "CLM-1", executable: NODE, args: ["-e", "process.exit(1)"] },
     root,
   );
@@ -274,32 +274,28 @@ test("newfang_run_verification records a receipt and says success != passed", as
   assert.equal((await loadState(root)).receipts.length, 1);
 });
 
-test("newfang_run_verification refuses a shell string", async () => {
+test("voila_run_verification refuses a shell string", async () => {
   const root = await proveRoot();
   await assert.rejects(
     () =>
-      run(
-        tool("newfang_run_verification"),
-        { claimId: "CLM-1", executable: "npm test | tee" },
-        root,
-      ),
+      run(tool("voila_run_verification"), { claimId: "CLM-1", executable: "npm test | tee" }, root),
     /Refusing to run/,
   );
 });
 
 // --- Receipt tool ---
 
-test("newfang_get_receipt returns curated metadata and only a bounded excerpt on request", async () => {
+test("voila_get_receipt returns curated metadata and only a bounded excerpt on request", async () => {
   const root = await proveRoot();
-  const plain = await run(tool("newfang_get_receipt"), { receiptId: "RCP-1" }, root);
+  const plain = await run(tool("voila_get_receipt"), { receiptId: "RCP-1" }, root);
   const plainText = textOf(plain);
   assert.match(plainText, /RCP-1 for CLM-1: passed \(exit 0\)/);
   assert.match(plainText, /matches the current repository state/);
-  assert.match(plainText, /Artifact: \.newfang\/receipts\/RCP-1\//);
+  assert.match(plainText, /Artifact: \.voila\/receipts\/RCP-1\//);
   assert.equal(plainText.includes("stdout excerpt"), false, "output is not returned by default");
 
   const withOutput = await run(
-    tool("newfang_get_receipt"),
+    tool("voila_get_receipt"),
     { receiptId: "RCP-1", includeOutput: true },
     root,
   );
@@ -309,10 +305,10 @@ test("newfang_get_receipt returns curated metadata and only a bounded excerpt on
   assert.equal(details.excerptTruncated, false);
 });
 
-test("newfang_get_receipt truncates a large excerpt for display", async () => {
+test("voila_get_receipt truncates a large excerpt for display", async () => {
   const root = await projectRoot();
   await run(
-    tool("newfang_create_claim"),
+    tool("voila_create_claim"),
     {
       workItemId: "NF-1",
       statement: "x",
@@ -322,7 +318,7 @@ test("newfang_get_receipt truncates a large excerpt for display", async () => {
     root,
   );
   await run(
-    tool("newfang_run_verification"),
+    tool("voila_run_verification"),
     {
       claimId: "CLM-1",
       executable: NODE,
@@ -332,7 +328,7 @@ test("newfang_get_receipt truncates a large excerpt for display", async () => {
     root,
   );
   const result = await run(
-    tool("newfang_get_receipt"),
+    tool("voila_get_receipt"),
     { receiptId: "RCP-1", includeOutput: true },
     root,
   );
@@ -341,22 +337,22 @@ test("newfang_get_receipt truncates a large excerpt for display", async () => {
   assert.ok(details.stdoutExcerpt.length <= 4000, `excerpt was ${details.stdoutExcerpt.length}`);
 });
 
-test("newfang_get_receipt rejects an unknown receipt", async () => {
+test("voila_get_receipt rejects an unknown receipt", async () => {
   const root = await proveRoot();
   await assert.rejects(
-    () => run(tool("newfang_get_receipt"), { receiptId: "RCP-99" }, root),
+    () => run(tool("voila_get_receipt"), { receiptId: "RCP-99" }, root),
     /Receipt not found/,
   );
 });
 
 // --- Proof and completion tools ---
 
-test("newfang_get_proof reports counts and, for an item, every gate", async () => {
+test("voila_get_proof reports counts and, for an item, every gate", async () => {
   const root = await proveRoot();
-  const overall = await run(tool("newfang_get_proof"), {}, root);
+  const overall = await run(tool("voila_get_proof"), {}, root);
   assert.match(textOf(overall), /Claims: 1 — 1 supported, 0 unsupported, 0 stale, 0 pending/);
 
-  const forItem = await run(tool("newfang_get_proof"), { workItemId: "NF-1" }, root);
+  const forItem = await run(tool("voila_get_proof"), { workItemId: "NF-1" }, root);
   const text = textOf(forItem);
   assert.match(text, /NF-1 \[in_progress\] — completion READY/);
   assert.match(text, /\[pass\] every required claim supported by current passing evidence/);
@@ -364,14 +360,14 @@ test("newfang_get_proof reports counts and, for an item, every gate", async () =
   assert.equal(details.assessment.ready, true);
   assert.equal(details.coverage.length, 1);
 
-  const missing = await run(tool("newfang_get_proof"), { workItemId: "NF-9" }, root);
+  const missing = await run(tool("voila_get_proof"), { workItemId: "NF-9" }, root);
   assert.match(textOf(missing), /Work item not found: NF-9/);
 });
 
-test("newfang_complete_work_item completes a fully proven item and clears focus", async () => {
+test("voila_complete_work_item completes a fully proven item and clears focus", async () => {
   const root = await proveRoot();
   await updateState(root, (cur) => setFocusWorkItem(cur, "NF-1"));
-  const result = await run(tool("newfang_complete_work_item"), { workItemId: "NF-1" }, root);
+  const result = await run(tool("voila_complete_work_item"), { workItemId: "NF-1" }, root);
   const text = textOf(result);
   assert.match(text, /Completed NF-1: Verified outcome/);
   assert.match(text, /completion gates passed/);
@@ -387,11 +383,11 @@ test("newfang_complete_work_item completes a fully proven item and clears focus"
   assert.equal(events.filter((e) => e.type === "work_item_completed").length, 1);
 });
 
-test("newfang_complete_work_item refuses an unproven item and changes nothing", async () => {
+test("voila_complete_work_item refuses an unproven item and changes nothing", async () => {
   const root = await projectRoot();
   const before = await readFile(statePaths(root).projectJson, "utf8");
   await assert.rejects(
-    () => run(tool("newfang_complete_work_item"), { workItemId: "NF-1" }, root),
+    () => run(tool("voila_complete_work_item"), { workItemId: "NF-1" }, root),
     CompletionRejectedError,
   );
   assert.equal(await readFile(statePaths(root).projectJson, "utf8"), before, "bytes unchanged");
@@ -410,15 +406,15 @@ test("parseVerifyArgs consumes only the FIRST -- separator", () => {
     executable: "npm",
     args: ["test"],
   });
-  assert.match(parseVerifyArgs([]) as string, /Usage: \/newfang verify/);
+  assert.match(parseVerifyArgs([]) as string, /Usage: \/voila verify/);
   assert.match(parseVerifyArgs(["CLM-1"]) as string, /the -- separator is required/);
   assert.match(parseVerifyArgs(["CLM-1", "--"]) as string, /No executable given after --/);
 });
 
-test("/newfang verify echoes the exact structured command before executing", async () => {
+test("/voila verify echoes the exact structured command before executing", async () => {
   const root = await projectRoot();
   await run(
-    tool("newfang_create_claim"),
+    tool("voila_create_claim"),
     {
       workItemId: "NF-1",
       statement: "x",
@@ -438,10 +434,10 @@ test("/newfang verify echoes the exact structured command before executing", asy
   assert.equal(result.level, "info");
 });
 
-test("/newfang verify echoes the command even when it is refused", async () => {
+test("/voila verify echoes the command even when it is refused", async () => {
   const root = await projectRoot();
   await run(
-    tool("newfang_create_claim"),
+    tool("voila_create_claim"),
     {
       workItemId: "NF-1",
       statement: "x",
@@ -457,10 +453,10 @@ test("/newfang verify echoes the command even when it is refused", async () => {
   assert.equal(result.level, "warning");
 });
 
-test("/newfang verify warns, not errors, when the command fails", async () => {
+test("/voila verify warns, not errors, when the command fails", async () => {
   const root = await projectRoot();
   await run(
-    tool("newfang_create_claim"),
+    tool("voila_create_claim"),
     {
       workItemId: "NF-1",
       statement: "x",
@@ -474,7 +470,7 @@ test("/newfang verify warns, not errors, when the command fails", async () => {
   assert.match(result.lines.join("\n"), /is NOT supported: the command did not pass/);
 });
 
-test("/newfang claims lists and details claims", async () => {
+test("/voila claims lists and details claims", async () => {
   const root = await proveRoot();
   const list = await runClaims(root);
   assert.match(list.lines.join("\n"), /Claims — 1 \(supported 1/);
@@ -493,14 +489,14 @@ test("/newfang claims lists and details claims", async () => {
   assert.match((await runClaims(root, "CLM-9")).lines.join("\n"), /No claim or claimed work item/);
 });
 
-test("/newfang claims explains an empty project", async () => {
+test("/voila claims explains an empty project", async () => {
   const root = await projectRoot();
   const result = await runClaims(root);
   assert.match(result.lines.join("\n"), /No claims yet/);
   assert.match(result.lines.join("\n"), /cannot be completed until claims cover/);
 });
 
-test("/newfang proof shows an overview, a work item's gates, and a receipt without output", async () => {
+test("/voila proof shows an overview, a work item's gates, and a receipt without output", async () => {
   const root = await proveRoot();
   const overview = await runProof(root);
   assert.match(overview.lines.join("\n"), /Proof — 1 claim\(s\)/);
@@ -527,7 +523,7 @@ test("/newfang proof shows an overview, a work item's gates, and a receipt witho
   assert.match((await runProof(root, "NF-9")).lines.join("\n"), /No work item NF-9/);
 });
 
-test("/newfang complete lists EVERY failing gate and changes nothing", async () => {
+test("/voila complete lists EVERY failing gate and changes nothing", async () => {
   const root = await projectRoot();
   const before = await readFile(statePaths(root).projectJson, "utf8");
   const result = await runComplete(root, "NF-1");
@@ -539,10 +535,10 @@ test("/newfang complete lists EVERY failing gate and changes nothing", async () 
   assert.match(text, /every required claim supported by current passing evidence/);
   assert.equal(await readFile(statePaths(root).projectJson, "utf8"), before, "bytes unchanged");
 
-  assert.match((await runComplete(root)).lines.join("\n"), /Usage: \/newfang complete NF-n/);
+  assert.match((await runComplete(root)).lines.join("\n"), /Usage: \/voila complete NF-n/);
 });
 
-test("/newfang complete succeeds on a fully proven item", async () => {
+test("/voila complete succeeds on a fully proven item", async () => {
   const root = await proveRoot();
   await updateState(root, (cur) => setFocusWorkItem(cur, "NF-1"));
   const result = await runComplete(root, "NF-1");
@@ -698,7 +694,7 @@ test("doctor reports leftover receipt staging directories", async () => {
 
 test("doctor WARNS (never reverts) when completed work no longer revalidates", async () => {
   const root = await proveRoot();
-  await run(tool("newfang_complete_work_item"), { workItemId: "NF-1" }, root);
+  await run(tool("voila_complete_work_item"), { workItemId: "NF-1" }, root);
   // The repository moves: the receipt that justified completion is no longer current.
   await writeFile(join(root, "tracked.txt"), "moved on\n", "utf8");
 
@@ -717,18 +713,18 @@ test("doctor WARNS (never reverts) when completed work no longer revalidates", a
 
 test("doctor passes revalidation while completed work still has current evidence", async () => {
   const root = await proveRoot();
-  await run(tool("newfang_complete_work_item"), { workItemId: "NF-1" }, root);
+  await run(tool("voila_complete_work_item"), { workItemId: "NF-1" }, root);
   const revalidation = check(await runDoctor(doctorInput(root)), "completed work revalidation");
   assert.equal(revalidation.level, "pass");
 });
 
 test("doctor warns that migration is required for a v3 project", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-v3-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-v3-"));
   await mkdir(statePaths(root).dir, { recursive: true });
   const { V3_FIXTURE } = await import("./helpers.ts");
   await writeFile(statePaths(root).projectJson, `${JSON.stringify(V3_FIXTURE, null, 2)}\n`, "utf8");
   const migration = check(await runDoctor(doctorInput(root)), "schema migration");
   assert.equal(migration.level, "warn");
   assert.match(migration.detail, /v3 state; migration to v4 is required/);
-  assert.match(migration.detail, /\/newfang migrate --apply/);
+  assert.match(migration.detail, /\/voila migrate --apply/);
 });

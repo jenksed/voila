@@ -4,9 +4,9 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-// Loads the pinned Pi package and the thin adapter, proving /newfang home registers and opens
+// Loads the pinned Pi package and the thin adapter, proving /voila home registers and opens
 // through the pinned API shape without provider authentication.
-import newfangExtension from "../.pi/extensions/newfang.ts";
+import voilaExtension from "../.pi/extensions/voila.ts";
 import { SUBCOMMANDS } from "../src/extension/register.ts";
 import { buildModelForRoot, themeStyler } from "../src/ui/steward-console/open.ts";
 import { initState } from "../src/state/store.ts";
@@ -88,7 +88,7 @@ function harness(cwd: string, opts: { withCustom: boolean; mode?: string }) {
 }
 
 async function seededRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-console-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-console-"));
   await initState(root, { displayName: "console-demo" });
   await updateState(root, (s) =>
     createWorkItem(s, { kind: "task", title: "First item", status: "ready" }, "T"),
@@ -97,11 +97,11 @@ async function seededRoot(): Promise<string> {
   return root;
 }
 
-test("/newfang home is registered and offered in completions", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-console-"));
+test("/voila home is registered and offered in completions", async () => {
+  const root = await mkdtemp(join(tmpdir(), "voila-console-"));
   const h = harness(root, { withCustom: true, mode: "tui" });
-  (newfangExtension as unknown as (pi: unknown) => void)(h.host);
-  const cmd = h.commands.get("newfang");
+  (voilaExtension as unknown as (pi: unknown) => void)(h.host);
+  const cmd = h.commands.get("voila");
   assert.ok(cmd);
   assert.ok(SUBCOMMANDS.includes("home"));
   assert.deepEqual(cmd.getArgumentCompletions?.("ho"), [{ value: "home", label: "home" }]);
@@ -124,17 +124,17 @@ test("canonical state is transformed into the console view model", async () => {
 });
 
 test("missing state produces an initialization view rather than a crash", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-console-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-console-"));
   const model = await buildModelForRoot(root);
   assert.equal(model.status, "uninitialized");
 });
 
-test("/newfang home opens the custom component and closing returns control", async () => {
+test("/voila home opens the custom component and closing returns control", async () => {
   const root = await seededRoot();
   const h = harness(root, { withCustom: true, mode: "tui" });
-  (newfangExtension as unknown as (pi: unknown) => void)(h.host);
+  (voilaExtension as unknown as (pi: unknown) => void)(h.host);
 
-  const pending = h.commands.get("newfang")!.handler("home", h.ctx);
+  const pending = h.commands.get("voila")!.handler("home", h.ctx);
   // Wait for the factory to run.
   await new Promise((r) => setTimeout(r, 20));
   const component = h.getComponent();
@@ -142,7 +142,7 @@ test("/newfang home opens the custom component and closing returns control", asy
 
   const lines = component.render(100);
   assert.ok(lines.length > 5);
-  assert.match(lines.join("\n"), /NEWFANG · console-demo/);
+  assert.match(lines.join("\n"), /VOILA · console-demo/);
 
   // Close with q; the handler resolves and the ambient widget is restored.
   component.handleInput("q");
@@ -153,11 +153,11 @@ test("/newfang home opens the custom component and closing returns control", asy
 test("non-TUI mode falls back to status output instead of failing", async () => {
   const root = await seededRoot();
   const h = harness(root, { withCustom: false, mode: "rpc" });
-  (newfangExtension as unknown as (pi: unknown) => void)(h.host);
-  await h.commands.get("newfang")!.handler("home", h.ctx);
+  (voilaExtension as unknown as (pi: unknown) => void)(h.host);
+  await h.commands.get("voila")!.handler("home", h.ctx);
   const text = h.notifications.join("\n");
   assert.match(text, /interactive terminal/);
-  assert.match(text, /NewFang — console-demo/);
+  assert.match(text, /Voila — console-demo/);
 });
 
 test("themeStyler maps tokens through the Pi theme and survives failures", () => {

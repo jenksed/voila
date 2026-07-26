@@ -1,11 +1,12 @@
-// `/newfang doctor` logic. Read-only diagnostics; makes no repairs or migrations.
+// `/voila doctor` logic. Read-only diagnostics; makes no repairs or migrations.
 
 import { existsSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { randomBytes } from "node:crypto";
-import { intakePaths, statePaths } from "../state/paths.ts";
+import { VOILA_DIR, intakePaths, statePaths } from "../state/paths.ts";
+import { LEGACY_STATE_DIR, stateDirectoryStatus } from "../state/legacy.ts";
 import {
   listDraftRevisions,
   readDraft,
@@ -64,7 +65,7 @@ function gte(a: [number, number, number], b: [number, number, number]): boolean 
 }
 
 async function isWritable(dir: string): Promise<boolean> {
-  const probe = join(dir, `.newfang-doctor-${randomBytes(4).toString("hex")}.tmp`);
+  const probe = join(dir, `.voila-doctor-${randomBytes(4).toString("hex")}.tmp`);
   try {
     await writeFile(probe, "ok", "utf8");
     await rm(probe, { force: true });
@@ -156,6 +157,36 @@ function stateIntegrityChecks(state: ProjectState): DoctorCheck[] {
   return checks;
 }
 
+/**
+ * Which state directory the project uses. A legacy-only tree is a FAIL (it must be migrated before
+ * anything operates on it); both directories present is a FAIL that requires a human decision.
+ */
+function stateDirectoryCheck(root: string): DoctorCheck {
+  const status = stateDirectoryStatus(root);
+  switch (status.kind) {
+    case "current":
+      return { name: "state directory", level: "pass", detail: `${VOILA_DIR}/` };
+    case "none":
+      return {
+        name: "state directory",
+        level: "warn",
+        detail: "no state directory — run /voila init",
+      };
+    case "legacy":
+      return {
+        name: "state directory",
+        level: "fail",
+        detail: `legacy ${LEGACY_STATE_DIR}/ found and no ${VOILA_DIR}/ — run /voila migrate --apply`,
+      };
+    case "conflict":
+      return {
+        name: "state directory",
+        level: "fail",
+        detail: `both ${LEGACY_STATE_DIR}/ and ${VOILA_DIR}/ exist — resolve manually; Voila will not choose`,
+      };
+  }
+}
+
 export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   const checks: DoctorCheck[] = [];
   const paths = statePaths(input.root);
@@ -219,6 +250,12 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
         },
   );
 
+  // Which state directory is in play. A legacy or conflicting tree is terminal for diagnostics:
+  // nothing below can read canonical state until a human resolves it.
+  const dirCheck = stateDirectoryCheck(input.root);
+  checks.push(dirCheck);
+  if (dirCheck.level === "fail") return checks;
+
   // State presence + schema/migration + integrity.
   let raw;
   try {
@@ -226,9 +263,9 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   } catch (error) {
     if (error instanceof StateNotFoundError) {
       checks.push({
-        name: "newfang state",
+        name: "voila state",
         level: "warn",
-        detail: "no .newfang/project.json — run /newfang init",
+        detail: "no .voila/project.json — run /voila init",
       });
       return checks;
     }
@@ -243,7 +280,7 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
     throw error;
   }
 
-  checks.push({ name: "newfang state", level: "pass", detail: "project.json present" });
+  checks.push({ name: "voila state", level: "pass", detail: "project.json present" });
 
   // Any older version with a known migration path is a WARN with an actionable instruction.
   if (typeof raw.version === "number" && raw.version !== SCHEMA_VERSION) {
@@ -251,7 +288,7 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
       checks.push({
         name: "schema migration",
         level: "warn",
-        detail: `v${raw.version} state; migration to v${SCHEMA_VERSION} is required — run /newfang migrate --apply`,
+        detail: `v${raw.version} state; migration to v${SCHEMA_VERSION} is required — run /voila migrate --apply`,
       });
       return checks;
     }
@@ -313,7 +350,7 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
 const LEVEL_MARK: Record<CheckLevel, string> = { pass: "PASS", warn: "WARN", fail: "FAIL" };
 
 export function formatDoctor(checks: DoctorCheck[]): string[] {
-  const lines = ["NewFang doctor:"];
+  const lines = ["Voila doctor:"];
   for (const c of checks) lines.push(`  [${LEVEL_MARK[c.level]}] ${c.name}: ${c.detail}`);
   return lines;
 }
@@ -339,7 +376,7 @@ async function proofChecks(root: string, state: ProjectState): Promise<DoctorChe
     checks.push({
       name: "receipt staging directories",
       level: "warn",
-      detail: `${leftovers.length} leftover temp dir(s) under .newfang/receipts/.tmp/ from an interrupted run (${leftovers.join(", ")}); safe to delete`,
+      detail: `${leftovers.length} leftover temp dir(s) under .voila/receipts/.tmp/ from an interrupted run (${leftovers.join(", ")}); safe to delete`,
     });
   }
 

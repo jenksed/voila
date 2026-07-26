@@ -5,7 +5,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { registerNewfang, type NewfangHost } from "../../src/extension/register.ts";
+import { registerVoila, type VoilaHost } from "../../src/extension/register.ts";
 
 const EXPECTED_PI_VERSION = "0.82.0";
 const MIN_NODE = "22.19.0";
@@ -44,10 +44,10 @@ function resolvePiVersion(): string {
   return "unknown";
 }
 
-export default function newfangExtension(pi: ExtensionAPI): void {
-  // The single Pi boundary: bridge the real ExtensionAPI to NewFang's structural host
+export default function voilaExtension(pi: ExtensionAPI): void {
+  // The single Pi boundary: bridge the real ExtensionAPI to Voila's structural host
   // interface. All logic lives in src/ and is tested without Pi.
-  registerNewfang(pi as unknown as NewfangHost, {
+  registerVoila(pi as unknown as VoilaHost, {
     piVersion: resolvePiVersion(),
     expectedPiVersion: EXPECTED_PI_VERSION,
     nodeVersion: process.version,

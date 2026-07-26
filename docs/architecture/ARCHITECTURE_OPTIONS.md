@@ -2,9 +2,9 @@
 
 ## Summary
 
-Five architectures can deliver NewFang on Pi. They are not mutually exclusive over time; the real
+Five architectures can deliver Voila on Pi. They are not mutually exclusive over time; the real
 decision is the **starting point** and the **migration path**. This document compares them on the
-dimensions that matter for NewFang. The recommendation is in
+dimensions that matter for Voila. The recommendation is in
 [RECOMMENDED_ARCHITECTURE.md](RECOMMENDED_ARCHITECTURE.md). Evidence: Pi `0.80.3` docs (access
 2026-07-24), see [../research/PI_CAPABILITY_AUDIT.md](../research/PI_CAPABILITY_AUDIT.md).
 
@@ -13,7 +13,7 @@ dimensions that matter for NewFang. The recommendation is in
 1. **Project-local Pi extensions** — a set of `.pi/extensions/*.ts` (plus skills, prompts, a theme)
    loaded by an installed `pi` CLI. State in session entries + repo files. No separate app.
 2. **Shareable Pi package** — the same extensions/skills/prompts/theme bundled as an
-   `@newfang/*` pi package (npm or git), installed via `pi install`. Distribution-oriented.
+   `@voila/*` pi package (npm or git), installed via `pi install`. Distribution-oriented.
 3. **Standalone application embedding Pi via the SDK** — a Node/TypeScript app that calls
    `createAgentSession()` / `createAgentSessionRuntime()`, owns its own UI and process, and uses Pi
    as a library.
@@ -25,9 +25,9 @@ dimensions that matter for NewFang. The recommendation is in
 
 ## Evaluation
 
-Scores are qualitative: **High / Medium / Low**, read in NewFang's favor (High = better for
-NewFang). "Upgrade resilience" = tolerance to Pi version churn. "Self-hosting" = how well NewFang can
-build NewFang under this architecture now.
+Scores are qualitative: **High / Medium / Low**, read in Voila's favor (High = better for
+Voila). "Upgrade resilience" = tolerance to Pi version churn. "Self-hosting" = how well Voila can
+build Voila under this architecture now.
 
 | Dimension | 1. Extensions | 2. Package | 3. SDK app | 4. RPC app | 5. Hybrid |
 |-----------|---------------|-----------|-----------|-----------|-----------|
@@ -51,7 +51,7 @@ build NewFang under this architecture now.
 ### 1. Project-local extensions
 
 - **For**: Fastest path to real value on native primitives (extensions, tools, events, custom UI,
-  session state). Highest self-hosting potential *now* — NewFang can build NewFang immediately.
+  session state). Highest self-hosting potential *now* — Voila can build Voila immediately.
   Small, modular, testable; extension API is the most stable Pi surface. Matches "personal utility
   first."
 - **Against**: Requires an installed `pi`. State is split between Pi session entries and repo files
@@ -61,7 +61,7 @@ build NewFang under this architecture now.
 
 ### 2. Shareable package
 
-- **For**: Same code as option 1, but installable and shareable (`pi install npm:@newfang/...` or
+- **For**: Same code as option 1, but installable and shareable (`pi install npm:@voila/...` or
   git), team-shareable via project settings. Trivial migration from option 1 (add a `pi` manifest,
   move core deps to `peerDependencies`).
 - **Against**: Distribution is not an MVP concern ("personal utility before public positioning").
@@ -73,7 +73,7 @@ build NewFang under this architecture now.
 - **For**: Maximum control — own UI (web/desktop/TUI), own process lifecycle, direct agent state,
   in-process subagent sessions, strong fit for sandbox/remote/delegation. Type-safe.
 - **Against**: Highest up-front cost; you rebuild the run loop, UI, and much that Pi gives free.
-  Lowest self-hosting potential now (you must build the app before NewFang can use itself). Larger
+  Lowest self-hosting potential now (you must build the app before Voila can use itself). Larger
   Pi SDK surface = more exposure to churn. Contradicts fast personal utility.
 - **Verdict**: Powerful future pivot; wrong to start here.
 
@@ -90,7 +90,7 @@ build NewFang under this architecture now.
 - **For**: Lets the in-terminal experience stay extension-based while a thin SDK/RPC controller
   handles what extensions do poorly (fan-out delegation, background/remote execution, external
   views), with the **repo-visible ledger as the shared contract**. This is the likely *mature*
-  shape of NewFang.
+  shape of Voila.
 - **Against**: Two moving parts and a contract to maintain; premature before the ledger and single
   delegation are proven. Complexity without payoff at MVP.
 - **Verdict**: The probable end-state, reached incrementally — not the starting point.
@@ -98,7 +98,7 @@ build NewFang under this architecture now.
 ## Decision framing
 
 - Do **not** choose an option because it is ambitious. Options 3–5 sound more capable but cost the
-  one thing this packet's product direction prizes most early: the ability for NewFang to **build
+  one thing this packet's product direction prizes most early: the ability for Voila to **build
   itself** quickly with durable, inspectable state.
 - The cheapest reversible path is **1 → 2 → (5)**: start as project-local extensions, package when
   sharing matters, add a thin controller only when background/remote/fan-out needs are proven. The

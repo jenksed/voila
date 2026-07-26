@@ -27,7 +27,7 @@ const SOURCE = [
 ].join("\n");
 
 async function repoWithSource(): Promise<{ root: string; intakeId: string }> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-apply-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-apply-"));
   await initState(root, { displayName: "apply-demo" });
   await writeFile(join(root, "brief.md"), SOURCE, "utf8");
   const created = await createIntake(root, { path: "brief.md" });

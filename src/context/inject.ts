@@ -1,4 +1,4 @@
-// Compact, deterministic NewFang context for injection before agent work.
+// Compact, deterministic Voila context for injection before agent work.
 // Pure builder + a thin async assembler. Injection never mutates canonical state.
 //
 // Hard rules:
@@ -18,7 +18,7 @@ export const CONTEXT_CHAR_LIMIT = 2400;
  * make weak claims: it says what evidence means, not how to satisfy a gate.
  */
 const PROOF_RULES =
-  "Proof: claims cite exact acceptance criteria; run commands only via newfang_run_verification (executable + args, no shell); a passing command is evidence only for the claim it ran for; stale or failed evidence cannot complete work; limitations stay visible; only newfang_complete_work_item may mark work completed.";
+  "Proof: claims cite exact acceptance criteria; run commands only via voila_run_verification (executable + args, no shell); a passing command is evidence only for the claim it ran for; stale or failed evidence cannot complete work; limitations stay visible; only voila_complete_work_item may mark work completed.";
 
 export type ContextStatus = "ok" | "uninitialized" | "migration" | "error";
 
@@ -47,18 +47,18 @@ function clamp(text: string, limit = CONTEXT_CHAR_LIMIT): string {
  */
 export function buildContextBlock(input: ContextInput): string {
   if (input.status === "uninitialized") {
-    return "[NewFang] No canonical project state here. Run /newfang init to create it.";
+    return "[Voila] No canonical project state here. Run /voila init to create it.";
   }
   if (input.status === "migration") {
-    return "[NewFang] Canonical state needs migration. Run /newfang migrate to inspect and /newfang migrate --apply to migrate. Do not modify .newfang/ by hand.";
+    return "[Voila] Canonical state needs migration. Run /voila migrate to inspect and /voila migrate --apply to migrate. Do not modify .voila/ by hand.";
   }
   if (input.status === "error" || !input.state) {
-    return `[NewFang] Canonical state problem: ${input.message ?? "unreadable state"}. Run /newfang doctor.`;
+    return `[Voila] Canonical state problem: ${input.message ?? "unreadable state"}. Run /voila doctor.`;
   }
 
   const s = input.state;
   const summary = backlogSummary(s);
-  const lines: string[] = ["[NewFang project context]"];
+  const lines: string[] = ["[Voila project context]"];
 
   lines.push(
     `Project: ${s.displayName} · phase ${s.phase} · health ${s.health} · revision ${s.revision}`,
@@ -110,7 +110,7 @@ export function buildContextBlock(input: ContextInput): string {
   lines.push(PROOF_RULES);
 
   lines.push(
-    "Brief: .newfang/briefs/PROJECT_BRIEF.md · Use NewFang tools (newfang_*) for project truth; never edit .newfang/ by hand.",
+    "Brief: .voila/briefs/PROJECT_BRIEF.md · Use Voila tools (voila_*) for project truth; never edit .voila/ by hand.",
   );
 
   return clamp(lines.join("\n"));

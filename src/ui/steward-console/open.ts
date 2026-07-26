@@ -110,7 +110,7 @@ export async function buildModelForRoot(root: string, piVersion?: string): Promi
   }
 }
 
-/** Most recent receipts shown in the Proof view. Older receipts stay reachable via /newfang proof. */
+/** Most recent receipts shown in the Proof view. Older receipts stay reachable via /voila proof. */
 const RECEIPT_ROWS = 5;
 
 /**
@@ -175,7 +175,7 @@ export interface OpenConsoleCtx {
 
 /**
  * Open the Steward Console. Requires a real terminal (Pi `custom()` is TUI-only); in other modes the
- * caller should fall back to `/newfang status`.
+ * caller should fall back to `/voila status`.
  */
 export async function openStewardConsole(ctx: OpenConsoleCtx, piVersion?: string): Promise<void> {
   const initialModel = await buildModelForRoot(ctx.cwd, piVersion);
@@ -203,7 +203,7 @@ export async function openStewardConsole(ctx: OpenConsoleCtx, piVersion?: string
           pending
             ? [
                 `To request a corrected draft of ${pending.id} revision ${pending.draftRevision}, run:`,
-                `  /newfang intake revise "<what must change>"`,
+                `  /voila intake revise "<what must change>"`,
                 "The feedback is stored verbatim in the append-only review log, and the corrected",
                 "draft cannot be staged until it is recorded.",
               ].join("\n")
