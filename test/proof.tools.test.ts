@@ -21,6 +21,7 @@ import { formatDoctor, runDoctor, worstLevel, type DoctorCheck } from "../src/co
 import { createWorkItem, setFocusWorkItem, updateWorkItem } from "../src/domain/operations.ts";
 import { CompletionRejectedError } from "../src/domain/proof.ts";
 import { readReceiptManifest } from "../src/state/receipt-store.ts";
+import { SCHEMA_VERSION } from "../src/domain/types.ts";
 
 const NODE = process.execPath;
 const CRITERION = "the recorded command passes";
@@ -783,6 +784,9 @@ test("doctor warns that migration is required for a v3 project", async () => {
   await writeFile(statePaths(root).projectJson, `${JSON.stringify(V3_FIXTURE, null, 2)}\n`, "utf8");
   const migration = check(await runDoctor(doctorInput(root)), "schema migration");
   assert.equal(migration.level, "warn");
-  assert.match(migration.detail, /v3 state; migration to v4 is required/);
+  assert.match(
+    migration.detail,
+    new RegExp(`v3 state; migration to v${SCHEMA_VERSION} is required`),
+  );
   assert.match(migration.detail, /\/voila migrate --apply/);
 });

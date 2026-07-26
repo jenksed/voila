@@ -1,4 +1,6 @@
-// The v3 -> v4 migration step: claims, receipts, per-item proof requirements, and new counters.
+// The v3 -> v5 migration: claims, receipts, per-item proof requirements, and the R2A
+// operation-definition and operation-run fields. The legacy v3 -> v4 semantics are covered
+// transitively (every migration now passes through v4 on its way to the current schema).
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -12,8 +14,10 @@ import { loadState, readRawState } from "../src/state/store.ts";
 import { statePaths } from "../src/state/paths.ts";
 import { MigrationRequiredError, StateValidationError } from "../src/state/errors.ts";
 import { renderStatusView } from "../src/domain/status.ts";
-import { migrationPlan, migrateV3ToV4 } from "../src/domain/migrate.ts";
+import { migrationPlan, migrateV3ToV4, migrateV4ToV5 } from "../src/domain/migrate.ts";
 import { validateProjectStateV3 } from "../src/domain/schema-v3.ts";
+import { validateProjectStateV4 } from "../src/domain/schema-v4.ts";
+import { V4_FIXTURE } from "./helpers.ts";
 import { assessCompletion } from "../src/domain/proof.ts";
 import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import { V3_FIXTURE } from "./helpers.ts";
@@ -26,22 +30,26 @@ async function seed(raw: unknown): Promise<string> {
   return root;
 }
 
-test("the current schema version is 4", () => {
-  assert.equal(SCHEMA_VERSION, 4);
+test("the current schema version is 5", () => {
+  assert.equal(SCHEMA_VERSION, 5);
 });
 
-test("v3 inspection reports the 3 -> 4 migration without writing", async () => {
+test("v3 inspection reports the chained 3 -> 4 -> 5 migration without writing", async () => {
   const root = await seed(V3_FIXTURE);
   const before = await readFile(statePaths(root).projectJson, "utf8");
   const report = await runMigration(root, { apply: false });
   assert.equal(report.status, "inspectable");
   assert.equal(report.fromVersion, 3);
-  assert.equal(report.toVersion, 4);
-  assert.deepEqual(report.steps, [{ from: 3, to: 4 }]);
+  assert.equal(report.toVersion, SCHEMA_VERSION);
+  assert.deepEqual(report.steps, [
+    { from: 3, to: 4 },
+    { from: 4, to: 5 },
+  ]);
   assert.ok(report.additions.some((a) => a.name === "claims"));
   assert.ok(report.additions.some((a) => a.name === "receipts"));
   assert.ok(report.additions.some((a) => a.name === "workItems[].requiredClaimIds"));
   assert.ok(report.additions.some((a) => a.name.includes("sequences.claim")));
+  assert.ok(report.additions.some((a) => a.name === "operationDefinitions"));
   assert.equal(await readFile(statePaths(root).projectJson, "utf8"), before, "no write on inspect");
   assert.equal((await readRawState(root)).version, 3, "still v3 on disk");
 });
@@ -51,29 +59,37 @@ test("loading v3 reports migration required (never silent)", async () => {
   await assert.rejects(() => loadState(root), MigrationRequiredError);
 });
 
-test("migrationPlan chains every supported source version to v4", () => {
-  assert.deepEqual(migrationPlan(4)?.steps, []);
-  assert.deepEqual(migrationPlan(3)?.steps, [{ from: 3, to: 4 }]);
+test("migrationPlan chains every supported source version to v5", () => {
+  assert.deepEqual(migrationPlan(5)?.steps, []);
+  assert.deepEqual(migrationPlan(4)?.steps, [{ from: 4, to: 5 }]);
+  assert.deepEqual(migrationPlan(3)?.steps, [
+    { from: 3, to: 4 },
+    { from: 4, to: 5 },
+  ]);
   assert.deepEqual(migrationPlan(2)?.steps, [
     { from: 2, to: 3 },
     { from: 3, to: 4 },
+    { from: 4, to: 5 },
   ]);
   assert.deepEqual(migrationPlan(1)?.steps, [
     { from: 1, to: 2 },
     { from: 2, to: 3 },
     { from: 3, to: 4 },
+    { from: 4, to: 5 },
   ]);
   assert.equal(migrationPlan(0), null);
-  assert.equal(migrationPlan(5), null);
+  assert.deepEqual(migrationPlan(SCHEMA_VERSION)?.steps, []);
+  assert.deepEqual(migrationPlan(SCHEMA_VERSION)?.additions, []);
+  assert.equal(migrationPlan(SCHEMA_VERSION + 1), null);
 });
 
-test("v3 -> v4 preserves everything and defaults requiredClaimIds to empty", async () => {
+test("v3 -> v5 preserves everything and defaults requiredClaimIds to empty", async () => {
   const root = await seed(V3_FIXTURE);
   const report = await runMigration(root, { apply: true });
   assert.equal(report.status, "migrated");
 
   const v4 = await loadState(root);
-  assert.equal(v4.schemaVersion, 4);
+  assert.equal(v4.schemaVersion, SCHEMA_VERSION);
   // Identity and existing content preserved exactly.
   assert.equal(v4.projectId, V3_FIXTURE.projectId);
   assert.equal(v4.createdAt, V3_FIXTURE.createdAt);
@@ -130,13 +146,14 @@ test("migration appends exactly one schema_migrated event and refreshes the view
     .split("\n")
     .map((l) => JSON.parse(l));
   const migrations = events.filter((e) => e.type === "schema_migrated");
+  // v3 -> v5 produces one combined event because the migration chain collapses into a single apply.
   assert.equal(migrations.length, 1);
   assert.equal(migrations[0].from, 3);
-  assert.equal(migrations[0].to, 4);
+  assert.equal(migrations[0].to, SCHEMA_VERSION);
   assert.equal(await readFile(statePaths(root).statusView, "utf8"), renderStatusView(state));
 });
 
-test("rerunning the migration on v4 is a safe no-op", async () => {
+test("rerunning the migration on the current version is a safe no-op", async () => {
   const root = await seed(V3_FIXTURE);
   await runMigration(root, { apply: true });
   const again = await runMigration(root, { apply: true });
@@ -194,14 +211,17 @@ test("the integrated Packet 3 state is genuinely v3 and carries the real history
   assert.equal(INTEGRATED_V3.currentIntakeId, "INT-8");
 });
 
-test("the integrated v3 state migrates to v4 and keeps every intake and review record", async () => {
+test("the integrated v3 state migrates to v5 and keeps every intake and review record", async () => {
   const root = await seed(INTEGRATED_V3);
   const report = await runMigration(root, { apply: true });
   assert.equal(report.status, "migrated");
-  assert.deepEqual(report.steps, [{ from: 3, to: 4 }]);
+  assert.deepEqual(report.steps, [
+    { from: 3, to: 4 },
+    { from: 4, to: 5 },
+  ]);
 
   const v4 = await loadState(root);
-  assert.equal(v4.schemaVersion, 4);
+  assert.equal(v4.schemaVersion, SCHEMA_VERSION);
   assert.equal(v4.revision, INTEGRATED_V3.revision + 1);
 
   // Nothing from Packet 3 is dropped or rewritten.
@@ -259,7 +279,7 @@ test("migrating the integrated state appends exactly one event and refreshes the
   assert.equal(events.length, 1, "exactly one event for the migration");
   assert.equal(events[0].type, "schema_migrated");
   assert.equal(events[0].from, 3);
-  assert.equal(events[0].to, 4);
+  assert.equal(events[0].to, SCHEMA_VERSION);
   assert.equal(await readFile(statePaths(root).statusView, "utf8"), renderStatusView(state));
 });
 
@@ -295,6 +315,40 @@ test("migrateV3ToV4 keeps an already-present requiredClaimIds array", () => {
     ],
   });
   const v4 = migrateV3ToV4(source);
-  assert.deepEqual(v4.workItems[0]?.requiredClaimIds, ["CLM-7"]);
-  assert.deepEqual(v4.workItems[1]?.requiredClaimIds, []);
+  const items = v4.workItems as Array<{ id: string; requiredClaimIds?: string[] }>;
+  assert.deepEqual(items[0]?.requiredClaimIds, ["CLM-7"]);
+  assert.deepEqual(items[1]?.requiredClaimIds, []);
+});
+
+// --- v4 -> v5 migration (R2A operation supervision) ---
+
+test("v4 -> v5 migration initializes operation fields without inventing definitions or runs", () => {
+  const v4 = validateProjectStateV4(V4_FIXTURE);
+  const v5 = migrateV4ToV5(v4);
+  assert.equal(v5.schemaVersion, SCHEMA_VERSION);
+  assert.deepEqual(v5.operationDefinitions, []);
+  assert.deepEqual(v5.operationRuns, []);
+  assert.equal(v5.sequences.operationDefinition, 1);
+  assert.equal(v5.sequences.operationRun, 1);
+  // All v4 fields survive.
+  assert.deepEqual(
+    v5.workItems.map((w) => w.id),
+    ["NF-1", "NF-2"],
+  );
+  assert.deepEqual(
+    v5.decisions.map((d) => d.id),
+    ["DEC-1"],
+  );
+  assert.equal(v5.claims.length, 0);
+  assert.equal(v5.receipts.length, 0);
+});
+
+test("migrationPlan reports the v4 -> v5 step with the expected additions", () => {
+  const plan = migrationPlan(4);
+  assert.ok(plan, "a plan must exist for v4");
+  assert.deepEqual(plan?.steps, [{ from: 4, to: 5 }]);
+  const names = plan?.additions.map((a) => a.name) ?? [];
+  assert.ok(names.includes("operationDefinitions"));
+  assert.ok(names.includes("operationRuns"));
+  assert.ok(names.includes("sequences.operationDefinition / sequences.operationRun"));
 });

@@ -13,6 +13,8 @@ export const ID_PREFIXES: Record<SequenceKey, string> = {
   orientation: "ORI",
   claim: "CLM",
   receipt: "RCP",
+  operationDefinition: "OP",
+  operationRun: "RUN",
 };
 
 /**

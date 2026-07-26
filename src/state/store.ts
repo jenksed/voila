@@ -15,12 +15,18 @@ import type {
   Claim,
   Decision,
   IntakeRecord,
+  OperationDefinition,
+  OperationLifecycleState,
+  OperationRun,
+  OperationDeliveryState,
+  OperationFinalState,
   OrientationRecord,
   ProjectState,
   Risk,
   Sequences,
   VerificationReceiptRecord,
   WorkItem,
+  WorkingDirectoryPolicy,
 } from "../domain/types.ts";
 import {
   ASSUMPTION_STATUSES,
@@ -31,6 +37,10 @@ import {
   INTAKE_SOURCE_TYPES,
   INTAKE_STATUSES,
   LIKELIHOODS,
+  OPERATION_LIFECYCLE_STATES,
+  OPERATION_FINAL_STATES,
+  OPERATION_RISK_CLASSES,
+  OPERATION_DELIVERY_STATES,
   ORIENTATION_STATUSES,
   PHASES,
   RECEIPT_RESULTS,
@@ -39,6 +49,7 @@ import {
   WORK_ITEM_KINDS,
   WORK_ITEM_PRIORITIES,
   WORK_ITEM_STATUSES,
+  WORKING_DIRECTORY_POLICIES,
 } from "../domain/types.ts";
 import { createInitialState } from "../domain/defaults.ts";
 import { renderStatusView } from "../domain/status.ts";
@@ -265,6 +276,201 @@ function validateOrientation(raw: unknown, i: number, problems: string[]): void 
   validateTimestamps(o, p, problems);
 }
 
+function validateOperationDefinition(raw: unknown, i: number, problems: string[]): void {
+  const p = `operationDefinitions[${i}]`;
+  if (typeof raw !== "object" || raw === null) {
+    problems.push(p);
+    return;
+  }
+  const o = raw as Record<string, unknown>;
+  if (!isNonEmptyString(o.id)) problems.push(`${p}.id`);
+  if (!isNonEmptyString(o.purpose)) problems.push(`${p}.purpose`);
+  if (!inEnum(o.kind, ["finite"])) problems.push(`${p}.kind`);
+  if (!isNonEmptyString(o.executable)) problems.push(`${p}.executable`);
+  if (!isStringArray(o.args)) problems.push(`${p}.args`);
+  if (!inEnum(o.workingDirectory, WORKING_DIRECTORY_POLICIES))
+    problems.push(`${p}.workingDirectory`);
+  const env = o.environmentPolicy;
+  if (typeof env !== "object" || env === null) {
+    problems.push(`${p}.environmentPolicy`);
+  } else {
+    const e = env as Record<string, unknown>;
+    if (!inEnum(e.kind, ["inherit", "isolate"])) problems.push(`${p}.environmentPolicy.kind`);
+    if (e.recordedVariableNames !== undefined && !isStringArray(e.recordedVariableNames))
+      problems.push(`${p}.environmentPolicy.recordedVariableNames`);
+  }
+  const risk = o.riskClassification;
+  if (typeof risk !== "object" || risk === null) {
+    problems.push(`${p}.riskClassification`);
+  } else {
+    const r = risk as Record<string, unknown>;
+    if (!inEnum(r.riskClass, OPERATION_RISK_CLASSES))
+      problems.push(`${p}.riskClassification.riskClass`);
+    for (const f of [
+      "impact",
+      "externalEffects",
+      "privilegesRequired",
+      "trustSource",
+      "concurrency",
+    ]) {
+      if (!isNonEmptyString(r[f])) problems.push(`${p}.riskClassification.${f}`);
+    }
+    if (typeof r.networkRequired !== "boolean")
+      problems.push(`${p}.riskClassification.networkRequired`);
+    if (typeof r.interactive !== "boolean") problems.push(`${p}.riskClassification.interactive`);
+    if (typeof r.reversible !== "boolean") problems.push(`${p}.riskClassification.reversible`);
+  }
+  const success = o.successContract;
+  if (typeof success !== "object" || success === null) {
+    problems.push(`${p}.successContract`);
+  } else {
+    const s = success as Record<string, unknown>;
+    if (!Number.isInteger(s.exitCode)) problems.push(`${p}.successContract.exitCode`);
+    if (!isNonEmptyString(s.description)) problems.push(`${p}.successContract.description`);
+  }
+  const timeouts = o.timeoutContract;
+  if (typeof timeouts !== "object" || timeouts === null) {
+    problems.push(`${p}.timeoutContract`);
+  } else {
+    const t = timeouts as Record<string, unknown>;
+    for (const f of ["startupMs", "totalMs", "gracefulMs", "forcedMs"]) {
+      if (typeof t[f] !== "number" || !Number.isInteger(t[f]) || (t[f] as number) < 1) {
+        problems.push(`${p}.timeoutContract.${f}`);
+      }
+    }
+  }
+  const cancel = o.cancellationContract;
+  if (typeof cancel !== "object" || cancel === null) {
+    problems.push(`${p}.cancellationContract`);
+  } else {
+    const c = cancel as Record<string, unknown>;
+    if (!inEnum(c.gracefulSignal, ["SIGTERM", "SIGINT"]))
+      problems.push(`${p}.cancellationContract.gracefulSignal`);
+    if (!inEnum(c.escalationSignal, ["SIGKILL", "SIGABRT"]))
+      problems.push(`${p}.cancellationContract.escalationSignal`);
+  }
+  const out = o.outputPolicy;
+  if (typeof out !== "object" || out === null) {
+    problems.push(`${p}.outputPolicy`);
+  } else {
+    const op = out as Record<string, unknown>;
+    for (const f of ["maxChunkBytes", "maxInMemoryTailBytes", "maxDurableBytes"]) {
+      if (typeof op[f] !== "number" || !Number.isInteger(op[f]) || (op[f] as number) < 1) {
+        problems.push(`${p}.outputPolicy.${f}`);
+      }
+    }
+  }
+  const redact = o.redactionPolicy;
+  if (typeof redact !== "object" || redact === null) {
+    problems.push(`${p}.redactionPolicy`);
+  } else {
+    const rd = redact as Record<string, unknown>;
+    if (!isStringArray(rd.secretVariableNames))
+      problems.push(`${p}.redactionPolicy.secretVariableNames`);
+    if (typeof rd.redactAuthorizationHeaders !== "boolean")
+      problems.push(`${p}.redactionPolicy.redactAuthorizationHeaders`);
+    if (typeof rd.skipShortValues !== "boolean")
+      problems.push(`${p}.redactionPolicy.skipShortValues`);
+    if (typeof rd.minSecretLength !== "number" || !Number.isInteger(rd.minSecretLength)) {
+      problems.push(`${p}.redactionPolicy.minSecretLength`);
+    }
+  }
+  if (typeof o.version !== "number" || !Number.isInteger(o.version) || o.version < 1) {
+    problems.push(`${p}.version`);
+  }
+  validateTimestamps(o, p, problems);
+}
+
+function validateOperationRun(raw: unknown, i: number, problems: string[]): void {
+  const p = `operationRuns[${i}]`;
+  if (typeof raw !== "object" || raw === null) {
+    problems.push(p);
+    return;
+  }
+  const o = raw as Record<string, unknown>;
+  if (!isNonEmptyString(o.id)) problems.push(`${p}.id`);
+  if (!isNonEmptyString(o.definitionId)) problems.push(`${p}.definitionId`);
+  if (typeof o.definitionVersion !== "number" || !Number.isInteger(o.definitionVersion)) {
+    problems.push(`${p}.definitionVersion`);
+  }
+  if (
+    typeof o.definitionFingerprint !== "string" ||
+    !/^[a-f0-9]{64}$/.test(o.definitionFingerprint)
+  ) {
+    problems.push(`${p}.definitionFingerprint`);
+  }
+  if (!isNonEmptyString(o.projectId)) problems.push(`${p}.projectId`);
+  if (!isNonEmptyString(o.repositoryRoot)) problems.push(`${p}.repositoryRoot`);
+  if (!isNonEmptyString(o.worktreeIdentity)) problems.push(`${p}.worktreeIdentity`);
+  const ownership = o.ownership;
+  if (typeof ownership !== "object" || ownership === null) {
+    problems.push(`${p}.ownership`);
+  } else {
+    const own = ownership as Record<string, unknown>;
+    if (!isNonEmptyString(own.requester)) problems.push(`${p}.ownership.requester`);
+    if (!isNonEmptyString(own.owner)) problems.push(`${p}.ownership.owner`);
+    if (own.workItemId !== undefined && typeof own.workItemId !== "string") {
+      problems.push(`${p}.ownership.workItemId`);
+    }
+  }
+  if (typeof o.startingFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(o.startingFingerprint)) {
+    problems.push(`${p}.startingFingerprint`);
+  }
+  if (o.endingFingerprint !== undefined) {
+    if (typeof o.endingFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(o.endingFingerprint)) {
+      problems.push(`${p}.endingFingerprint`);
+    }
+  }
+  if (typeof o.changedDuringRun !== "boolean") problems.push(`${p}.changedDuringRun`);
+  if (!inEnum(o.lifecycleState, OPERATION_LIFECYCLE_STATES)) problems.push(`${p}.lifecycleState`);
+  if (!isNonEmptyString(o.createdAt)) problems.push(`${p}.createdAt`);
+  if (o.startedAt !== undefined && !isNonEmptyString(o.startedAt)) problems.push(`${p}.startedAt`);
+  if (o.settledAt !== undefined && !isNonEmptyString(o.settledAt)) problems.push(`${p}.settledAt`);
+  const proc = o.processIdentity;
+  if (proc !== undefined) {
+    if (typeof proc !== "object" || proc === null) {
+      problems.push(`${p}.processIdentity`);
+    } else {
+      const pp = proc as Record<string, unknown>;
+      if (typeof pp.pid !== "number" || !Number.isInteger(pp.pid) || pp.pid < 0)
+        problems.push(`${p}.processIdentity.pid`);
+      if (
+        typeof pp.processGroupId !== "number" ||
+        !Number.isInteger(pp.processGroupId) ||
+        pp.processGroupId < 0
+      )
+        problems.push(`${p}.processIdentity.processGroupId`);
+      if (typeof pp.processGroupOwned !== "boolean")
+        problems.push(`${p}.processIdentity.processGroupOwned`);
+      if (typeof pp.platform !== "string") problems.push(`${p}.processIdentity.platform`);
+    }
+  }
+  if (o.exitCode !== undefined && (!Number.isInteger(o.exitCode) || (o.exitCode as number) < 0))
+    problems.push(`${p}.exitCode`);
+  if (o.terminatingSignal !== undefined && typeof o.terminatingSignal !== "string")
+    problems.push(`${p}.terminatingSignal`);
+  if (o.settlementReason !== undefined && !inEnum(o.settlementReason, OPERATION_FINAL_STATES))
+    problems.push(`${p}.settlementReason`);
+  const summary = o.outputSummary;
+  if (typeof summary !== "object" || summary === null) {
+    problems.push(`${p}.outputSummary`);
+  } else {
+    const sm = summary as Record<string, unknown>;
+    if (typeof sm.truncated !== "boolean") problems.push(`${p}.outputSummary.truncated`);
+    if (typeof sm.droppedBytes !== "number" || !Number.isInteger(sm.droppedBytes)) {
+      problems.push(`${p}.outputSummary.droppedBytes`);
+    }
+    if (typeof sm.redactionCount !== "number" || !Number.isInteger(sm.redactionCount)) {
+      problems.push(`${p}.outputSummary.redactionCount`);
+    }
+    if (typeof sm.redactedSecrets !== "boolean")
+      problems.push(`${p}.outputSummary.redactedSecrets`);
+  }
+  if (o.outputArtifactRef !== undefined && typeof o.outputArtifactRef !== "string")
+    problems.push(`${p}.outputArtifactRef`);
+  if (!inEnum(o.deliveryState, OPERATION_DELIVERY_STATES)) problems.push(`${p}.deliveryState`);
+}
+
 function validateSequences(raw: unknown, problems: string[]): void {
   if (typeof raw !== "object" || raw === null) {
     problems.push("sequences");
@@ -280,6 +486,8 @@ function validateSequences(raw: unknown, problems: string[]): void {
     "orientation",
     "claim",
     "receipt",
+    "operationDefinition",
+    "operationRun",
   ]) {
     if (typeof o[key] !== "number" || !Number.isInteger(o[key]) || (o[key] as number) < 1) {
       problems.push(`sequences.${key}`);
@@ -343,6 +551,8 @@ export function validateProjectState(raw: unknown): ProjectState {
     ["orientations", validateOrientation],
     ["claims", validateClaim],
     ["receipts", validateReceipt],
+    ["operationDefinitions", validateOperationDefinition],
+    ["operationRuns", validateOperationRun],
   ] as const) {
     if (!Array.isArray(o[key])) {
       problems.push(key);
@@ -367,6 +577,8 @@ export function validateProjectState(raw: unknown): ProjectState {
   uniqueIds(state.orientations, "orientations", problems);
   uniqueIds(state.claims, "claims", problems);
   uniqueIds(state.receipts, "receipts", problems);
+  uniqueIds(state.operationDefinitions, "operationDefinitions", problems);
+  uniqueIds(state.operationRuns, "operationRuns", problems);
   if (problems.length > 0) {
     throw new StateValidationError(`Structural problems in project.json: ${problems.join(", ")}.`);
   }
@@ -391,6 +603,8 @@ export function validateProjectState(raw: unknown): ProjectState {
     orientations: state.orientations as OrientationRecord[],
     claims: state.claims as Claim[],
     receipts: state.receipts as VerificationReceiptRecord[],
+    operationDefinitions: state.operationDefinitions as OperationDefinition[],
+    operationRuns: state.operationRuns as OperationRun[],
     ...(state.currentIntakeId !== undefined ? { currentIntakeId: state.currentIntakeId } : {}),
     ...(state.currentOrientationId !== undefined
       ? { currentOrientationId: state.currentOrientationId }

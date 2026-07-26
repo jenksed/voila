@@ -8,13 +8,14 @@ import { join } from "node:path";
 import { loadState } from "../src/state/store.ts";
 import { leftoverReceiptTempDirs, OUTPUT_CAP_BYTES } from "../src/state/receipt-store.ts";
 import { runDoctor } from "../src/commands/doctor.ts";
+import { SCHEMA_VERSION } from "../src/domain/types.ts";
 
 // The Voila repository dogfoods its own canonical state. These assertions load the committed
 // .voila/project.json from the repo root (the test runner's cwd).
 
-test("repository loads its own dogfooded v4 canonical state", async () => {
+test("repository loads its own dogfooded canonical state", async () => {
   const state = await loadState(process.cwd());
-  assert.equal(state.schemaVersion, 4);
+  assert.equal(state.schemaVersion, SCHEMA_VERSION);
   assert.equal(state.phase, "build");
   assert.ok(state.workItems.length >= 7);
   // R1 (NF-9) was completed through the protected transition. Canonical focus is empty and the next

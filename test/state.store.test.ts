@@ -45,11 +45,15 @@ test("initState creates current-schema canonical state with empty collections", 
     orientation: 1,
     claim: 1,
     receipt: 1,
+    operationDefinition: 1,
+    operationRun: 1,
   });
   assert.deepEqual(state.intakes, []);
   assert.deepEqual(state.orientations, []);
   assert.deepEqual(state.claims, []);
   assert.deepEqual(state.receipts, []);
+  assert.deepEqual(state.operationDefinitions, []);
+  assert.deepEqual(state.operationRuns, []);
   assert.equal(state.focusWorkItemId, null);
   const paths = statePaths(root);
   assert.ok(

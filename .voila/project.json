@@ -1,21 +1,23 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Plan R2: one supervised background terminal (NF-10). Begin with the smallest public surface (start, list, inspect, read_output, stop, wait), one bounded happy-path operation, then a single matching receipt.",
-  "nextActionRationale": "R1 is complete on 4d108fc via voila_complete_work_item. NF-9 is completed; canonical focus is empty. R2 begins now per the realignment plan and the repo build is green at 626 tests.",
+  "nextAction": "Implement R2A: schema v5 with operation definitions and runs, pure domain contracts, finite supervisor with process-group ownership, registry entry r2a.state-store-tests, minimal tool surface (start/inspect/read_output/cancel), settlement delivery through canonical state, focus-capsule operation summary, focused tests, Gherkin artifact, and documentation.",
+  "nextActionRationale": "R1 is complete and R2-0 is accepted. R2A is the smallest vertical slice that exercises one finite operation end-to-end without overstating R2 capability. DEC-21 accepts the bounded scope; implementation begins now on branch feat/r2a-finite-operation.",
   "focusWorkItemId": null,
   "sequences": {
-    "workItem": 16,
-    "decision": 21,
-    "assumption": 4,
-    "risk": 6,
+    "workItem": 17,
+    "decision": 22,
+    "assumption": 5,
+    "risk": 9,
     "intake": 9,
     "orientation": 6,
     "claim": 11,
-    "receipt": 109
+    "receipt": 109,
+    "operationDefinition": 1,
+    "operationRun": 5
   },
   "workItems": [
     {
@@ -291,6 +293,32 @@
       "requiredClaimIds": [],
       "createdAt": "2026-07-26T15:00:18.284Z",
       "updatedAt": "2026-07-26T15:00:18.284Z"
+    },
+    {
+      "id": "NF-16",
+      "kind": "task",
+      "title": "R2A — one finite supervised project operation",
+      "description": "First bounded R2 implementation packet.",
+      "status": "in_progress",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "One accepted finite operation exists and uses executable plus argv.",
+        "Start returns before settlement and the Steward remains available for other work.",
+        "Exactly one canonical settlement is produced per run, including under racing exit, timeout, and cancellation.",
+        "Equivalent active requests reuse the existing run; different requests at capacity are rejected.",
+        "Output is bounded, classified secrets are redacted, and prompt-injection content is treated as data.",
+        "Start and end fingerprints are recorded; changed-during-run results are not treated as current completion evidence automatically.",
+        "Wrong project or wrong worktree execution is rejected.",
+        "The parent Steward receives settlement without developer monitoring.",
+        "The focus capsule shows only authoritative bounded operation state.",
+        "The fresh-session interactive acceptance for R2A passes."
+      ],
+      "dependsOn": [
+        "NF-10"
+      ],
+      "requiredClaimIds": [],
+      "createdAt": "2026-07-26T19:19:56.855Z",
+      "updatedAt": "2026-07-26T19:19:56.855Z"
     }
   ],
   "decisions": [
@@ -478,6 +506,15 @@
       "status": "accepted",
       "createdAt": "2026-07-26T18:14:46.171Z",
       "updatedAt": "2026-07-26T18:14:46.171Z"
+    },
+    {
+      "id": "DEC-21",
+      "title": "Accept R2A — one finite supervised project operation",
+      "decision": "R2A (one finite, local, non-interactive project operation supervised through a language-neutral lifecycle) is the accepted implementation packet under R2-0. The packet is bounded to:\n- exactly one explicit accepted operation: r2a.state-store-tests v1, executable `mise` with argv `[\"exec\",\"--\",\"node\",\"--test\",\"test/state.store.test.ts\"]`, working directory = repository root, risk class Safe and expected.\n- risk classification: Safe and expected. Impact: local read with bounded temporary writes. Network: not required. Privileges: normal user. Interaction: non-interactive. Reversibility: automatic. Trust source: explicit accepted project operation. Concurrency: one active operation per project root.\n- retry policy: zero automatic retries on every failure class; one transient supervisor startup retry is allowed.\n- time budgets (R2A-only): startup 10s, total 120s, graceful 5s, forced 5s.\n- output limits (R2A-only): 16 KiB per chunk, 256 KiB in-memory tail, 1 MiB durable redacted output per run.\n- concurrency: maximum one active operation per project root; equivalent requests reuse the existing run; different requests while capacity is occupied are rejected with a structured capacity result (never queued, never auto-cancelled).\n- cross-process boundary: one controlling Node/Pi process only. Multiple Pi processes, multiple Node processes, future worker processes, external state writers, process crashes during persistence, network filesystems, and stale inter-process locks are NOT claimed safe by R2A. No filesystem lock is implemented for the sake of appearing complete.\n- explicit non-goals: operation discovery, stack adapters, operation manifests, user-authored workflows, queues, multiple concurrent operations, services, watchers, PTYs, child workers, cross-session recovery, cross-process coordination, remote execution, approval bundles.\n- the Project Steward selects and explains the operation; the supervisor owns the child process; canonical state retains run metadata; output content lives under .voila/operations/.",
+      "rationale": "R1 is canonically completed and the R2-0 planning envelope is accepted. R2A is the smallest vertical slice that exercises end-to-end finite-operation supervision with bounded risk, and it is the only runtime slice permitted in R2. Building it proves select→start→observe→continue→settle→react→retain without overstating R2 capability. NF-10 stays open until all of R2 is delivered; R2A claims its own narrow capability honestly.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T19:19:43.236Z",
+      "updatedAt": "2026-07-26T19:19:43.236Z"
     }
   ],
   "assumptions": [
@@ -504,6 +541,14 @@
       "status": "open",
       "createdAt": "2026-07-25T04:51:01.991Z",
       "updatedAt": "2026-07-25T04:51:01.991Z"
+    },
+    {
+      "id": "ASM-4",
+      "statement": "The accepted R2A operation (mise exec -- node --test test/state.store.test.ts) requires Node 22.19+ (project toolchain) and the project's existing test fixture path. R2A therefore depends on the same toolchain that the current verify gate already requires and does not introduce new runtime requirements.",
+      "confidence": "high",
+      "status": "open",
+      "createdAt": "2026-07-26T19:19:43.242Z",
+      "updatedAt": "2026-07-26T19:19:43.242Z"
     }
   ],
   "risks": [
@@ -558,6 +603,45 @@
       "status": "open",
       "createdAt": "2026-07-25T04:51:01.991Z",
       "updatedAt": "2026-07-25T04:51:01.991Z"
+    },
+    {
+      "id": "RSK-6",
+      "statement": "Cross-process state mutation: R2A supervisor and Steward live in the same Node/Pi process. If a second process opens this project root and mutates `.voila/project.json`, the supervisor's per-root async mutex does not protect it, and operation run state could be silently overwritten.",
+      "likelihood": "low",
+      "impact": "high",
+      "status": "open",
+      "mitigation": "Document the boundary explicitly in operation metadata and the R2A verification record; do not claim cross-process safety; reject `cwdRef` that does not match the focused worktree. Re-evaluate at R2B if a second process is introduced.",
+      "linkedWorkItems": [
+        "NF-10"
+      ],
+      "createdAt": "2026-07-26T19:19:43.244Z",
+      "updatedAt": "2026-07-26T19:19:43.244Z"
+    },
+    {
+      "id": "RSK-7",
+      "statement": "Settlement race: process exit, timeout, cancellation, startup failure, and output closure can race. Without an idempotent boundary the same run could record two settlements or two canonical writes for one transition.",
+      "likelihood": "medium",
+      "impact": "high",
+      "status": "open",
+      "mitigation": "Single async settlement guard keyed on run identity with state transition validation (only one of queued→starting→running→{passed|failed|cancelled|timed_out|supervisor_error}). Focused regression test races two settlement paths and asserts exactly one canonical result.",
+      "linkedWorkItems": [
+        "NF-10"
+      ],
+      "createdAt": "2026-07-26T19:19:43.251Z",
+      "updatedAt": "2026-07-26T19:19:43.251Z"
+    },
+    {
+      "id": "RSK-8",
+      "statement": "Prompt injection through captured output: a malicious or coerced child process could emit text resembling instructions. If the Steward treats it as authoritative, arbitrary commands could be triggered by output alone.",
+      "likelihood": "medium",
+      "impact": "high",
+      "status": "open",
+      "mitigation": "Treat all child output as untrusted data. Output is redacted, classified secrets are stripped, and the settlement message marks output as data. Tool surface accepts only structured inputs from the model; no tool accepts free-text commands. Skill and focus-capsule text say so explicitly.",
+      "linkedWorkItems": [
+        "NF-10"
+      ],
+      "createdAt": "2026-07-26T19:19:43.254Z",
+      "updatedAt": "2026-07-26T19:19:43.254Z"
     }
   ],
   "intakes": [
@@ -3332,9 +3416,221 @@
       "outputTruncated": true
     }
   ],
+  "operationDefinitions": [
+    {
+      "id": "r2a.state-store-tests",
+      "version": 1,
+      "purpose": "test",
+      "kind": "finite",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "node",
+        "--test",
+        "test/state.store.test.ts"
+      ],
+      "workingDirectory": "repository_root",
+      "environmentPolicy": {
+        "kind": "inherit"
+      },
+      "riskClassification": {
+        "riskClass": "safe_and_expected",
+        "impact": "Local read with bounded temporary writes inside the worktree.",
+        "externalEffects": "None expected.",
+        "networkRequired": false,
+        "privilegesRequired": "Normal user.",
+        "interactive": false,
+        "reversible": true,
+        "trustSource": "Explicit accepted project operation.",
+        "concurrency": "One active operation per project root."
+      },
+      "successContract": {
+        "exitCode": 0,
+        "description": "Process exits with code 0 within the total time budget."
+      },
+      "timeoutContract": {
+        "startupMs": 10000,
+        "totalMs": 120000,
+        "gracefulMs": 5000,
+        "forcedMs": 5000
+      },
+      "cancellationContract": {
+        "gracefulSignal": "SIGTERM",
+        "escalationSignal": "SIGKILL"
+      },
+      "outputPolicy": {
+        "maxChunkBytes": 16384,
+        "maxInMemoryTailBytes": 262144,
+        "maxDurableBytes": 1048576
+      },
+      "redactionPolicy": {
+        "secretVariableNames": [
+          "TOKEN",
+          "SECRET",
+          "PASSWORD",
+          "PASSWD",
+          "API_KEY",
+          "PRIVATE_KEY",
+          "AUTH",
+          "AUTHORIZATION",
+          "COOKIE",
+          "SESSION",
+          "CREDENTIAL"
+        ],
+        "redactAuthorizationHeaders": true,
+        "skipShortValues": true,
+        "minSecretLength": 6
+      },
+      "createdAt": "2026-07-26T19:46:59.609Z",
+      "updatedAt": "2026-07-26T19:46:59.609Z"
+    }
+  ],
+  "operationRuns": [
+    {
+      "id": "RUN-1",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "fd04f5b81dea83d5028133167de110d638498bd1fb964327d2113e210049de81",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "real-acceptance",
+        "owner": "project-steward"
+      },
+      "startingFingerprint": "e92220deb2269336d554aa01161677408df69186029718ef0423a6bfe1e70cc8",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T19:46:59.759Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "delivered",
+      "startedAt": "2026-07-26T19:46:59.764Z",
+      "processIdentity": {
+        "pid": 49428,
+        "processGroupId": 49428,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T19:46:59.825Z",
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "outputArtifactRef": "operations/RUN-1"
+    },
+    {
+      "id": "RUN-2",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "fd04f5b81dea83d5028133167de110d638498bd1fb964327d2113e210049de81",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "real-acceptance",
+        "owner": "project-steward"
+      },
+      "startingFingerprint": "e4082f581b41ecee8e72f012eb69d0ce29e469f9b70417b7caf844cb583a8835",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T19:47:32.656Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "delivered",
+      "startedAt": "2026-07-26T19:47:32.666Z",
+      "processIdentity": {
+        "pid": 61091,
+        "processGroupId": 61091,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T19:47:32.729Z",
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "outputArtifactRef": "operations/RUN-2"
+    },
+    {
+      "id": "RUN-3",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "fd04f5b81dea83d5028133167de110d638498bd1fb964327d2113e210049de81",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "real-acceptance",
+        "owner": "project-steward"
+      },
+      "startingFingerprint": "1a8bdd710fee108752ba0024c03851f1b3040f8a80f9525306d6278e44bbe659",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T19:50:05.757Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "delivered",
+      "startedAt": "2026-07-26T19:50:05.764Z",
+      "processIdentity": {
+        "pid": 1145,
+        "processGroupId": 1145,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T19:50:05.827Z",
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "outputArtifactRef": "operations/RUN-3"
+    },
+    {
+      "id": "RUN-4",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "fd04f5b81dea83d5028133167de110d638498bd1fb964327d2113e210049de81",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "manual",
+        "owner": "manual"
+      },
+      "startingFingerprint": "60782a31f4ceacce332699e2dea0bc73fb2e19cb7b2263d6e55199c0cb4e1504",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T19:53:50.157Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "acknowledged",
+      "startedAt": "2026-07-26T19:53:50.166Z",
+      "processIdentity": {
+        "pid": 68583,
+        "processGroupId": 68583,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T19:53:50.403Z",
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "outputArtifactRef": "operations/RUN-4"
+    }
+  ],
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T18:26:22.713Z",
-  "revision": 246
+  "updatedAt": "2026-07-26T19:53:50.432Z",
+  "revision": 282
 }
