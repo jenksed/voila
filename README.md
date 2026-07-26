@@ -11,6 +11,26 @@ not merely generating code.
 > See [docs/migrations/NEWFANG_TO_VOILA.md](docs/migrations/NEWFANG_TO_VOILA.md) for the transition
 > and the `.newfang/` -> `.voila/` migration path.
 
+## Using Voila on other projects
+
+Voila lives in this repository as a project-local Pi extension, so out of the box it only loads
+here. Pi also loads `~/.pi/agent/extensions/` in **every** session, so one command makes Voila
+available everywhere:
+
+```bash
+node scripts/install-global.mjs           # install
+node scripts/install-global.mjs --status  # what is installed, and where it points
+node scripts/install-global.mjs --remove  # uninstall
+```
+
+This writes a single shim that re-exports this checkout's adapter. It does **not** copy the code, so
+there is one source of truth and `git pull` here updates every project. It is reversible: `--remove`
+deletes the one file.
+
+Canonical state stays **per-project** in `.voila/`. A global install changes only where the code is
+loaded from. In a project with no `.voila/`, the ambient widget shows the `/voila init` hint and
+nothing is created until you ask for it.
+
 ## Status
 
 **Phase 0 + Packets 1–4 complete — evidence-gated completion.** Voila is a runnable Pi extension:
