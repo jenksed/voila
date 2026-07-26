@@ -33,6 +33,8 @@ test("capsule includes one bounded active operation line while a run is in fligh
   await ensureR2ARegistry(root);
   const supervisor = new FiniteOperationSupervisor(root);
   // Use a long-running definition so the run is still active when we read the capsule.
+  // The accepted operation's executable is `mise`, so we keep the `exec --` separator to ensure
+  // mise forwards the rest of the argv to node rather than parsing it as its own options.
   const { updateState } = await import("../src/state/store.ts");
   await updateState(
     root,
@@ -48,7 +50,7 @@ test("capsule includes one bounded active operation line while a run is in fligh
                 gracefulMs: 500,
                 forcedMs: 500,
               },
-              args: ["-e", "setTimeout(()=>{}, 1500)"],
+              args: ["exec", "--", "node", "-e", "setTimeout(()=>{}, 1500)"],
             }
           : d,
       ),
