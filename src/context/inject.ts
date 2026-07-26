@@ -133,13 +133,24 @@ function blockerLine(state: ProjectState): string {
  * The current slice, derived from the canonical next action rather than from a new planning
  * subsystem (R1 records no slice of its own, and inventing one would be fiction).
  *
- * Emitted only when the next action opens with a short, complete sentence: a truncated prefix of the
- * line directly below it is noise, not information.
+ * The only period we trust as a sentence boundary is one followed by whitespace **and a capital
+ * letter that opens the next sentence**. That single structural signal rejects the cases a naive
+ * `.`-split mangles, with no natural-language parser:
+ *
+ *   - an inline literal like `Continue.` — the next word ("acceptance") is lowercase, so no boundary;
+ *   - a filename like `app.py` — no whitespace after the dot;
+ *   - a version like `22.23.1` — dots are followed by digits, not a space.
+ *
+ * When no trustworthy boundary exists the slice is omitted, and the full (abbreviated) next action on
+ * the line below carries the meaning. A malformed prefix would be worse than no slice: the controlling
+ * rule is to prefer the complete canonical next action over a damaged summary.
  */
 function sliceLine(nextAction: string): string | null {
   const text = nextAction.trim();
-  const first = /^(.+?[.!?])\s+\S/.exec(text)?.[1];
-  if (!first || first.length > CAP.slice || first.length >= text.length) return null;
+  // {15,} and the internal-space check keep a bare token — "1.", an initial "J." — from ever
+  // becoming a "slice"; the non-greedy quantifier stops at the first *trusted* boundary.
+  const first = /^(.{15,}?[.!?])\s+[A-Z]/.exec(text)?.[1];
+  if (!first || first.length > CAP.slice || !first.includes(" ")) return null;
   return `Current slice: ${first} (the canonical next action's first step)`;
 }
 

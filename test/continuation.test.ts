@@ -132,7 +132,44 @@ test("unrelated messages are never reinterpreted as continuation commands", () =
   assert.equal(isContinuationRequest(undefined), false);
 });
 
-// --- The capsule a continuation turn receives ----------------------------------------------------
+test("current slices prefer trustworthy sentence boundaries over punctuation inside meaning", () => {
+  const cases: Array<{ nextAction: string; expectedSlice?: string }> = [
+    {
+      nextAction: "Run the fresh-session Continue. acceptance for NF-9.",
+      expectedSlice: undefined,
+    },
+    {
+      nextAction: "Inspect app.py before recording the acceptance result.",
+      expectedSlice: undefined,
+    },
+    {
+      nextAction: "Confirm Node 22.23.1 is the pinned runtime before testing.",
+      expectedSlice: undefined,
+    },
+    {
+      nextAction: "Run the focused tests first. Then record the result.",
+      expectedSlice: "Current slice: Run the focused tests first.",
+    },
+    {
+      nextAction: "Use the existing acceptance record with no trustworthy boundary",
+      expectedSlice: undefined,
+    },
+  ];
+
+  for (const { nextAction, expectedSlice } of cases) {
+    let state = r1LikeState();
+    state = setNextAction(state, nextAction);
+    const capsule = buildFocusCapsule({ status: "ok", state });
+    if (expectedSlice === undefined) {
+      assert.doesNotMatch(capsule, /Current slice:/, nextAction);
+    } else {
+      assert.match(capsule, new RegExp(expectedSlice.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")), nextAction);
+    }
+    assert.match(capsule, /Next action:/, "required next action survives");
+    assert.ok(capsule.length <= CAPSULE_HARD_MAX, "capsule hard limit holds");
+  }
+});
+
 
 test("a continuation turn receives project, objective, focus, next action, and an instruction to act", () => {
   const state = r1LikeState();
