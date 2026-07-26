@@ -44,7 +44,11 @@ test("the realignment is recorded in canonical state and the R-sequence is seque
       assert.equal(item.status, "completed", "R1 is completed on this branch");
       assert.deepEqual(item.dependsOn, [], "R1 has no predecessor in the R-sequence");
     } else {
-      assert.notEqual(item.status, "completed", `${id} is unbuilt; nothing here may claim otherwise`);
+      assert.notEqual(
+        item.status,
+        "completed",
+        `${id} is unbuilt; nothing here may claim otherwise`,
+      );
       assert.deepEqual(item.dependsOn, [chain[i - 1]], `${id} depends on ${chain[i - 1]}`);
     }
     assert.ok(item.acceptanceCriteria.length > 0, `${id} states how it will be judged`);
