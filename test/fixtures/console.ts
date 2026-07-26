@@ -35,7 +35,7 @@ export function emptyProject(): ProjectState {
 
 /** A normal dogfood-like project: focus, rationale, mixed statuses, truth entries. */
 export function normalProject(): ProjectState {
-  let s = createInitialState({ displayName: "newfang", now: T, projectId: "pid" });
+  let s = createInitialState({ displayName: "voila", now: T, projectId: "pid" });
   s = setPhase(s, "build");
   s = setHealth(s, "green");
   s = createWorkItem(

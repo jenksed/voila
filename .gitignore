@@ -10,7 +10,7 @@ build/
 # Anchored to repo root so docs/research/ is NOT ignored.
 /research/
 
-# Pi runtime and private state (when NewFang runs on Pi)
+# Pi runtime and private state (when Voila runs on Pi)
 sessions/
 auth.json
 trust.json
@@ -39,7 +39,7 @@ bin/
 .idea/
 
 # Local canonical-state backups (not tracked)
-.newfang/backups/
+.voila/backups/
 
 # Receipt staging directories from interrupted verification runs (never committed)
-.newfang/receipts/.tmp/
+.voila/receipts/.tmp/

@@ -1,4 +1,4 @@
-// `/newfang intake …`, `/newfang orient`, `/newfang brief` command logic. Pure of Pi.
+// `/voila intake …`, `/voila orient`, `/voila brief` command logic. Pure of Pi.
 //
 // These commands own preservation, review, confirmation, and display. They never claim that
 // preserving a source or queueing a request means the model has analyzed anything.
@@ -21,18 +21,18 @@ import { currentOrientationStatus } from "../state/orientation-store.ts";
 import { applyDraft, applySummaryLines } from "../domain/apply.ts";
 import { blockingConflicts } from "../domain/intake.ts";
 import { ProjectOperationError } from "../domain/errors.ts";
-import { NewfangStateError } from "../state/errors.ts";
+import { VoilaStateError } from "../state/errors.ts";
 import { loadErrorResult } from "./loaderror.ts";
 import type { CommandResult } from "./types.ts";
 
 function operationError(error: unknown): CommandResult | null {
-  if (error instanceof ProjectOperationError || error instanceof NewfangStateError) {
+  if (error instanceof ProjectOperationError || error instanceof VoilaStateError) {
     return { level: "warning", lines: [error.message] };
   }
   return null;
 }
 
-/** `/newfang intake <repository-relative-path>` — preserve the source, then recommend analysis. */
+/** `/voila intake <repository-relative-path>` — preserve the source, then recommend analysis. */
 export async function runIntakeCreate(root: string, path: string): Promise<CommandResult> {
   try {
     const result = await createIntake(root, { path });
@@ -46,7 +46,7 @@ export async function runIntakeCreate(root: string, path: string): Promise<Comma
         `  status:   ${i.status} — nothing has been interpreted or applied yet`,
         "",
         "Next: ask the Project Steward to analyze this intake (it will read the preserved source and",
-        "stage a structured draft), then run /newfang intake review.",
+        "stage a structured draft), then run /voila intake review.",
       ],
     };
   } catch (error) {
@@ -54,7 +54,7 @@ export async function runIntakeCreate(root: string, path: string): Promise<Comma
   }
 }
 
-/** `/newfang intake status` — where the current intake stands. */
+/** `/voila intake status` — where the current intake stands. */
 export async function runIntakeStatus(root: string): Promise<CommandResult> {
   let state;
   try {
@@ -65,9 +65,7 @@ export async function runIntakeStatus(root: string): Promise<CommandResult> {
   if (state.intakes.length === 0) {
     return {
       level: "info",
-      lines: [
-        "No intakes yet. Run /newfang intake <repository-relative-path> to preserve a source.",
-      ],
+      lines: ["No intakes yet. Run /voila intake <repository-relative-path> to preserve a source."],
       state,
     };
   }
@@ -79,7 +77,7 @@ export async function runIntakeStatus(root: string): Promise<CommandResult> {
     );
   }
   const pending = state.intakes.find((i) => i.status === "review_required");
-  if (pending) lines.push("", `${pending.id} awaits review: run /newfang intake review.`);
+  if (pending) lines.push("", `${pending.id} awaits review: run /voila intake review.`);
   return { level: "info", lines, state };
 }
 
@@ -103,7 +101,7 @@ export async function loadIntakeReview(
   }
   const id = intakeId ?? state.currentIntakeId;
   if (!id) {
-    return { level: "warning", lines: ["No current intake. Run /newfang intake <path> first."] };
+    return { level: "warning", lines: ["No current intake. Run /voila intake <path> first."] };
   }
   const record = state.intakes.find((i) => i.id === id);
   if (!record) return { level: "warning", lines: [`No intake ${id}.`] };
@@ -128,7 +126,7 @@ export async function loadIntakeReview(
   };
 }
 
-/** `/newfang intake review` — show the understanding check as text (console shows the rich view). */
+/** `/voila intake review` — show the understanding check as text (console shows the rich view). */
 export async function runIntakeReview(root: string, intakeId?: string): Promise<CommandResult> {
   const data = await loadIntakeReview(root, intakeId);
   if ("level" in data) return data;
@@ -139,13 +137,13 @@ export async function runIntakeReview(root: string, intakeId?: string): Promise<
       "",
       data.blocked
         ? "Apply is blocked by conflicts requiring your resolution."
-        : `To accept: /newfang intake apply  ·  To correct: /newfang intake revise "<feedback>"  ·  To reject: /newfang intake reject`,
+        : `To accept: /voila intake apply  ·  To correct: /voila intake revise "<feedback>"  ·  To reject: /voila intake reject`,
     ],
   };
 }
 
 /**
- * `/newfang intake revise "<feedback>"` — record a request for a corrected draft.
+ * `/voila intake revise "<feedback>"` — record a request for a corrected draft.
  *
  * Changes no project truth and does not move the intake out of `review_required`; it durably records
  * that this exact revision was read and found wanting, which is what makes the next draft attributable.
@@ -163,7 +161,7 @@ export async function runIntakeRevise(
   }
   const id = opts.intakeId ?? state.currentIntakeId;
   if (!id) {
-    return { level: "warning", lines: ["No current intake. Run /newfang intake <path> first."] };
+    return { level: "warning", lines: ["No current intake. Run /voila intake <path> first."] };
   }
   const record = state.intakes.find((i) => i.id === id);
   if (!record) return { level: "warning", lines: [`No intake ${id}.`] };
@@ -171,7 +169,7 @@ export async function runIntakeRevise(
     return {
       level: "warning",
       lines: [
-        'Describe the correction: /newfang intake revise "<what must change>"',
+        'Describe the correction: /voila intake revise "<what must change>"',
         "The feedback is stored verbatim in the review log, so keep it concise and specific.",
       ],
     };
@@ -201,7 +199,7 @@ export async function runIntakeRevise(
 }
 
 /**
- * `/newfang intake apply` — two-step: without `confirm`, show exactly what will change; with
+ * `/voila intake apply` — two-step: without `confirm`, show exactly what will change; with
  * `confirm`, apply. The confirmation the user sees comes from the same code path that applies.
  */
 export async function runIntakeApply(
@@ -242,7 +240,7 @@ export async function runIntakeApply(
         lines: [
           ...applySummaryLines(preview),
           "",
-          `Nothing has changed yet. Run /newfang intake apply confirm to apply revision ${draft.draftRevision}.`,
+          `Nothing has changed yet. Run /voila intake apply confirm to apply revision ${draft.draftRevision}.`,
         ],
       };
     } catch (error) {
@@ -270,7 +268,7 @@ export async function runIntakeApply(
   }
 }
 
-/** `/newfang intake reject` */
+/** `/voila intake reject` */
 export async function runIntakeReject(
   root: string,
   reason?: string,
@@ -296,7 +294,7 @@ export async function runIntakeReject(
 }
 
 /**
- * `/newfang orient` — report current orientation and staleness, and recommend the Steward workflow.
+ * `/voila orient` — report current orientation and staleness, and recommend the Steward workflow.
  * It deliberately does not pretend that filesystem enumeration equals orientation.
  */
 export async function runOrient(root: string): Promise<CommandResult> {
@@ -313,7 +311,7 @@ export async function runOrient(root: string): Promise<CommandResult> {
       "No repository orientation recorded.",
       "",
       "Ask the Project Steward to orient (it will inspect instructions, key docs, and build/test",
-      "commands narrowly, then record a snapshot with newfang_record_orientation).",
+      "commands narrowly, then record a snapshot with voila_record_orientation).",
     );
     return { level: "warning", lines, state };
   }
@@ -323,7 +321,7 @@ export async function runOrient(root: string): Promise<CommandResult> {
       ? [`  head:     ${status.record.repositoryHead.slice(0, 12)}`]
       : []),
     `  recorded: ${status.record.createdAt}`,
-    `  artifact: .newfang/${status.record.artifactRef}`,
+    `  artifact: .voila/${status.record.artifactRef}`,
   );
   if (status.staleness.stale) {
     lines.push(`  reasons:  ${status.staleness.reasons.join("; ")}`);
@@ -339,7 +337,7 @@ export async function runOrient(root: string): Promise<CommandResult> {
   return { level: status.staleness.stale ? "warning" : "info", lines, state };
 }
 
-/** `/newfang brief` — display the generated project brief, regenerating it if missing. */
+/** `/voila brief` — display the generated project brief, regenerating it if missing. */
 export async function runBrief(root: string): Promise<CommandResult> {
   let state;
   try {

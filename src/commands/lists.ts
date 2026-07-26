@@ -1,4 +1,4 @@
-// `/newfang decisions | assumptions | risks` — compact, readable listings.
+// `/voila decisions | assumptions | risks` — compact, readable listings.
 
 import { loadState } from "../state/store.ts";
 import { loadErrorResult } from "./loaderror.ts";

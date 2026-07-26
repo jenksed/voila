@@ -14,7 +14,7 @@ import { ProjectOperationError } from "../src/domain/errors.ts";
 const CONTENT = "# Plan\n\nLine two with trailing spaces   \n\tTabbed line\nunicode: café ✓\n";
 
 async function repo(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-src-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-src-"));
   await initState(root, { displayName: "src-demo" });
   return root;
 }
@@ -71,7 +71,7 @@ test("path traversal is rejected", async () => {
 
 test("symlink escape is rejected", async () => {
   const root = await repo();
-  const outside = await mkdtemp(join(tmpdir(), "newfang-outside-"));
+  const outside = await mkdtemp(join(tmpdir(), "voila-outside-"));
   await writeFile(join(outside, "secret.md"), "secret\n", "utf8");
   await symlink(join(outside, "secret.md"), join(root, "link.md"));
   await assert.rejects(() => createIntake(root, { path: "link.md" }), UnsafeSourcePathError);
@@ -133,11 +133,11 @@ test("intake IDs are monotonic and canonical metadata tracks them", async () => 
   assert.equal(state.intakes.length, 2);
 });
 
-test("source artifact lives under .newfang/intakes/<id>/", async () => {
+test("source artifact lives under .voila/intakes/<id>/", async () => {
   const root = await repo();
   await writeFile(join(root, "plan.md"), CONTENT, "utf8");
   const result = await createIntake(root, { path: "plan.md" });
   const paths = intakePaths(root, result.intake.id);
-  assert.ok(paths.source.includes(`.newfang/intakes/${result.intake.id}/source.md`));
+  assert.ok(paths.source.includes(`.voila/intakes/${result.intake.id}/source.md`));
   assert.equal(await readFile(paths.source, "utf8"), CONTENT);
 });

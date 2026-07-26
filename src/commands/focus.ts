@@ -1,4 +1,4 @@
-// `/newfang focus [ID|clear]` — set, clear, or show the focus pointer.
+// `/voila focus [ID|clear]` — set, clear, or show the focus pointer.
 
 import { loadState, updateState } from "../state/store.ts";
 import { setFocusWorkItem } from "../domain/operations.ts";
@@ -15,7 +15,7 @@ export async function runFocus(root: string, arg?: string): Promise<CommandResul
         lines: [
           state.focusWorkItemId
             ? `Focus: ${state.focusWorkItemId}`
-            : "No focus set. Use /newfang focus <ID> or /newfang focus clear.",
+            : "No focus set. Use /voila focus <ID> or /voila focus clear.",
         ],
         state,
       };

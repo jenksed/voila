@@ -1,8 +1,8 @@
-# Self-Hosting Acceptance Project: `newfang-approval-bundles`
+# Self-Hosting Acceptance Project: `voila-approval-bundles`
 
 ## Summary
 
-Once a minimum NewFang core exists (the MVP vertical slice), NewFang's first real reference project
+Once a minimum Voila core exists (the MVP vertical slice), Voila's first real reference project
 is to build an approval subsystem **for itself**, using its own intake, canonical state, claims,
 evidence, verification, and delivery process (delegation is **not** required — direct Steward
 execution suffices). The approval model is a **proactive execution contract**: the Steward declares a
@@ -16,7 +16,7 @@ Phase 0 or Packet 1** — this is a specification and plan.
 - It is a **genuine gap** in Pi: approval gating exists only as single-purpose examples
   (`permission-gate.ts`, `protected-paths.ts`); there is no grouping, phase-scoping, denial behavior,
   history, or policy narrowing (see [../research/PI_CAPABILITY_AUDIT.md](../research/PI_CAPABILITY_AUDIT.md)).
-- It is **the right first self-hosting target**: valuable to NewFang itself, bounded, testable, and
+- It is **the right first self-hosting target**: valuable to Voila itself, bounded, testable, and
   it forces every part of the core (intake → canonical state → claims → evidence → completion gate →
   delivery) to be exercised on a real deliverable. Delegation is not exercised here.
 - It directly serves product direction §15 (approval experience) and §23 (controlled
@@ -43,26 +43,26 @@ coherent bundle. The bundle is derived from the declared contract; interception 
 
 ## Capability contract (design intent, to be refined during the project)
 
-Built on `on("tool_call")` (block/allow) plus a NewFang policy store and UI:
+Built on `on("tool_call")` (block/allow) plus a Voila policy store and UI:
 
 - Represent a declared phase contract: operation classes, reversibility, declared boundary.
 - Present one prepared bundle via `ctx.ui.custom()`/dialogs (TUI) or the RPC extension-UI
   sub-protocol.
 - Enforce: allow calls within scope; block or re-request calls outside scope; expire at the boundary.
-- Persist decisions, enforcement outcomes, and history to canonical `.newfang/` state and
+- Persist decisions, enforcement outcomes, and history to canonical `.voila/` state and
   `receipts/`; never widen scope implicitly.
 - Emit a receipt for each approval decision and each enforcement action (what was asked, decided,
   scope, timestamp).
 
-## Minimum NewFang capabilities required before self-hosting (the gate)
+## Minimum Voila capabilities required before self-hosting (the gate)
 
 **Delegation is not required for the first self-hosting transition.** Direct Project Steward
 execution is acceptable. Subprocess delegation remains an important prototype and later capability
-claim, but it does not block building `newfang-approval-bundles`. NewFang may start managing this
+claim, but it does not block building `voila-approval-bundles`. Voila may start managing this
 project itself when the MVP core can:
 
 1. **Planning intake** — ingest a planning document and derive canonical state/backlog.
-2. **Durable state** — canonical `.newfang/` state that survives restart (loads/validates first).
+2. **Durable state** — canonical `.voila/` state that survives restart (loads/validates first).
 3. **Visible next action** — surface the next justified action after restart.
 4. **Claims and evidence** — track claims with confidence and evidence links.
 5. **Reproducible verification** — run at least one independent verification and store a reproducible
@@ -76,10 +76,10 @@ Until all eight hold, work proceeds as *bootstrap* (Claude-driven), not self-hos
 
 ## Project intake artifact
 
-The kickoff artifact NewFang ingests is a short `APPROVAL_BUNDLES_BRIEF.md` containing: objective,
+The kickoff artifact Voila ingests is a short `APPROVAL_BUNDLES_BRIEF.md` containing: objective,
 the product surface above, non-goals (not a full RBAC/permissions system; not a Pi trust
 replacement), constraints (must not silently broaden permissions; must degrade across TUI/RPC modes),
-and acceptance criteria. NewFang preserves it and derives the backlog.
+and acceptance criteria. Voila preserves it and derives the backlog.
 
 ## Expected backlog items (illustrative)
 
@@ -88,7 +88,7 @@ and acceptance criteria. NewFang preserves it and derives the backlog.
    consequence).
 3. Interception + scope enforcement (`on("tool_call")`): allow in-scope, block/re-request
    out-of-scope, expire at boundary — in TUI and RPC modes.
-4. Policy/decision store + enforcement history in canonical `.newfang/` state; no-implicit-broadening
+4. Policy/decision store + enforcement history in canonical `.voila/` state; no-implicit-broadening
    invariant.
 5. Denial behavior and safe continuation/stop.
 6. Receipts for approval decisions and enforcement actions.
@@ -127,7 +127,7 @@ and acceptance criteria. NewFang preserves it and derives the backlog.
 - Unit tests for the phase-contract model, scope enforcement, and the no-broadening invariant.
 - Behavioral demonstrations (transcripts/receipts) for bundle presentation, out-of-scope blocking,
   denial, and boundary expiry.
-- Reproducible verification receipts stored in `.newfang/receipts/` and linked to each claim.
+- Reproducible verification receipts stored in `.voila/receipts/` and linked to each claim.
 - Explicit limitations documented (what the approval system does **not** guarantee).
 
 ## Git delivery boundary
@@ -142,15 +142,15 @@ passing. No push/publish without explicit approval.
 - Every failure case has a test or a documented, justified exclusion.
 - The extension degrades correctly across TUI and RPC modes.
 - Limitations are documented.
-- NewFang itself managed the project from intake to delivery (the self-hosting proof) — recorded in
-  the ledger with the phase at which control passed from bootstrap to NewFang.
+- Voila itself managed the project from intake to delivery (the self-hosting proof) — recorded in
+  the ledger with the phase at which control passed from bootstrap to Voila.
 
 ## Work-ownership boundaries (explicit)
 
 - **Bootstrap work performed directly through Claude:** the Phase 0 audit and plans (this repo);
-  standing up the MVP core if done before NewFang can self-host.
-- **Work managed by early NewFang:** ingesting `APPROVAL_BUNDLES_BRIEF.md`, maintaining canonical
+  standing up the MVP core if done before Voila can self-host.
+- **Work managed by early Voila:** ingesting `APPROVAL_BUNDLES_BRIEF.md`, maintaining canonical
   state/backlog, tracking claims, running verification, and producing the delivery summary — once the
   eight-capability gate holds (delegation not required).
-- **Work performed after NewFang reaches the self-hosting gate:** the approval extension
-  implementation, verified and delivered under NewFang's own process, with control-transfer recorded.
+- **Work performed after Voila reaches the self-hosting gate:** the approval extension
+  implementation, verified and delivered under Voila's own process, with control-transfer recorded.

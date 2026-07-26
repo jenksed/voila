@@ -8,7 +8,7 @@ import { randomBytes } from "node:crypto";
 import { orientationPaths } from "./paths.ts";
 import { loadState, updateState } from "./store.ts";
 import { sha256 } from "./source.ts";
-import { NewfangStateError } from "./errors.ts";
+import { VoilaStateError } from "./errors.ts";
 import { allocateId } from "../domain/ids.ts";
 import { ProjectOperationError } from "../domain/errors.ts";
 import type { OrientationArtifact, StalenessResult } from "../domain/orientation.ts";
@@ -19,7 +19,7 @@ import {
 } from "../domain/orientation.ts";
 import type { OrientationRecord, ProjectState } from "../domain/types.ts";
 
-export class OrientationNotFoundError extends NewfangStateError {
+export class OrientationNotFoundError extends VoilaStateError {
   constructor(id: string) {
     super(`Orientation not found: ${id}.`);
     this.name = "OrientationNotFoundError";

@@ -7,7 +7,7 @@ import { tryRepositoryFingerprint } from "../state/fingerprint.ts";
 import { proofSummary } from "../domain/proof.ts";
 import { buildContextBlock, type ContextInput } from "./inject.ts";
 
-/** Build the NewFang context block for a project root, degrading gracefully on any problem. */
+/** Build the Voila context block for a project root, degrading gracefully on any problem. */
 export async function assembleContext(root: string): Promise<string> {
   let input: ContextInput;
   try {

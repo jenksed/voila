@@ -1,6 +1,6 @@
 # Proof Engine
 
-How NewFang turns "I think this is done" into a state transition it will refuse unless evidence
+How Voila turns "I think this is done" into a state transition it will refuse unless evidence
 supports it. Packet 4 introduces **claims**, **verification receipts**, **evidence freshness**, and
 **protected completion** on canonical schema **v4**.
 
@@ -12,15 +12,15 @@ completion**.
 > Canonical state will not move a work item to `completed` unless every acceptance criterion is
 > covered by a required claim **and** every required claim is supported by a current passing receipt.
 
-**This guarantees NewFang's state transition only.** It does **not** guarantee that a model never
+**This guarantees Voila's state transition only.** It does **not** guarantee that a model never
 writes unsupported prose, never overstates progress in conversation, or never believes a wrong thing.
 A model can still say "done" in chat. What it cannot do is make `project.json` say `completed`
 without evidence. That narrowness is the point: the ledger is the thing that is defended.
 
 Two further honest boundaries:
 
-- A `completed` status hand-written directly into `project.json` is schema-valid. NewFang defends its
-  own transitions, not the file against a text editor. `/newfang doctor` reports when a completed
+- A `completed` status hand-written directly into `project.json` is schema-valid. Voila defends its
+  own transitions, not the file against a text editor. `/voila doctor` reports when a completed
   item's current evidence no longer supports revalidating it.
 - Verification executes a real command on the real machine. It is bounded, but it is **not a
   sandbox**.
@@ -59,12 +59,12 @@ Rules the domain enforces:
   **not** change the work item it is about, and it never rewrites historical receipts.
 
 `knownLimitations` is deliberately load-bearing: it is shown in the claim list, the Proof view, the
-claim detail view, and `/newfang claims CLM-n`. A supported claim still displays what it does not
+claim detail view, and `/voila claims CLM-n`. A supported claim still displays what it does not
 establish.
 
 ### Requiring a claim
 
-Attaching a claim with `newfang_require_claim` puts it in the work item's `requiredClaimIds`. Only
+Attaching a claim with `voila_require_claim` puts it in the work item's `requiredClaimIds`. Only
 required claims gate completion and only they raise attention in the console. Duplicates are
 rejected, a claim about another work item cannot be required, and proof requirements cannot be added
 to or removed from **completed** work — a completion record never loses its proof.
@@ -94,8 +94,8 @@ interface VerificationReceiptRecord {
 ### Artifact layout
 
 ```text
-.newfang/receipts/
-├── .tmp/                 # NewFang-owned staging; gitignored, promoted then gone
+.voila/receipts/
+├── .tmp/                 # Voila-owned staging; gitignored, promoted then gone
 ├── RCP-1/
 │   ├── manifest.json     # full metadata + sha256 of each stream
 │   ├── stdout.txt        # ANSI-stripped, capped at 64 KiB
@@ -107,12 +107,12 @@ Ordering invariant, in this exact order:
 
 1. compute the repository fingerprint,
 2. execute the command,
-3. write the **complete** artifact into `.newfang/receipts/.tmp/<token>/`,
-4. **atomically promote** it with a single `rename` into `.newfang/receipts/RCP-n/`,
+3. write the **complete** artifact into `.voila/receipts/.tmp/<token>/`,
+4. **atomically promote** it with a single `rename` into `.voila/receipts/RCP-n/`,
 5. only then link the receipt into canonical state.
 
 Consequences: a failed canonical update never leaves a *linked* partial receipt; the worst case is an
-unreferenced promoted directory or an abandoned staging directory, both of which `/newfang doctor`
+unreferenced promoted directory or an abandoned staging directory, both of which `/voila doctor`
 detects and reports as safe to delete. Artifacts are immutable — an existing `RCP-n` directory blocks
 reuse of that ID rather than being overwritten.
 
@@ -152,7 +152,7 @@ The contract is structured only:
   "failed"); spawn failure → `error`.
 
 **Tool success means the receipt was recorded, not that verification passed.** A failing command
-produces a valid `failed` receipt, and both the tool text and `/newfang verify` say so explicitly.
+produces a valid `failed` receipt, and both the tool text and `/voila verify` say so explicitly.
 
 ## Repository fingerprint
 
@@ -172,14 +172,14 @@ When git is unavailable, `repositoryFingerprint` fails clearly. Read-only surfac
 variant that returns `null`, and `null` means *nothing can be current* — evidence reads `stale`, never
 optimistically `supported`.
 
-### The `.newfang/` exclusion
+### The `.voila/` exclusion
 
-Everything under `.newfang/` is excluded from the fingerprint. This is deliberate and is the reason
+Everything under `.voila/` is excluded from the fingerprint. This is deliberate and is the reason
 **creating a receipt does not invalidate its own fingerprint** — a property with a dedicated test.
 Linking a receipt necessarily rewrites `project.json`, `events.jsonl`, the generated view, and the
 artifact itself; including them would make every receipt stale the instant it was created.
 
-The tradeoff, stated plainly: **a change confined entirely to `.newfang/` does not invalidate
+The tradeoff, stated plainly: **a change confined entirely to `.voila/` does not invalidate
 existing evidence.**
 
 ## Evidence evaluation (derived, never stored)
@@ -202,7 +202,7 @@ by reading**.
 
 ## Protected completion
 
-`newfang_complete_work_item` (and `/newfang complete NF-n`) is the **only** canonical path to
+`voila_complete_work_item` (and `/voila complete NF-n`) is the **only** canonical path to
 `completed`. Generic create and update still reject the status outright, and a test asserts no other
 tool offers `completed` as a settable value.
 
@@ -233,21 +233,21 @@ refreshed.
 
 ### Pi tools
 
-`newfang_create_claim`, `newfang_update_claim`, `newfang_require_claim`, `newfang_list_claims`,
-`newfang_run_verification`, `newfang_get_receipt`, `newfang_complete_work_item`, `newfang_get_proof`.
+`voila_create_claim`, `voila_update_claim`, `voila_require_claim`, `voila_list_claims`,
+`voila_run_verification`, `voila_get_receipt`, `voila_complete_work_item`, `voila_get_proof`.
 
 All use strict typebox schemas with `additionalProperties: false`, accept no filesystem root, expose
-no support flag, and provide no completion bypass. `newfang_get_receipt` returns output only when
+no support flag, and provide no completion bypass. `voila_get_receipt` returns output only when
 asked, and then only a bounded excerpt.
 
 ### Human commands
 
 | Command | Behavior |
 |---------|----------|
-| `/newfang claims [CLM-n\|NF-n]` | Claims with derived status; detail includes coverage and limitations. |
-| `/newfang proof [NF-n\|CLM-n\|RCP-n]` | Overview, per-item gates and coverage, or curated receipt metadata. Never dumps output or raw JSON. |
-| `/newfang verify CLM-n -- executable [args...]` | Echoes the exact structured command (claim, executable, quoted args, cwd, the not-a-sandbox note) **before** executing. Only the first `--` is the separator, so `-- mise exec -- npm run verify` survives intact. |
-| `/newfang complete NF-n` | The protected transition; lists every failing gate on rejection. |
+| `/voila claims [CLM-n\|NF-n]` | Claims with derived status; detail includes coverage and limitations. |
+| `/voila proof [NF-n\|CLM-n\|RCP-n]` | Overview, per-item gates and coverage, or curated receipt metadata. Never dumps output or raw JSON. |
+| `/voila verify CLM-n -- executable [args...]` | Echoes the exact structured command (claim, executable, quoted args, cwd, the not-a-sandbox note) **before** executing. Only the first `--` is the separator, so `-- mise exec -- npm run verify` survives intact. |
+| `/voila complete NF-n` | The protected transition; lists every failing gate on rejection. |
 
 ### Steward Console
 
@@ -265,9 +265,9 @@ unproven is a normal early state, not an alarm.
 ### Context injection
 
 Deterministic, under the 2400-character cap: claim counts by status plus a compact rules line stating
-that claims cite exact criteria, verification runs through `newfang_run_verification`, a passing
+that claims cite exact criteria, verification runs through `voila_run_verification`, a passing
 command is evidence only for the claim it ran for, stale or failed evidence cannot complete work,
-limitations stay visible, and only `newfang_complete_work_item` may complete work. Individual claim
+limitations stay visible, and only `voila_complete_work_item` may complete work. Individual claim
 statements are never enumerated, and the wording deliberately avoids nudging toward satisfying the
 gate cheaply.
 
@@ -286,7 +286,7 @@ and the message says so. Silently un-completing work would be worse than a stale
 
 An explicit `3 → 4` step, chaining `1 → 2 → 3 → 4` when needed. It follows the established pattern: a
 read-only `schema-v3.ts` source validator, inspect-before-apply, explicit `--apply`, a timestamped
-backup to `.newfang/backups/`, validation of both source and full candidate before any write, atomic
+backup to `.voila/backups/`, validation of both source and full candidate before any write, atomic
 replace, exactly one `schema_migrated` event after success, and a refreshed generated view. Unknown
 versions are rejected; nothing migrates silently.
 

@@ -32,3 +32,11 @@ version.
 - [../research/PI_CAPABILITY_AUDIT.md](../research/PI_CAPABILITY_AUDIT.md) (Pi `0.80.3`, access
   2026-07-24).
 - npm `latest = 0.82.0`, `legacy-node20 = 0.74.2` (checked 2026-07-24).
+
+## Rename note
+
+This ADR is preserved as written. The product was later renamed from NewFang to Voila
+(Packet 4.5): the canonical state directory is now `.voila/`, the Pi adapter is
+`.pi/extensions/voila.ts`, the command is `/voila`, and the package scope under consideration is
+`@voila`. The decision recorded above is unchanged; only the names are. See
+[../migrations/NEWFANG_TO_VOILA.md](../migrations/NEWFANG_TO_VOILA.md).

@@ -1,4 +1,4 @@
-// `/newfang backlog` logic. Concise by default; detail for a single ID.
+// `/voila backlog` logic. Concise by default; detail for a single ID.
 
 import { loadState } from "../state/store.ts";
 import { backlogSummary } from "../domain/operations.ts";

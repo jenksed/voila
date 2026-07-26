@@ -4,60 +4,60 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { newfangTools, type NewfangTool } from "../src/tools/index.ts";
+import { voilaTools, type VoilaTool } from "../src/tools/index.ts";
 import { initState, loadState } from "../src/state/store.ts";
 
 async function initedRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-tools-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-tools-"));
   await initState(root, { displayName: "demo" });
   return root;
 }
 
-function toolByName(name: string): NewfangTool {
-  const t = newfangTools().find((x) => x.name === name);
+function toolByName(name: string): VoilaTool {
+  const t = voilaTools().find((x) => x.name === name);
   assert.ok(t, `tool ${name} exists`);
   return t;
 }
 
-async function run(tool: NewfangTool, params: Record<string, unknown>, cwd: string) {
+async function run(tool: VoilaTool, params: Record<string, unknown>, cwd: string) {
   return tool.execute("call-1", params, undefined, undefined, { cwd });
 }
 
 test("expected tool surface is registered with schemas", () => {
-  const names = newfangTools()
+  const names = voilaTools()
     .map((t) => t.name)
     .sort();
   assert.deepEqual(names, [
-    "newfang_apply_intake",
-    "newfang_complete_work_item",
-    "newfang_create_claim",
-    "newfang_create_intake",
-    "newfang_create_work_item",
-    "newfang_get_intake_draft",
-    "newfang_get_project_context",
-    "newfang_get_proof",
-    "newfang_get_receipt",
-    "newfang_list_claims",
-    "newfang_list_project_operations",
-    "newfang_list_work_items",
-    "newfang_record_assumption",
-    "newfang_record_decision",
-    "newfang_record_orientation",
-    "newfang_record_risk",
-    "newfang_reject_intake",
-    "newfang_request_intake_revision",
-    "newfang_require_claim",
-    "newfang_run_verification",
-    "newfang_set_focus",
-    "newfang_set_next_action",
-    "newfang_stage_intake_draft",
-    "newfang_update_assumption",
-    "newfang_update_claim",
-    "newfang_update_decision",
-    "newfang_update_risk",
-    "newfang_update_work_item",
+    "voila_apply_intake",
+    "voila_complete_work_item",
+    "voila_create_claim",
+    "voila_create_intake",
+    "voila_create_work_item",
+    "voila_get_intake_draft",
+    "voila_get_project_context",
+    "voila_get_proof",
+    "voila_get_receipt",
+    "voila_list_claims",
+    "voila_list_project_operations",
+    "voila_list_work_items",
+    "voila_record_assumption",
+    "voila_record_decision",
+    "voila_record_orientation",
+    "voila_record_risk",
+    "voila_reject_intake",
+    "voila_request_intake_revision",
+    "voila_require_claim",
+    "voila_run_verification",
+    "voila_set_focus",
+    "voila_set_next_action",
+    "voila_stage_intake_draft",
+    "voila_update_assumption",
+    "voila_update_claim",
+    "voila_update_decision",
+    "voila_update_risk",
+    "voila_update_work_item",
   ]);
-  for (const t of newfangTools()) {
+  for (const t of voilaTools()) {
     assert.equal(typeof t.execute, "function");
     assert.ok(t.parameters && typeof t.parameters === "object");
   }
@@ -65,7 +65,7 @@ test("expected tool surface is registered with schemas", () => {
 
 test("create/update/list work-item tools mutate canonical state", async () => {
   const root = await initedRoot();
-  const create = toolByName("newfang_create_work_item");
+  const create = toolByName("voila_create_work_item");
   const res = await run(create, { kind: "task", title: "Do the thing", priority: "high" }, root);
   assert.match(res.content[0]?.text ?? "", /Created NF-1/);
 
@@ -74,34 +74,34 @@ test("create/update/list work-item tools mutate canonical state", async () => {
   assert.equal(state.workItems[0]?.title, "Do the thing");
   assert.ok((state.revision ?? 0) > 1, "revision advanced by the mutation");
 
-  const update = toolByName("newfang_update_work_item");
+  const update = toolByName("voila_update_work_item");
   await run(update, { id: "NF-1", status: "ready" }, root);
   assert.equal((await loadState(root)).workItems[0]?.status, "ready");
 
-  const list = toolByName("newfang_list_work_items");
+  const list = toolByName("voila_list_work_items");
   const listed = await run(list, { status: "ready" }, root);
   assert.match(listed.content[0]?.text ?? "", /NF-1/);
 });
 
 test("tools cannot mark a work item completed", async () => {
   const root = await initedRoot();
-  const create = toolByName("newfang_create_work_item");
+  const create = toolByName("voila_create_work_item");
   await assert.rejects(() => run(create, { kind: "task", title: "x", status: "completed" }, root));
   await run(create, { kind: "task", title: "x" }, root);
-  const update = toolByName("newfang_update_work_item");
+  const update = toolByName("voila_update_work_item");
   await assert.rejects(() => run(update, { id: "NF-1", status: "completed" }, root));
 });
 
 test("record decision/assumption/risk tools persist entities", async () => {
   const root = await initedRoot();
   await run(
-    toolByName("newfang_record_decision"),
+    toolByName("voila_record_decision"),
     { title: "d", decision: "x", rationale: "y" },
     root,
   );
-  await run(toolByName("newfang_record_assumption"), { statement: "a", confidence: "high" }, root);
+  await run(toolByName("voila_record_assumption"), { statement: "a", confidence: "high" }, root);
   await run(
-    toolByName("newfang_record_risk"),
+    toolByName("voila_record_risk"),
     { statement: "r", likelihood: "low", impact: "high" },
     root,
   );
@@ -110,11 +110,11 @@ test("record decision/assumption/risk tools persist entities", async () => {
   assert.equal(state.assumptions[0]?.id, "ASM-1");
   assert.equal(state.risks[0]?.id, "RSK-1");
 
-  const ops = await run(toolByName("newfang_list_project_operations"), {}, root);
+  const ops = await run(toolByName("voila_list_project_operations"), {}, root);
   assert.match(ops.content[0]?.text ?? "", /DEC-1/);
 });
 
 test("tool errors propagate (actionable) for unknown work item", async () => {
   const root = await initedRoot();
-  await assert.rejects(() => run(toolByName("newfang_update_work_item"), { id: "NF-42" }, root));
+  await assert.rejects(() => run(toolByName("voila_update_work_item"), { id: "NF-42" }, root));
 });

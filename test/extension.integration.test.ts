@@ -8,7 +8,7 @@ import { join } from "node:path";
 // Loads the pinned Pi package at runtime (proves it resolves/executes).
 import * as pi from "@earendil-works/pi-coding-agent";
 // Loads the thin adapter (which type-imports Pi and imports src/).
-import newfangExtension from "../.pi/extensions/newfang.ts";
+import voilaExtension from "../.pi/extensions/voila.ts";
 import { loadState } from "../src/state/store.ts";
 
 interface CapturedCommand {
@@ -73,44 +73,44 @@ test("pinned Pi package loads at runtime and reports 0.82.0", async () => {
   assert.equal(pkg.version, "0.82.0");
 });
 
-test("extension registers the newfang command, tools, and session_start", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-int-"));
+test("extension registers the voila command, tools, and session_start", async () => {
+  const root = await mkdtemp(join(tmpdir(), "voila-int-"));
   const h = makeHarness(root);
-  (newfangExtension as unknown as (pi: unknown) => void)(h.host);
+  (voilaExtension as unknown as (pi: unknown) => void)(h.host);
 
-  assert.ok(h.commands.has("newfang"));
+  assert.ok(h.commands.has("voila"));
   assert.ok(h.events.has("session_start"));
   assert.equal(h.tools.size, 28);
-  assert.ok(h.tools.has("newfang_create_work_item"));
-  assert.ok(h.tools.has("newfang_request_intake_revision"));
-  assert.ok(h.tools.has("newfang_complete_work_item"));
+  assert.ok(h.tools.has("voila_create_work_item"));
+  assert.ok(h.tools.has("voila_request_intake_revision"));
+  assert.ok(h.tools.has("voila_complete_work_item"));
 });
 
 test("session_start shows init hint when uninitialized", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-int-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-int-"));
   const h = makeHarness(root);
-  (newfangExtension as unknown as (pi: unknown) => void)(h.host);
+  (voilaExtension as unknown as (pi: unknown) => void)(h.host);
   await h.events.get("session_start")!(undefined, h.ctx);
   const last = h.widgets.at(-1);
-  assert.match((last?.lines ?? []).join(" "), /run \/newfang init/);
+  assert.match((last?.lines ?? []).join(" "), /run \/voila init/);
 });
 
 test("init command then create-work-item tool run end to end through Pi wiring", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-int-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-int-"));
   const h = makeHarness(root);
-  (newfangExtension as unknown as (pi: unknown) => void)(h.host);
+  (voilaExtension as unknown as (pi: unknown) => void)(h.host);
 
-  await h.commands.get("newfang")!.handler("init", h.ctx);
-  assert.ok(existsSync(join(root, ".newfang/project.json")));
+  await h.commands.get("voila")!.handler("init", h.ctx);
+  assert.ok(existsSync(join(root, ".voila/project.json")));
 
   await h.tools
-    .get("newfang_create_work_item")!
+    .get("voila_create_work_item")!
     .execute("c1", { kind: "task", title: "wire test", status: "ready" }, undefined, undefined, {
       cwd: root,
     });
   const state = await loadState(root);
   assert.equal(state.workItems[0]?.title, "wire test");
 
-  await h.commands.get("newfang")!.handler("backlog", h.ctx);
+  await h.commands.get("voila")!.handler("backlog", h.ctx);
   assert.match(h.notifications.map((n) => n.message).join("\n"), /NF-1/);
 });

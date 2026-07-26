@@ -5,11 +5,11 @@
 //   - there is NO manual support flag; support is derived from receipts + the repository fingerprint,
 //   - verification takes a structured executable + argv, never a shell string,
 //   - recording a receipt succeeds even when the command fails (failure is evidence, not an error),
-//   - newfang_complete_work_item is the only path to `completed`, and it reports every failing gate.
+//   - voila_complete_work_item is the only path to `completed`, and it reports every failing gate.
 
 import { Type } from "typebox";
 import { StringEnum } from "./schema.ts";
-import type { NewfangTool, NewfangToolResult } from "./index.ts";
+import type { VoilaTool, VoilaToolResult } from "./index.ts";
 import { loadState, updateState } from "../state/store.ts";
 import { loadProofOverview } from "../state/proof-store.ts";
 import { tryRepositoryFingerprint } from "../state/fingerprint.ts";
@@ -36,7 +36,7 @@ import {
 } from "../domain/proof.ts";
 import { CONFIDENCES } from "../domain/types.ts";
 
-function text(line: string, details?: unknown): NewfangToolResult {
+function text(line: string, details?: unknown): VoilaToolResult {
   return { content: [{ type: "text", text: line }], details };
 }
 
@@ -52,16 +52,16 @@ function excerpt(value: string): { text: string; truncatedForDisplay: boolean } 
   return { text: value.slice(0, TOOL_OUTPUT_EXCERPT), truncatedForDisplay: true };
 }
 
-export function proofTools(): NewfangTool[] {
+export function proofTools(): VoilaTool[] {
   return [
     {
-      name: "newfang_create_claim",
+      name: "voila_create_claim",
       label: "Create Claim",
       description:
-        "State a claim about a work item and which of its acceptance criteria the claim covers. Each covered criterion must match the work item's criterion text EXACTLY. Creating a claim proves nothing: support is derived from verification receipts recorded through newfang_run_verification. Record honest knownLimitations.",
-      promptSnippet: "State a NewFang claim about a work item and the criteria it covers",
+        "State a claim about a work item and which of its acceptance criteria the claim covers. Each covered criterion must match the work item's criterion text EXACTLY. Creating a claim proves nothing: support is derived from verification receipts recorded through voila_run_verification. Record honest knownLimitations.",
+      promptSnippet: "State a Voila claim about a work item and the criteria it covers",
       promptGuidelines: [
-        "Use newfang_create_claim to state what you believe is true and which acceptance criteria it covers; a claim is not evidence, and there is no way to mark it supported by hand.",
+        "Use voila_create_claim to state what you believe is true and which acceptance criteria it covers; a claim is not evidence, and there is no way to mark it supported by hand.",
       ],
       parameters: Type.Object(
         {
@@ -96,18 +96,18 @@ export function proofTools(): NewfangTool[] {
         );
         const claim = state.claims[state.claims.length - 1];
         return text(
-          `Created ${claim?.id} for ${claim?.workItemId} covering ${claim?.coveredAcceptanceCriteria.length} criterion(s). Status: pending — no verification receipt exists yet. Run newfang_run_verification, then newfang_require_claim to make it a completion requirement.`,
+          `Created ${claim?.id} for ${claim?.workItemId} covering ${claim?.coveredAcceptanceCriteria.length} criterion(s). Status: pending — no verification receipt exists yet. Run voila_run_verification, then voila_require_claim to make it a completion requirement.`,
           { claim },
         );
       },
     },
 
     {
-      name: "newfang_update_claim",
+      name: "voila_update_claim",
       label: "Update Claim",
       description:
         "Update a claim's statement, confidence, covered acceptance criteria, or known limitations. The work item it refers to cannot change, historical receipts are never rewritten, and there is no support flag to set.",
-      promptSnippet: "Update a NewFang claim's statement, coverage, or limitations",
+      promptSnippet: "Update a Voila claim's statement, coverage, or limitations",
       parameters: Type.Object(
         {
           id: Type.String({ description: "Claim ID, e.g. CLM-1" }),
@@ -133,13 +133,13 @@ export function proofTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_require_claim",
+      name: "voila_require_claim",
       label: "Require Claim",
       description:
         "Attach a claim to its work item as a completion requirement. A work item cannot be completed unless every acceptance criterion is covered by a required claim and every required claim is supported by current passing evidence. Completed work items cannot have their requirements changed.",
-      promptSnippet: "Make a NewFang claim a completion requirement of its work item",
+      promptSnippet: "Make a Voila claim a completion requirement of its work item",
       promptGuidelines: [
-        "Use newfang_require_claim so a work item's completion actually depends on the claim; do not attach weak claims that merely satisfy the gate.",
+        "Use voila_require_claim so a work item's completion actually depends on the claim; do not attach weak claims that merely satisfy the gate.",
       ],
       parameters: Type.Object(
         { workItemId: Type.String(), claimId: Type.String() },
@@ -164,11 +164,11 @@ export function proofTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_list_claims",
+      name: "voila_list_claims",
       label: "List Claims",
       description:
         "List claims with their DERIVED evidence status: pending (no receipt), supported (newest current receipt passed), unsupported (newest current receipt failed/errored/timed out), or stale (receipts exist but the repository changed since). Status is computed on read and never stored.",
-      promptSnippet: "List NewFang claims with their derived evidence status",
+      promptSnippet: "List Voila claims with their derived evidence status",
       parameters: Type.Object(
         {
           workItemId: Type.Optional(Type.String()),
@@ -211,13 +211,13 @@ export function proofTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_run_verification",
+      name: "voila_run_verification",
       label: "Run Verification",
       description:
-        "Execute one command for a claim and record an immutable verification receipt. Provide a structured executable plus an args array — NewFang runs it with no shell, so pipes, redirection, chaining, quoting, and variable expansion are unavailable and a single shell string is refused. SUCCESS OF THIS TOOL MEANS THE RECEIPT WAS RECORDED, NOT THAT VERIFICATION PASSED: a failing command produces a valid `failed` receipt. The command may have side effects; this is not a sandbox.",
-      promptSnippet: "Run a NewFang verification command for a claim and record a receipt",
+        "Execute one command for a claim and record an immutable verification receipt. Provide a structured executable plus an args array — Voila runs it with no shell, so pipes, redirection, chaining, quoting, and variable expansion are unavailable and a single shell string is refused. SUCCESS OF THIS TOOL MEANS THE RECEIPT WAS RECORDED, NOT THAT VERIFICATION PASSED: a failing command produces a valid `failed` receipt. The command may have side effects; this is not a sandbox.",
+      promptSnippet: "Run a Voila verification command for a claim and record a receipt",
       promptGuidelines: [
-        "Use newfang_run_verification with a structured executable and args to produce evidence for a claim; a passing command is evidence only for the claim it was run for.",
+        "Use voila_run_verification with a structured executable and args to produce evidence for a claim; a passing command is evidence only for the claim it was run for.",
       ],
       parameters: Type.Object(
         {
@@ -235,7 +235,7 @@ export function proofTools(): NewfangTool[] {
             }),
           ),
           timeoutMs: Type.Optional(
-            Type.Integer({ minimum: 1000, description: "Bounded timeout; capped by NewFang" }),
+            Type.Integer({ minimum: 1000, description: "Bounded timeout; capped by Voila" }),
           ),
         },
         { additionalProperties: false },
@@ -247,7 +247,7 @@ export function proofTools(): NewfangTool[] {
         const lines = [
           `Recorded ${r.id} for ${r.claimId}: ${r.result}${r.exitCode !== undefined ? ` (exit ${r.exitCode})` : ""}.`,
           `Command: ${r.executable} ${r.args.join(" ")} (cwd ${r.cwdRef}, no shell)`,
-          `Artifact: .newfang/${r.artifactRef}/ · fingerprint ${r.repositoryFingerprint.slice(0, 12)}…`,
+          `Artifact: .voila/${r.artifactRef}/ · fingerprint ${r.repositoryFingerprint.slice(0, 12)}…`,
         ];
         if (r.outputTruncated) lines.push("Captured output was truncated at the per-stream cap.");
         lines.push(
@@ -264,11 +264,11 @@ export function proofTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_get_receipt",
+      name: "voila_get_receipt",
       label: "Get Receipt",
       description:
         "Read one verification receipt: canonical metadata plus its manifest. Set includeOutput to read a bounded excerpt of the stored stdout/stderr; full output lives in the immutable artifact directory and requires deliberate inspection.",
-      promptSnippet: "Read a NewFang verification receipt",
+      promptSnippet: "Read a Voila verification receipt",
       parameters: Type.Object(
         {
           receiptId: Type.String({ description: "Receipt ID, e.g. RCP-1" }),
@@ -293,7 +293,7 @@ export function proofTools(): NewfangTool[] {
           `${receipt.id} for ${receipt.claimId}: ${receipt.result}${receipt.exitCode !== undefined ? ` (exit ${receipt.exitCode})` : ""}`,
           `Command: ${receipt.executable} ${receipt.args.join(" ")} (cwd ${receipt.cwdRef})`,
           `Ran ${receipt.startedAt} → ${receipt.finishedAt} · ${current ? "matches the current repository state" : "does NOT match the current repository state (stale evidence)"}`,
-          `Artifact: .newfang/${receipt.artifactRef}/ (stdout.txt, stderr.txt, manifest.json)`,
+          `Artifact: .voila/${receipt.artifactRef}/ (stdout.txt, stderr.txt, manifest.json)`,
         ];
         if (receipt.outputTruncated)
           lines.push("Stored output was truncated at the per-stream cap.");
@@ -317,14 +317,13 @@ export function proofTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_complete_work_item",
+      name: "voila_complete_work_item",
       label: "Complete Work Item",
       description:
         "The ONLY way to mark a work item completed. Every gate must pass: the item is not cancelled/blocked and has no blocked reason, all dependencies are completed, acceptance criteria exist, required claims exist, every acceptance criterion is covered by a required claim, every required claim is supported by a current passing receipt, and no open high-impact risk is linked. A rejection reports ALL failing gates and changes nothing.",
-      promptSnippet:
-        "Complete a NewFang work item through the protected, evidence-gated transition",
+      promptSnippet: "Complete a Voila work item through the protected, evidence-gated transition",
       promptGuidelines: [
-        "Use newfang_complete_work_item as the only way to complete work; if it rejects, fix the named gates rather than restating completion in prose.",
+        "Use voila_complete_work_item as the only way to complete work; if it rejects, fix the named gates rather than restating completion in prose.",
       ],
       parameters: Type.Object({ workItemId: Type.String() }, { additionalProperties: false }),
       async execute(_id, params, _signal, _onUpdate, ctx) {
@@ -355,13 +354,13 @@ export function proofTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_get_proof",
+      name: "voila_get_proof",
       label: "Get Proof",
       description:
         "Read the proof picture: claim counts by derived status, per-claim evidence, and — for a work item — acceptance-criterion coverage plus every completion gate with its current pass/fail state. Read-only; returns no command output.",
-      promptSnippet: "Read NewFang proof status and completion gates",
+      promptSnippet: "Read Voila proof status and completion gates",
       promptGuidelines: [
-        "Use newfang_get_proof before claiming work is done, to see which gates actually pass.",
+        "Use voila_get_proof before claiming work is done, to see which gates actually pass.",
       ],
       parameters: Type.Object(
         {

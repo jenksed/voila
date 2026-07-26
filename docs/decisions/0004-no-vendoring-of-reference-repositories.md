@@ -32,3 +32,11 @@ reuse from any source; classify each borrowed idea (inspiration / API pattern / 
 - [../research/BEN_SETUP_AUDIT.md](../research/BEN_SETUP_AUDIT.md) (license finding, element
   classification).
 - `AGENTS.md` "Reference handling".
+
+## Rename note
+
+This ADR is preserved as written. The product was later renamed from NewFang to Voila
+(Packet 4.5): the canonical state directory is now `.voila/`, the Pi adapter is
+`.pi/extensions/voila.ts`, the command is `/voila`, and the package scope under consideration is
+`@voila`. The decision recorded above is unchanged; only the names are. See
+[../migrations/NEWFANG_TO_VOILA.md](../migrations/NEWFANG_TO_VOILA.md).

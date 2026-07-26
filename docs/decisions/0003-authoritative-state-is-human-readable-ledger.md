@@ -60,3 +60,11 @@ are now locked.
   Session entries).
 - Product direction §5.5, §13.
 - Packet 1 Part A1 (this amendment).
+
+## Rename note
+
+This ADR is preserved as written. The product was later renamed from NewFang to Voila
+(Packet 4.5): the canonical state directory is now `.voila/`, the Pi adapter is
+`.pi/extensions/voila.ts`, the command is `/voila`, and the package scope under consideration is
+`@voila`. The decision recorded above is unchanged; only the names are. See
+[../migrations/NEWFANG_TO_VOILA.md](../migrations/NEWFANG_TO_VOILA.md).

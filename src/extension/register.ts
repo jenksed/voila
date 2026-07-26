@@ -27,21 +27,21 @@ import type { CommandResult } from "../commands/types.ts";
 import { loadState } from "../state/store.ts";
 import { MigrationRequiredError, StateNotFoundError } from "../state/errors.ts";
 import { homeViewLines } from "../ui/homeview.ts";
-import { newfangTools, type NewfangTool } from "../tools/index.ts";
+import { voilaTools, type VoilaTool } from "../tools/index.ts";
 import { openStewardConsole, type ConsoleUiSurface } from "../ui/steward-console/open.ts";
 
-export interface NewfangUi {
+export interface VoilaUi {
   notify(message: string, level?: "info" | "warning" | "error"): void;
   setWidget(key: string, lines: string[] | undefined): void;
   /** Present only in TUI mode (Pi `ctx.ui.custom`). */
   custom?: ConsoleUiSurface["custom"];
 }
 
-export interface NewfangCtx {
+export interface VoilaCtx {
   cwd: string;
   /** Pi run mode; `"tui"` guards terminal-only UI such as the Steward Console. */
   mode?: string;
-  ui: NewfangUi;
+  ui: VoilaUi;
 }
 
 export interface AutocompleteItem {
@@ -49,17 +49,17 @@ export interface AutocompleteItem {
   label: string;
 }
 
-export interface NewfangHost {
+export interface VoilaHost {
   registerCommand(
     name: string,
     options: {
       description?: string;
       getArgumentCompletions?: (prefix: string) => AutocompleteItem[] | null;
-      handler: (args: string, ctx: NewfangCtx) => unknown | Promise<unknown>;
+      handler: (args: string, ctx: VoilaCtx) => unknown | Promise<unknown>;
     },
   ): void;
-  registerTool(tool: NewfangTool): void;
-  on(event: string, handler: (event: unknown, ctx: NewfangCtx) => unknown | Promise<unknown>): void;
+  registerTool(tool: VoilaTool): void;
+  on(event: string, handler: (event: unknown, ctx: VoilaCtx) => unknown | Promise<unknown>): void;
 }
 
 export interface RegisterOptions {
@@ -69,7 +69,7 @@ export interface RegisterOptions {
   minNode: string;
 }
 
-export const HOME_WIDGET_KEY = "newfang-home";
+export const HOME_WIDGET_KEY = "voila-home";
 export const SUBCOMMANDS = [
   "home",
   "init",
@@ -90,11 +90,11 @@ export const SUBCOMMANDS = [
   "doctor",
 ] as const;
 
-export function registerNewfang(host: NewfangHost, options: RegisterOptions): void {
-  for (const tool of newfangTools()) host.registerTool(tool);
+export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
+  for (const tool of voilaTools()) host.registerTool(tool);
 
-  host.registerCommand("newfang", {
-    description: `NewFang project steward: ${SUBCOMMANDS.join(" | ")}`,
+  host.registerCommand("voila", {
+    description: `Voila project steward: ${SUBCOMMANDS.join(" | ")}`,
     getArgumentCompletions: (prefix) => {
       const items = SUBCOMMANDS.filter((s) => s.startsWith(prefix)).map((s) => ({
         value: s,
@@ -154,11 +154,11 @@ export function registerNewfang(host: NewfangHost, options: RegisterOptions): vo
     await restoreHomeView(ctx);
   });
 
-  // Inject compact, deterministic NewFang context before agent work. Read-only: never mutates state.
+  // Inject compact, deterministic Voila context before agent work. Read-only: never mutates state.
   host.on("before_agent_start", async (_event, ctx) => {
     try {
       const content = await assembleContext(ctx.cwd);
-      return { message: { customType: "newfang-context", content, display: false } };
+      return { message: { customType: "voila-context", content, display: false } };
     } catch {
       return undefined;
     }
@@ -177,8 +177,8 @@ function stripQuotes(text: string): string {
   return t;
 }
 
-/** Route `/newfang intake …` subcommands. Apply requires the explicit `confirm` token. */
-async function runIntakeSub(ctx: NewfangCtx, args: string[]): Promise<CommandResult> {
+/** Route `/voila intake …` subcommands. Apply requires the explicit `confirm` token. */
+async function runIntakeSub(ctx: VoilaCtx, args: string[]): Promise<CommandResult> {
   const sub = args[0];
   if (!sub) return runIntakeStatus(ctx.cwd);
   switch (sub) {
@@ -212,16 +212,16 @@ async function runIntakeSub(ctx: NewfangCtx, args: string[]): Promise<CommandRes
   }
 }
 
-async function renderResult(ctx: NewfangCtx, result: CommandResult): Promise<void> {
+async function renderResult(ctx: VoilaCtx, result: CommandResult): Promise<void> {
   ctx.ui.notify(result.lines.join("\n"), result.level);
   await restoreHomeView(ctx);
 }
 
 /**
  * Open the Steward Console. `custom()` is TUI-only in Pi, so non-TUI modes fall back to the compact
- * `/newfang status` output instead of failing.
+ * `/voila status` output instead of failing.
  */
-async function openConsole(ctx: NewfangCtx, piVersion: string): Promise<void> {
+async function openConsole(ctx: VoilaCtx, piVersion: string): Promise<void> {
   const custom = ctx.ui.custom;
   if (!custom || (ctx.mode !== undefined && ctx.mode !== "tui")) {
     ctx.ui.notify(
@@ -241,7 +241,7 @@ async function openConsole(ctx: NewfangCtx, piVersion: string): Promise<void> {
   await restoreHomeView(ctx);
 }
 
-export async function restoreHomeView(ctx: NewfangCtx): Promise<void> {
+export async function restoreHomeView(ctx: VoilaCtx): Promise<void> {
   let state: ProjectState | null = null;
   try {
     state = await loadState(ctx.cwd);
@@ -251,11 +251,11 @@ export async function restoreHomeView(ctx: NewfangCtx): Promise<void> {
       return;
     }
     if (error instanceof MigrationRequiredError) {
-      ctx.ui.setWidget(HOME_WIDGET_KEY, ["NewFang · migration required — run /newfang migrate"]);
+      ctx.ui.setWidget(HOME_WIDGET_KEY, ["Voila · migration required — run /voila migrate"]);
       return;
     }
-    ctx.ui.notify(`NewFang state problem: ${(error as Error).message}`, "error");
-    ctx.ui.setWidget(HOME_WIDGET_KEY, ["NewFang · state error — run /newfang doctor"]);
+    ctx.ui.notify(`Voila state problem: ${(error as Error).message}`, "error");
+    ctx.ui.setWidget(HOME_WIDGET_KEY, ["Voila · state error — run /voila doctor"]);
     return;
   }
   // Only pay for a git fingerprint when there is proof to warn about.

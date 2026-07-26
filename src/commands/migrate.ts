@@ -1,4 +1,4 @@
-// `/newfang migrate` logic. Inspect by default; apply only with { apply: true }.
+// `/voila migrate` logic. Inspect by default; apply only with { apply: true }.
 
 import { runMigration } from "../state/migration.ts";
 import {
@@ -29,11 +29,11 @@ export async function runMigrate(root: string, apply: boolean): Promise<CommandR
       `Backup location: ${report.backupLocation}`,
       `Safe and supported: ${report.safe ? "yes" : "no"}`,
     ];
-    if (!apply) lines.push("Run /newfang migrate --apply to apply the migration.");
+    if (!apply) lines.push("Run /voila migrate --apply to apply the migration.");
     return { level: "info", lines };
   } catch (error) {
     if (error instanceof StateNotFoundError) {
-      return { level: "warning", lines: ["No NewFang project here. Run /newfang init."] };
+      return { level: "warning", lines: ["No Voila project here. Run /voila init."] };
     }
     if (error instanceof UnknownSchemaVersionError || error instanceof StateValidationError) {
       return { level: "error", lines: [`Cannot migrate: ${(error as Error).message}`] };

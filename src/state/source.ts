@@ -4,16 +4,16 @@
 import { createHash } from "node:crypto";
 import { realpath, stat } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import { NewfangStateError } from "./errors.ts";
+import { VoilaStateError } from "./errors.ts";
 
-export class UnsafeSourcePathError extends NewfangStateError {
+export class UnsafeSourcePathError extends VoilaStateError {
   constructor(message: string) {
     super(message);
     this.name = "UnsafeSourcePathError";
   }
 }
 
-export class SourceNotFoundError extends NewfangStateError {
+export class SourceNotFoundError extends VoilaStateError {
   constructor(message: string) {
     super(message);
     this.name = "SourceNotFoundError";

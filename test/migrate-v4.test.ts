@@ -19,7 +19,7 @@ import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import { V3_FIXTURE } from "./helpers.ts";
 
 async function seed(raw: unknown): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-mig4-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-mig4-"));
   const paths = statePaths(root);
   await mkdir(paths.dir, { recursive: true });
   await writeFile(paths.projectJson, `${JSON.stringify(raw, null, 2)}\n`, "utf8");
@@ -174,7 +174,7 @@ test("the v3 validator rejects non-v3 input and accepts the fixture", () => {
 });
 
 // The fixture below is the REAL integrated Packet 3 canonical state (the schema-v3
-// .newfang/project.json at the main merge commit 3169878), not a synthetic envelope. It is the
+// .voila/project.json at the main merge commit 3169878), not a synthetic envelope. It is the
 // state this migration actually has to survive, including the full intake and review history.
 const INTEGRATED_V3 = JSON.parse(
   await readFile(new URL("./fixtures/integrated-v3-project.json", import.meta.url), "utf8"),

@@ -128,7 +128,7 @@ export function createWorkItem(
     : "backlog";
   if (status === "completed") {
     throw new ProjectOperationError(
-      "Work items cannot be created as completed; completion is reserved for newfang_complete_work_item.",
+      "Work items cannot be created as completed; completion is reserved for voila_complete_work_item.",
     );
   }
   const dependsOn = input.dependsOn ?? [];
@@ -193,7 +193,7 @@ export function updateWorkItem(
     const status = requireEnum<WorkItemStatus>(input.status, WORK_ITEM_STATUSES, "status");
     if (status === "completed") {
       throw new ProjectOperationError(
-        "Generic updates cannot mark a work item completed; that transition is reserved for newfang_complete_work_item.",
+        "Generic updates cannot mark a work item completed; that transition is reserved for voila_complete_work_item.",
       );
     }
     next.status = status;

@@ -1,8 +1,8 @@
 {
-  "name": "newfang",
+  "name": "voila",
   "version": "0.0.1",
   "private": true,
-  "description": "Personal development operating system built on the Pi coding-agent harness.",
+  "description": "Voila — personal development operating system built on the Pi coding-agent harness.",
   "type": "module",
   "engines": {
     "node": ">=22.19.0"

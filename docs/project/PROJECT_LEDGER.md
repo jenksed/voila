@@ -1,15 +1,15 @@
 # Project Ledger
 
-Manual project ledger for the NewFang bootstrap period. This is a **precursor** to NewFang-managed
+Manual project ledger for the Voila bootstrap period. This is a **precursor** to Voila-managed
 state; its format is intentionally provisional and must not be treated as the permanent runtime
-schema (that is a Phase 2 prototype decision). Update this file by hand until NewFang manages it.
+schema (that is a Phase 2 prototype decision). Update this file by hand until Voila manages it.
 
 - **Maintained by**: bootstrap (Claude-driven) until the self-hosting gate.
 - **Last updated**: 2026-07-24.
 
 ## Objective
 
-Build NewFang: a personal development operating system on the Pi coding-agent harness that maintains
+Build Voila: a personal development operating system on the Pi coding-agent harness that maintains
 ownership from intent through implementation, verification, and delivery. Canonical direction:
 [../product/PRODUCT_DIRECTION.md](../product/PRODUCT_DIRECTION.md).
 
@@ -19,10 +19,10 @@ Phase 0 and Packets 1, 2, 2.5, 3 complete. **Packet 4 (claims, verification rece
 completion) — complete** as of 2026-07-25 on `feat/proof-engine` (not pushed): schema v4 with an
 explicit `3 → 4` migration; claims bound to exact acceptance-criterion text with no support flag;
 executable verification with no shell, recorded as immutable receipts with atomic promotion; a
-deterministic repository fingerprint driving evidence freshness; and `newfang_complete_work_item` as
+deterministic repository fingerprint driving evidence freshness; and `voila_complete_work_item` as
 the only path to `completed`, reporting every failing gate. 360/360 tests pass.
 
-**NewFang can now mark work complete — and refuses to.** On this repository NF-3's proof gates all
+**Voila can now mark work complete — and refuses to.** On this repository NF-3's proof gates all
 pass (CLM-1 supported by RCP-2), yet completion is correctly refused because NF-2 is not complete.
 **Zero work items are marked completed.**
 
@@ -45,7 +45,7 @@ is integrated over `main`.
 
 ### State-of-record note (dual state during transition)
 
-`.newfang/` is now NewFang's **runtime operational state** (authoritative `project.json`: backlog,
+`.voila/` is now Voila's **runtime operational state** (authoritative `project.json`: backlog,
 decisions, assumptions, risks). This hand-maintained Markdown ledger remains the **bootstrap and
 narrative record** — packet history, evidence, and durable rationale — until a later consolidation
 decision reconciles the two. Neither silently overwrites the other.
@@ -60,15 +60,15 @@ decision reconciles the two. Neither silently overwrites the other.
 | D4 | Do not vendor or reuse reference-repo code; reimplement independently (Ben's setup has no license). | [0004](../decisions/0004-no-vendoring-of-reference-repositories.md) |
 | D5 | Roles are product concepts / skills / prompt templates in the MVP, not runtime agents. | [0005](../decisions/0005-roles-as-skills-not-runtime-agents.md) |
 | D6 | Sandboxing is optional and off by default; not an MVP prerequisite. | [0006](../decisions/0006-sandboxing-optional-not-mvp-prerequisite.md) |
-| D7 | Canonical state lives in `.newfang/` (project.json authoritative, events.jsonl append-only, receipts/, generated views/PROJECT_STATUS.md); session entries are a non-authoritative cache; canonical loads first on resume; writes atomic. | [0003 (amended)](../decisions/0003-authoritative-state-is-human-readable-ledger.md) |
-| D8 | Thin Pi adapter (`.pi/extensions/newfang.ts`); production logic in modular, package-ready `src/`. | [0007](../decisions/0007-thin-adapter-modular-src.md) |
+| D7 | Canonical state lives in `.voila/` (project.json authoritative, events.jsonl append-only, receipts/, generated views/PROJECT_STATUS.md); session entries are a non-authoritative cache; canonical loads first on resume; writes atomic. | [0003 (amended)](../decisions/0003-authoritative-state-is-human-readable-ledger.md) |
+| D8 | Thin Pi adapter (`.pi/extensions/voila.ts`); production logic in modular, package-ready `src/`. | [0007](../decisions/0007-thin-adapter-modular-src.md) |
 | D9 | Pinned foundation: `@earendil-works/pi-coding-agent@0.82.0` (engines node >=22.19.0), Node `22.23.1`. | [0001 (amended)](../decisions/0001-adopt-pi-as-harness-foundation.md) |
-| D10 | Completion gate = rejecting the explicit `newfang_complete_work_item` state transition unless a required receipt passes; NewFang guarantees `project.json`, not model prose. | Packet 1 A3 |
+| D10 | Completion gate = rejecting the explicit `voila_complete_work_item` state transition unless a required receipt passes; Voila guarantees `project.json`, not model prose. | Packet 1 A3 |
 | D11 | Approval bundles use a proactive execution contract (declare phase + operation classes up front; enforce by interception; expire at boundary). Delegation is NOT required for the first self-hosting transition. | [self-hosting plan](../plans/SELF_HOSTING_ACCEPTANCE_PROJECT.md), Packet 1 A4/A5 |
 | D12 | Focus is a pointer, not a status: `focusWorkItemId` names the item receiving attention and is independent of `in_progress`. Schema v2 was amended in place (not v3) because v2 was unmerged. | Packet 2.5 A1 |
 | D13 | Steward Console = focus-first Delivery Desk hybrid (Focus Board primacy, Delivery Desk organization, Radar ideas folded into Attention/Work). Proof/Delivery rail is a reserved, unimplemented insertion point. | [design](../design/STEWARD_CONSOLE.md) |
-| D14 | The model interprets; NewFang enforces; the user accepts. Interpretation is never applied to canonical truth without explicit review and confirmation. | [intake design](../design/PLANNING_INTAKE.md), DEC-7/DEC-8 |
-| D15 | Intake sources are preserved byte-for-byte with SHA-256 in `.newfang/intakes/<id>/source.md`, written once; a revised interpretation is a new draft revision, never a source edit. | [intake design](../design/PLANNING_INTAKE.md) |
+| D14 | The model interprets; Voila enforces; the user accepts. Interpretation is never applied to canonical truth without explicit review and confirmation. | [intake design](../design/PLANNING_INTAKE.md), DEC-7/DEC-8 |
+| D15 | Intake sources are preserved byte-for-byte with SHA-256 in `.voila/intakes/<id>/source.md`, written once; a revised interpretation is a new draft revision, never a source edit. | [intake design](../design/PLANNING_INTAKE.md) |
 | D16 | Only explicit `proposedWorkItems` become work items; requirements do not auto-convert. Exact duplicates are skipped, likely duplicates are surfaced, never merged. | [intake design](../design/PLANNING_INTAKE.md) |
 | D17 | Orientation is a bounded, provenance-backed snapshot; staleness fires on HEAD movement, instruction-file change, or explicit refresh — never on a dirty worktree. | [orientation design](../design/REPOSITORY_ORIENTATION.md) |
 | D18 | Commands are recorded as findings with an explicit basis (`declared_in_documentation` / `observed_in_session` / `candidate`); `observedResult` requires actual execution, and nothing is labeled "verified" until Phase 4 receipts exist. | [orientation design](../design/REPOSITORY_ORIENTATION.md) |
@@ -76,32 +76,32 @@ decision reconciles the two. Neither silently overwrites the other.
 | D20 | Claim support is **derived, never stored**: there is no `supported` flag on the record and no tool parameter that sets one. Status is recomputed on every read from receipts plus the current repository fingerprint. | [proof design](../design/PROOF_ENGINE.md) |
 | D21 | A claim's `coveredAcceptanceCriteria` must match the work item's criterion text **exactly**; paraphrases are refused. A claim cannot invent a criterion. | [proof design](../design/PROOF_ENGINE.md) |
 | D22 | Verification takes a structured `executable` + `args` and runs with `shell: false`. A single arbitrary shell string is refused. **Tool success means the receipt was recorded, not that verification passed.** Execution is bounded but **not sandboxed**. | [proof design](../design/PROOF_ENGINE.md) |
-| D23 | The repository fingerprint **excludes everything under `.newfang/`**, so creating a receipt cannot invalidate its own fingerprint. Accepted cost: a change confined to `.newfang/` does not invalidate evidence. | [proof design](../design/PROOF_ENGINE.md) |
-| D24 | Receipt artifacts are written to a NewFang-owned staging directory and **atomically promoted**, then linked canonically — so a failed canonical update never leaves a linked partial receipt. Artifacts are immutable and never overwritten. | [proof design](../design/PROOF_ENGINE.md) |
+| D23 | The repository fingerprint **excludes everything under `.voila/`**, so creating a receipt cannot invalidate its own fingerprint. Accepted cost: a change confined to `.voila/` does not invalidate evidence. | [proof design](../design/PROOF_ENGINE.md) |
+| D24 | Receipt artifacts are written to a Voila-owned staging directory and **atomically promoted**, then linked canonically — so a failed canonical update never leaves a linked partial receipt. Artifacts are immutable and never overwritten. | [proof design](../design/PROOF_ENGINE.md) |
 | D25 | Captured output has machine-specific prefixes normalized (`repository root → <repo>`, `home → ~`) before hashing, so committed receipts leak no username and stay portable. Recorded in the manifest as `pathsNormalized`. | Packet 4 A3 (defect found by dogfooding) |
-| D26 | `newfang_complete_work_item` is the only path to `completed` and reports **every** failing gate, not the first. A rejection leaves canonical bytes byte-identical with no event appended. The guarantee covers NewFang's state transition only — not model prose, and not a hand-edited `project.json`. | [proof design](../design/PROOF_ENGINE.md) |
+| D26 | `voila_complete_work_item` is the only path to `completed` and reports **every** failing gate, not the first. A rejection leaves canonical bytes byte-identical with no event appended. The guarantee covers Voila's state transition only — not model prose, and not a hand-edited `project.json`. | [proof design](../design/PROOF_ENGINE.md) |
 | D27 | Completed work whose current evidence no longer revalidates is reported by doctor as a **WARNING**, never reverted. Silently un-completing work would be worse than a stale record. | [proof design](../design/PROOF_ENGINE.md) |
 
 ## Assumptions (reversible unless noted)
 
 - A1: Pi will be installed before Phase 1; it is **not** installed at Phase 0. (See "Blockers/notes".)
-- A2: Pi surfaces NewFang uses are documented for `0.80.3` and must be verified against the pinned
+- A2: Pi surfaces Voila uses are documented for `0.80.3` and must be verified against the pinned
   `0.82.0`; no claim of stability across arbitrary versions (version-sensitive). (Corrected, Packet 1
   A6.)
 - A3: Initial target is a single macOS/Apple Silicon machine; remote execution deferred.
-- A4: A model provider is configured manually by Joshua via `/login`; NewFang never does this. Not
+- A4: A model provider is configured manually by Joshua via `/login`; Voila never does this. Not
   required for Packet 1's non-model paths.
 - A5: `docs/project/PROJECT_LEDGER.md` is the hand-maintained bootstrap ledger; the runtime canonical
-  store is `.newfang/` (locked, ADR-0003 amended). (Resolves former Q1.)
+  store is `.voila/` (locked, ADR-0003 amended). (Resolves former Q1.)
 
 ## Open questions (not decisions)
 
-- Q1: RESOLVED (Packet 1 A1/ADR-0003): canonical state is `.newfang/` with locked responsibilities.
+- Q1: RESOLVED (Packet 1 A1/ADR-0003): canonical state is `.voila/` with locked responsibilities.
 - Q2: Is subprocess subagent delegation reliable enough for one task? Prototype in Phase 5. Note:
   delegation is NOT required for the first self-hosting transition (Packet 1 A5); direct execution is
   a first-class path.
 - Q3: Minimal home-view composition (which modules, what density). Resolve in Phase 1–3 prototype.
-- Q4: Whether NewFang needs a custom question tool or the native `ask_question` suffices. Resolve
+- Q4: Whether Voila needs a custom question tool or the native `ask_question` suffices. Resolve
   after checking the installed `ask_question` shape.
 - Q5: Model-routing table and cost-visibility module design. Deferred (post-MVP).
 
@@ -114,7 +114,7 @@ decision reconciles the two. Neither silently overwrites the other.
 - R3: Terminal UI overload. Mitigation: minimal home view first, progressive modules.
 - R4: Delegation unreliability. Mitigation: start with one bounded task; fall back to direct execution.
 - R5: Scope creep into project-management ceremony. Mitigation: progressive rigor + MVP non-goals.
-- R6: Single-writer assumption for `.newfang/` — concurrent writers could race. Mitigation: atomic
+- R6: Single-writer assumption for `.voila/` — concurrent writers could race. Mitigation: atomic
   temp+rename writes now; add locking before any multi-writer/background execution.
 - R7: Pi loads extensions via jiti, where `require.resolve`/`import.meta` behavior differs from plain
   Node. Mitigation: filesystem-walk version resolution (fixed in W4); prefer fs-based resolution over
@@ -147,10 +147,10 @@ decision reconciles the two. Neither silently overwrites the other.
   `requiredClaimIds: []` defaults so migration invents no proof. Built the pure proof domain (claims
   with exact criterion matching, derived four-state evaluation, criterion coverage, and an eleven-gate
   completion assessment that reports every failure); the repository fingerprint (git HEAD + tracked
-  diff + staged diff + sorted untracked hashes, excluding `.newfang/`); receipt execution and
+  diff + staged diff + sorted untracked hashes, excluding `.voila/`); receipt execution and
   immutable artifacts (`shell: false`, bounded timeout, ANSI stripping, path normalization, 64 KiB
   per-stream caps, sha256 manifests, staging + atomic promotion, link only after the artifact exists);
-  8 Pi tools (27 total); `/newfang claims|proof|verify|complete`; the Proof console view as the third
+  8 Pi tools (27 total); `/voila claims|proof|verify|complete`; the Proof console view as the third
   principal view with claim/receipt/gate detail views; one compact widget warning; proof-aware context
   injection and Steward skill; and 14 new read-only doctor diagnostics. 360/360 tests pass (169 new).
   Two real defects were caught by the new tests and fixed: the receipt counter never advanced, and
@@ -169,16 +169,16 @@ decision reconciles the two. Neither silently overwrites the other.
 - W2 (2026-07-24): Phase 0 bootstrap — repository initialized; product direction preserved; Pi and
   Ben audits, capability matrix, architecture options + recommendation, MVP vertical slice,
   self-hosting project, phased plan, this ledger, and ADRs 0001–0006 authored.
-- W3 (2026-07-24): Packet 1 Part A — locked canonical `.newfang/` state model (ADR-0003 amended);
+- W3 (2026-07-24): Packet 1 Part A — locked canonical `.voila/` state model (ADR-0003 amended);
   added ADR-0007 (thin adapter + modular `src/`); pinned foundation (ADR-0001 amended, D9); corrected
   completion-gate to a state-transition rejection (A3); corrected approval bundles to a proactive
   execution contract and made delegation non-blocking for self-hosting (A4/A5); replaced
   broad-stability version language with version-sensitive language (A6); added an external-effects
-  policy to AGENTS.md (A7). Committed as `docs: establish NewFang product and architecture baseline`.
+  policy to AGENTS.md (A7). Committed as `docs: establish Voila product and architecture baseline`.
 - W4 (2026-07-24): Packet 1 Part B–E — pinned Node `22.23.1` (`mise.toml`) and installed
   `@earendil-works/pi-coding-agent@0.82.0` project-locally; built the thin adapter
-  (`.pi/extensions/newfang.ts`) + modular `src/` (domain, state store, commands, ui, extension) +
-  `/newfang init|status|doctor` + minimal home view; 31 unit/integration tests pass; smoke-verified
+  (`.pi/extensions/voila.ts`) + modular `src/` (domain, state store, commands, ui, extension) +
+  `/voila init|status|doctor` + minimal home view; 31 unit/integration tests pass; smoke-verified
   through real Pi RPC (init/status/doctor + restart persistence); wrote `docs/DEVELOPMENT.md` and the
   verification record. Fixed a doctor Pi-version resolver that failed under Pi's jiti loader.
 - W8 (2026-07-25): Packet 3 closure — replaced `verifiedCommands`/`candidateCommands` with
@@ -195,7 +195,7 @@ decision reconciles the two. Neither silently overwrites the other.
   preservation with SHA-256 and path-safety (absolute/traversal/symlink-escape rejection); the intake
   draft model (12 categories, mandatory provenance, explicit model inferences, conflicts, proposed
   work); review-gated, idempotent, duplicate-safe apply; generated `UNDERSTANDING.md` and
-  `PROJECT_BRIEF.md`; bounded orientation with staleness; 8 new Pi tools (19 total); `/newfang intake
+  `PROJECT_BRIEF.md`; bounded orientation with staleness; 8 new Pi tools (19 total); `/voila intake
   |orient|brief`; the Understanding Check in the Steward Console; a real Project Steward skill with an
   orientation playbook; `before_agent_start` context injection; doctor v3 checks. Dogfooded INT-1 from
   `docs/plans/PHASE_3_INTAKE_BRIEF.md` → DEC-7/8/9, ASM-3, RSK-5, NF-8 with **no duplication** of
@@ -203,21 +203,21 @@ decision reconciles the two. Neither silently overwrites the other.
   reporting the wrong error, a context-clamp off-by-one, a doctor version label).
   ([record](../verification/PACKET_3_INTAKE_ORIENTATION.md))
 - W6 (2026-07-24): Packet 2.5 — renamed `activeWorkItemId` -> `focusWorkItemId` with focus/status
-  separation; added canonical `nextActionRationale`; added `newfang_set_focus` + `/newfang focus`;
-  added typed lifecycle update tools (`newfang_update_decision|assumption|risk`) with transition
+  separation; added canonical `nextActionRationale`; added `voila_set_focus` + `/voila focus`;
+  added typed lifecycle update tools (`voila_update_decision|assumption|risk`) with transition
   matrices, supersession-cycle rejection, and close-requires-resolution; designed and built the
-  Steward Console (`/newfang home`) with pure model/layout/render/navigation layers, three views,
+  Steward Console (`/voila home`) with pure model/layout/render/navigation layers, three views,
   detail views, help, reload, and wide/standard/compact layouts using Pi theme tokens; reshaped the
   ambient widget; reseeded dogfooded state honestly (NF-1 stays `in_progress`; nothing completed).
   95/95 tests pass; two real rendering defects were caught by tests and fixed. Interactive TUI check
   is pending ([record](../verification/PACKET_2_5_STEWARD_CONSOLE.md)).
 - W5 (2026-07-24): Packet 2 — refactored `updateState` to an immutable reducer contract; added schema
-  v2 + explicit 1→2 migration (backup, atomic replace, `/newfang migrate [--apply]`); added the
+  v2 + explicit 1→2 migration (backup, atomic replace, `/voila migrate [--apply]`); added the
   compact project-operations model (work items, decisions, assumptions, risks) with `NF/DEC/ASM/RSK`
   IDs, dependency/cycle validation, and completion protection; added 7 Pi tools and
-  `/newfang backlog|decisions|assumptions|risks|migrate`; extended doctor with integrity checks;
+  `/voila backlog|decisions|assumptions|risks|migrate`; extended doctor with integrity checks;
   added minimal GitHub CI (`.github/workflows/ci.yml`); added `typebox@1.1.38`; dogfooded the repo's
-  own `.newfang/` state (7 items, 5 decisions, 4 risks, 2 assumptions). 59/59 tests pass; smoke +
+  own `.voila/` state (7 items, 5 decisions, 4 risks, 2 assumptions). 59/59 tests pass; smoke +
   verification record ([../verification/PACKET_2_PROJECT_OPERATIONS.md](../verification/PACKET_2_PROJECT_OPERATIONS.md)).
 
 ## Blockers / notes
@@ -233,7 +233,7 @@ decision reconciles the two. Neither silently overwrites the other.
 
 Packet 4 is committed on `feat/proof-engine` (not pushed). Because a commit moves `HEAD`, the
 receipts committed with it read `stale` immediately afterwards — by design. The first action is
-therefore to **re-run `/newfang verify CLM-1 -- mise exec -- npm run verify`** on the committed tree
+therefore to **re-run `/voila verify CLM-1 -- mise exec -- npm run verify`** on the committed tree
 so CLM-1 has current evidence again.
 
 The rest of the queue is unchanged and still gated on Joshua — Packet 4 did not remove any of it:

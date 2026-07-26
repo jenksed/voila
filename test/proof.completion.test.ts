@@ -26,7 +26,7 @@ import {
 } from "../src/domain/proof.ts";
 import { initState, loadState, updateState, validateProjectState } from "../src/state/store.ts";
 import { statePaths } from "../src/state/paths.ts";
-import { newfangTools } from "../src/tools/index.ts";
+import { voilaTools } from "../src/tools/index.ts";
 import type { ProjectState, VerificationReceiptRecord } from "../src/domain/types.ts";
 
 const T = "2026-07-25T00:00:00.000Z";
@@ -372,7 +372,7 @@ test("completing a non-focused item leaves focus alone", () => {
 // --- Store-level guarantees ---
 
 async function seededRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-complete-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-complete-"));
   await initState(root, { displayName: "gate-demo" });
   await updateState(root, () => ({
     ...readyState(),
@@ -443,22 +443,22 @@ test("no alternative path reaches completed: generic update and creation both re
   );
 });
 
-test("no tool other than newfang_complete_work_item can set status completed", () => {
-  const tools = newfangTools();
-  const completers = tools.filter((t) => t.name === "newfang_complete_work_item");
+test("no tool other than voila_complete_work_item can set status completed", () => {
+  const tools = voilaTools();
+  const completers = tools.filter((t) => t.name === "voila_complete_work_item");
   assert.equal(completers.length, 1, "exactly one completion tool exists");
 
   // Every other tool that accepts a `status` enum must exclude "completed".
   for (const tool of tools) {
-    if (tool.name === "newfang_complete_work_item") continue;
+    if (tool.name === "voila_complete_work_item") continue;
     const schema = JSON.stringify(tool.parameters);
     if (!schema.includes('"status"')) continue;
     const properties =
       (tool.parameters as { properties?: Record<string, unknown> }).properties ?? {};
     const status = properties.status as { enum?: string[] } | undefined;
     if (!status?.enum) continue;
-    // newfang_list_work_items may FILTER by completed; it cannot set it.
-    if (tool.name === "newfang_list_work_items") continue;
+    // voila_list_work_items may FILTER by completed; it cannot set it.
+    if (tool.name === "voila_list_work_items") continue;
     assert.equal(
       status.enum.includes("completed"),
       false,
@@ -468,7 +468,7 @@ test("no tool other than newfang_complete_work_item can set status completed", (
 });
 
 test("hand-authored completed state still validates: the gate protects transitions, not files", () => {
-  // Honest boundary: a completed item written directly into project.json is schema-valid. NewFang
+  // Honest boundary: a completed item written directly into project.json is schema-valid. Voila
   // guarantees its own state TRANSITION, not that a file was never edited by hand.
   const s = readyState();
   const handAuthored = {

@@ -30,21 +30,21 @@ function git(root: string, args: string[]): string {
 }
 
 /** A temp git repository with one commit. */
-async function tempRepo(prefix = "newfang-fp-"): Promise<string> {
+async function tempRepo(prefix = "voila-fp-"): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), prefix));
   git(root, ["init", "-q"]);
   git(root, ["config", "user.email", "test@example.invalid"]);
-  git(root, ["config", "user.name", "NewFang Test"]);
+  git(root, ["config", "user.name", "Voila Test"]);
   git(root, ["config", "commit.gpgsign", "false"]);
   await writeFile(join(root, "tracked.txt"), "original\n", "utf8");
-  await writeFile(join(root, ".gitignore"), "ignored/\n.newfang/backups/\n", "utf8");
+  await writeFile(join(root, ".gitignore"), "ignored/\n.voila/backups/\n", "utf8");
   git(root, ["add", "-A"]);
   git(root, ["commit", "-q", "-m", "initial"]);
   return root;
 }
 
 test("a non-git directory fails clearly instead of guessing", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-nogit-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-nogit-"));
   await assert.rejects(() => repositoryFingerprint(root), FingerprintUnavailableError);
   await assert.rejects(() => repositoryFingerprint(root), /not inside a git work tree/);
   // The best-effort variant degrades to null for read-only surfaces.
@@ -151,12 +151,12 @@ test("untracked files are order-independent: the digest depends on sorted paths 
 });
 
 test("the fingerprint does not depend on the repository's absolute path", async () => {
-  const source = await tempRepo("newfang-fp-src-");
+  const source = await tempRepo("voila-fp-src-");
   await writeFile(join(source, "untracked.txt"), "same everywhere\n", "utf8");
   const before = await repositoryFingerprint(source);
 
   // Copy the whole repository (including .git) to a different absolute location.
-  const parent = await mkdtemp(join(tmpdir(), "newfang-fp-dst-"));
+  const parent = await mkdtemp(join(tmpdir(), "voila-fp-dst-"));
   const destination = join(parent, "relocated-with-a-different-name");
   await cp(source, destination, { recursive: true });
 
@@ -164,27 +164,27 @@ test("the fingerprint does not depend on the repository's absolute path", async 
   assert.equal(after.value, before.value, "no machine-specific absolute path enters the digest");
 });
 
-test("everything under .newfang/ is excluded, so NewFang bookkeeping cannot invalidate evidence", async () => {
+test("everything under .voila/ is excluded, so Voila bookkeeping cannot invalidate evidence", async () => {
   const root = await tempRepo();
   const original = await repositoryFingerprint(root);
 
   await initState(root, { displayName: "fp-demo" });
   const afterInit = await repositoryFingerprint(root);
-  assert.equal(afterInit.value, original.value, "creating .newfang/ does not change the digest");
+  assert.equal(afterInit.value, original.value, "creating .voila/ does not change the digest");
 
   await updateState(root, (cur) => createWorkItem(cur, { kind: "task", title: "A" }, "T"));
   const afterUpdate = await repositoryFingerprint(root);
   assert.equal(afterUpdate.value, original.value, "canonical writes do not change the digest");
 
-  // A tracked .newfang file is likewise ignored.
-  git(root, ["add", "-f", ".newfang/project.json"]);
-  git(root, ["commit", "-q", "-m", "track newfang state"]);
+  // A tracked .voila file is likewise ignored.
+  git(root, ["add", "-f", ".voila/project.json"]);
+  git(root, ["commit", "-q", "-m", "track voila state"]);
   await updateState(root, (cur) => ({ ...cur, health: "green" as const }));
   const afterTrackedChange = await repositoryFingerprint(root);
-  // HEAD moved, so the value differs from `original`; what matters is that further .newfang writes
+  // HEAD moved, so the value differs from `original`; what matters is that further .voila writes
   // do not move it again.
   const again = await repositoryFingerprint(root);
-  assert.equal(again.value, afterTrackedChange.value, "tracked .newfang diffs are excluded");
+  assert.equal(again.value, afterTrackedChange.value, "tracked .voila diffs are excluded");
 });
 
 test("creating a receipt does not invalidate its own fingerprint", async () => {

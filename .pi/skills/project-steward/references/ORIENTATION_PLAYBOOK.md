@@ -16,10 +16,10 @@ exhaustive scanning is a failure mode, not thoroughness.
 Read in this order and stop early when the questions are answered.
 
 1. **Instructions** — `AGENTS.md`, then `CLAUDE.md` (or equivalents). These override your defaults.
-   Record a sha256 for each; NewFang uses it for staleness detection.
+   Record a sha256 for each; Voila uses it for staleness detection.
 2. **README** — purpose and status.
-3. **Canonical NewFang state** — `newfang_get_project_context`, and
-   `.newfang/briefs/PROJECT_BRIEF.md` if present. This is usually the fastest route to "what is in
+3. **Canonical Voila state** — `voila_get_project_context`, and
+   `.voila/briefs/PROJECT_BRIEF.md` if present. This is usually the fastest route to "what is in
    flight" and "what is next".
 4. **Package manifest** — `package.json` (or `pyproject.toml`, `Cargo.toml`, `go.mod`). Extract the
    real script names for build/test/lint/verify. Record these as `commands` with
@@ -46,7 +46,7 @@ Read in this order and stop early when the questions are answered.
 
 ## What to record
 
-Use `newfang_record_orientation`:
+Use `voila_record_orientation`:
 
 - `purpose` — one or two sentences.
 - `instructionFiles` — path + sha256 (+ short note).
@@ -62,4 +62,4 @@ Use `newfang_record_orientation`:
 - No web access unless the user explicitly asks for research.
 - No secrets, environment-variable values, absolute private paths, or full command logs.
 - No claims that a command works unless you saw it declared (cite it) or ran it (record the result).
-- No use of the word "verified" for commands; NewFang has no verification receipts yet.
+- No use of the word "verified" for commands; Voila has no verification receipts yet.

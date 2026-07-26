@@ -1,9 +1,9 @@
 // Typed, actionable errors for the canonical state store.
 
-export class NewfangStateError extends Error {}
+export class VoilaStateError extends Error {}
 
-/** No `.newfang/project.json` exists. Normal before init. */
-export class StateNotFoundError extends NewfangStateError {
+/** No `.voila/project.json` exists. Normal before init. */
+export class StateNotFoundError extends VoilaStateError {
   constructor(message: string) {
     super(message);
     this.name = "StateNotFoundError";
@@ -11,7 +11,7 @@ export class StateNotFoundError extends NewfangStateError {
 }
 
 /** Init refused because canonical state already exists (no destructive overwrite). */
-export class StateExistsError extends NewfangStateError {
+export class StateExistsError extends VoilaStateError {
   constructor(message: string) {
     super(message);
     this.name = "StateExistsError";
@@ -19,7 +19,7 @@ export class StateExistsError extends NewfangStateError {
 }
 
 /** Canonical state is malformed or has invalid/missing fields. */
-export class StateValidationError extends NewfangStateError {
+export class StateValidationError extends VoilaStateError {
   constructor(message: string) {
     super(message);
     this.name = "StateValidationError";
@@ -27,13 +27,13 @@ export class StateValidationError extends NewfangStateError {
 }
 
 /** Canonical state is version 1 and must be migrated explicitly before use. Never auto-migrated. */
-export class MigrationRequiredError extends NewfangStateError {
+export class MigrationRequiredError extends VoilaStateError {
   fromVersion: number;
   toVersion: number;
   constructor(fromVersion: number, toVersion: number) {
     super(
-      `NewFang state is schema version ${fromVersion}; version ${toVersion} is required. ` +
-        "Run /newfang migrate to inspect and /newfang migrate --apply to migrate.",
+      `Voila state is schema version ${fromVersion}; version ${toVersion} is required. ` +
+        "Run /voila migrate to inspect and /voila migrate --apply to migrate.",
     );
     this.name = "MigrationRequiredError";
     this.fromVersion = fromVersion;
@@ -42,11 +42,11 @@ export class MigrationRequiredError extends NewfangStateError {
 }
 
 /** Canonical state uses an unknown schema version. Never rewritten. */
-export class UnknownSchemaVersionError extends NewfangStateError {
+export class UnknownSchemaVersionError extends VoilaStateError {
   found: unknown;
   constructor(found: unknown) {
     super(
-      `Unknown NewFang schema version: ${String(found)}. This build does not understand it and will not rewrite it.`,
+      `Unknown Voila schema version: ${String(found)}. This build does not understand it and will not rewrite it.`,
     );
     this.name = "UnknownSchemaVersionError";
     this.found = found;
@@ -54,13 +54,13 @@ export class UnknownSchemaVersionError extends NewfangStateError {
 }
 
 /** Canonical state uses a schema version this build does not understand. Never auto-rewritten. */
-export class SchemaVersionError extends NewfangStateError {
+export class SchemaVersionError extends VoilaStateError {
   found: number;
   expected: number;
   constructor(found: number, expected: number) {
     super(
-      `Incompatible NewFang schema version: found ${found}, expected ${expected}. ` +
-        "This build will not rewrite it; upgrade NewFang or migrate the state deliberately.",
+      `Incompatible Voila schema version: found ${found}, expected ${expected}. ` +
+        "This build will not rewrite it; upgrade Voila or migrate the state deliberately.",
     );
     this.name = "SchemaVersionError";
     this.found = found;

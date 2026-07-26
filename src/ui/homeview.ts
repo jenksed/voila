@@ -19,7 +19,7 @@ export function proofWarning(proof: ProofSummary | null | undefined): string | n
 
 /**
  * Ambient view. Shape:
- *   NewFang · BUILD · GREEN · Focus NF-2
+ *   Voila · BUILD · GREEN · Focus NF-2
  *   Next: Build planning-document intake · 3 risks · 1 blocked · 2 stale
  * Empty counts are omitted; long text is abbreviated; narrow widths degrade by dropping the tail.
  * At most one proof warning is added, and the result is always at most two lines.
@@ -30,10 +30,10 @@ export function homeViewLines(
   proof?: ProofSummary | null,
 ): string[] {
   if (state === null) {
-    return ["NewFang · not initialized — run /newfang init"];
+    return ["Voila · not initialized — run /voila init"];
   }
 
-  const head = ["NewFang", state.phase.toUpperCase(), state.health.toUpperCase()];
+  const head = ["Voila", state.phase.toUpperCase(), state.health.toUpperCase()];
   if (state.focusWorkItemId) head.push(`Focus ${state.focusWorkItemId}`);
   const line1 = abbreviate(head.join(" · "), Math.max(20, width));
 

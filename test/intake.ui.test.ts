@@ -67,7 +67,7 @@ function draftFor(intakeId: string, over: Record<string, unknown> = {}) {
 }
 
 async function repoWithStagedIntake(over: Record<string, unknown> = {}) {
-  const root = await mkdtemp(join(tmpdir(), "newfang-iui-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-iui-"));
   await initState(root, { displayName: "iui-demo" });
   await writeFile(join(root, "brief.md"), SOURCE, "utf8");
   const created = await createIntake(root, { path: "brief.md" });
@@ -84,8 +84,8 @@ function maxWidth(lines: string[]): number {
 
 // --- commands ---
 
-test("/newfang intake <path> preserves and reports without claiming analysis", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-iui-"));
+test("/voila intake <path> preserves and reports without claiming analysis", async () => {
+  const root = await mkdtemp(join(tmpdir(), "voila-iui-"));
   await initState(root, { displayName: "iui-demo" });
   await writeFile(join(root, "brief.md"), SOURCE, "utf8");
   const result = await runIntakeCreate(root, "brief.md");
@@ -97,8 +97,8 @@ test("/newfang intake <path> preserves and reports without claiming analysis", a
   assert.match(text, /Project Steward/, "recommends the analysis step");
 });
 
-test("/newfang intake rejects unsafe paths with an actionable message", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-iui-"));
+test("/voila intake rejects unsafe paths with an actionable message", async () => {
+  const root = await mkdtemp(join(tmpdir(), "voila-iui-"));
   await initState(root, { displayName: "iui-demo" });
   const abs = await runIntakeCreate(root, "/etc/hosts");
   assert.equal(abs.level, "warning");
@@ -107,15 +107,15 @@ test("/newfang intake rejects unsafe paths with an actionable message", async ()
   assert.match(trav.lines.join(" "), /traversal/);
 });
 
-test("/newfang intake status lists intakes and points at review", async () => {
+test("/voila intake status lists intakes and points at review", async () => {
   const { root } = await repoWithStagedIntake();
   const result = await runIntakeStatus(root);
   const text = result.lines.join("\n");
   assert.match(text, /INT-1 \[review_required\] rev 1 \(current\)/);
-  assert.match(text, /\/newfang intake review/);
+  assert.match(text, /\/voila intake review/);
 });
 
-test("/newfang intake review shows the understanding check with provenance and inferences", async () => {
+test("/voila intake review shows the understanding check with provenance and inferences", async () => {
   const { root } = await repoWithStagedIntake();
   const result = await runIntakeReview(root);
   const text = result.lines.join("\n");
@@ -125,10 +125,10 @@ test("/newfang intake review shows the understanding check with provenance and i
   assert.match(text, /Model inferences \(not stated by the source\)/);
   assert.match(text, /Which index\?/);
   assert.match(text, /## What applying this intake will change/);
-  assert.match(text, /\/newfang intake apply/);
+  assert.match(text, /\/voila intake apply/);
 });
 
-test("/newfang intake apply previews first and only applies with confirm", async () => {
+test("/voila intake apply previews first and only applies with confirm", async () => {
   const { root, intakeId } = await repoWithStagedIntake();
   const before = await loadState(root);
 
@@ -145,7 +145,7 @@ test("/newfang intake apply previews first and only applies with confirm", async
   assert.equal(after.workItems.length, 1);
 });
 
-test("/newfang intake apply refuses when conflicts require resolution", async () => {
+test("/voila intake apply refuses when conflicts require resolution", async () => {
   const { root } = await repoWithStagedIntake({
     conflicts: [
       { id: "C1", findingIds: ["F1", "F2"], explanation: "storage vs scope", severity: "blocking" },
@@ -158,7 +158,7 @@ test("/newfang intake apply refuses when conflicts require resolution", async ()
   assert.equal(state.decisions.length, 0);
 });
 
-test("/newfang intake reject records rejection and keeps artifacts", async () => {
+test("/voila intake reject records rejection and keeps artifacts", async () => {
   const { root } = await repoWithStagedIntake();
   const result = await runIntakeReject(root, "not now");
   assert.match(result.lines.join("\n"), /Rejected INT-1/);
@@ -166,8 +166,8 @@ test("/newfang intake reject records rejection and keeps artifacts", async () =>
   assert.equal((await loadState(root)).intakes[0]?.status, "rejected");
 });
 
-test("/newfang orient reports absence, then current status", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-iui-"));
+test("/voila orient reports absence, then current status", async () => {
+  const root = await mkdtemp(join(tmpdir(), "voila-iui-"));
   await initState(root, { displayName: "iui-demo" });
   const none = await runOrient(root);
   assert.equal(none.level, "warning");
@@ -184,7 +184,7 @@ test("/newfang orient reports absence, then current status", async () => {
   assert.match(recorded.lines.join("\n"), /Orientation ORI-1 — current/);
 });
 
-test("/newfang brief generates and displays the brief", async () => {
+test("/voila brief generates and displays the brief", async () => {
   const { root } = await repoWithStagedIntake();
   const result = await runBrief(root);
   const text = result.lines.join("\n");
@@ -286,7 +286,7 @@ test("intake keys are mapped from raw input", () => {
 });
 
 test("the console shows no intake section when none is pending", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-iui-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-iui-"));
   await initState(root, { displayName: "iui-demo" });
   const model = await buildModelForRoot(root, "0.82.0");
   assert.equal(model.pendingIntake, null);

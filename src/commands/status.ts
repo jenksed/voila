@@ -1,4 +1,4 @@
-// `/newfang status` logic. Pure of Pi; testable with a temp directory.
+// `/voila status` logic. Pure of Pi; testable with a temp directory.
 
 import { loadState } from "../state/store.ts";
 import { statusReportLines } from "../domain/status.ts";

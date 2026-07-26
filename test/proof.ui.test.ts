@@ -206,7 +206,7 @@ test("an empty proof view explains that nothing can be completed", () => {
   const text = render(model, ui({ view: "proof" }), 100).join("\n");
   assert.match(text, /No claims yet/);
   assert.match(text, /Nothing can be completed without proof/);
-  assert.match(text, /newfang_create_claim/);
+  assert.match(text, /voila_create_claim/);
 });
 
 test("a missing proof view renders the empty state rather than crashing", () => {
@@ -353,7 +353,7 @@ test("the too-narrow notice states the requirement and stays within the width", 
   assert.ok(lines.length > 0, "something is rendered rather than a blank screen");
   assert.ok(lines.every((l) => Array.from(l).length <= 19));
   const text = lines.join(" ");
-  assert.match(text, /NewFang/, "the notice identifies itself");
+  assert.match(text, /Voila/, "the notice identifies itself");
   assert.match(text, /20/, "it names the width it needs");
   // A zero-width terminal renders nothing rather than throwing.
   assert.deepEqual(render(model, ui({ view: "proof" }), 0), []);
@@ -435,7 +435,7 @@ test("receipt detail shows curated metadata, truncation, and an artifact pointer
   assert.match(text, /claim:.*CLM-3/);
   assert.match(text, /evidence:.*stale \(repository changed\)/);
   assert.match(text, /command: mise exec -- npm run verify/);
-  assert.match(text, /artifact: \.newfang\/receipts\/RCP-3\//);
+  assert.match(text, /artifact: \.voila\/receipts\/RCP-3\//);
   assert.match(text, /Command output is not shown here/);
 });
 
@@ -495,7 +495,7 @@ test("a ready item is announced as completable in the Focus view", () => {
   s = setFocusWorkItem(s, "NF-1");
   const text = render(modelWithProof(s), ui({ view: "focus" }), 120).join("\n");
   assert.match(text, /NF-1 passes every completion gate/);
-  assert.match(text, /newfang complete NF-1/);
+  assert.match(text, /voila complete NF-1/);
 });
 
 test("with no focus, the Focus view says there is no gate to report", () => {
@@ -649,10 +649,10 @@ test("injected context states claim counts and the proof rules", () => {
   const block = buildContextBlock({ status: "ok", state, proof: summary });
   assert.match(block, /Claims: 4 — 1 supported, 1 unsupported, 1 stale, 1 pending/);
   assert.match(block, /claims cite exact acceptance criteria/);
-  assert.match(block, /newfang_run_verification/);
+  assert.match(block, /voila_run_verification/);
   assert.match(block, /evidence only for the claim it ran for/);
   assert.match(block, /stale or failed evidence cannot complete work/);
-  assert.match(block, /only newfang_complete_work_item may mark work completed/);
+  assert.match(block, /only voila_complete_work_item may mark work completed/);
   assert.ok(block.length <= CONTEXT_CHAR_LIMIT, `block was ${block.length} chars`);
 });
 

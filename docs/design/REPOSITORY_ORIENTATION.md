@@ -23,7 +23,7 @@ for research.
 ## Artifact
 
 ```text
-.newfang/orientations/ORI-1/
+.voila/orientations/ORI-1/
 ├── orientation.json    # the validated snapshot
 └── ORIENTATION.md      # GENERATED human-readable view
 ```
@@ -38,7 +38,7 @@ read).
 
 ## Command evidence — honest by construction
 
-NewFang does **not** run or formally verify commands, so nothing here may be called "verified". Each
+Voila does **not** run or formally verify commands, so nothing here may be called "verified". Each
 command carries an explicit basis:
 
 | Basis | Meaning | `observedResult` allowed? |
@@ -74,8 +74,8 @@ An orientation becomes stale when:
 Deliberately **not** a staleness trigger: a dirty worktree. Editing files is normal, and a dirty flag
 must not rewrite canonical state or invalidate orientation.
 
-Staleness is evaluated **read-only** on demand (`/newfang orient`, `/newfang doctor`, the Steward
-Console, context injection). NewFang never silently re-runs model orientation on Pi startup; it reports
+Staleness is evaluated **read-only** on demand (`/voila orient`, `/voila doctor`, the Steward
+Console, context injection). Voila never silently re-runs model orientation on Pi startup; it reports
 staleness and lets the Steward re-orient. Recording a newer orientation marks the previous one `stale`.
 
 Git failures degrade gracefully: with no git available, HEAD is simply absent and HEAD-based staleness
@@ -83,15 +83,15 @@ never fires.
 
 ## Commands and tools
 
-- `/newfang orient` — report current orientation, staleness reasons, purpose, and command counts. It
+- `/voila orient` — report current orientation, staleness reasons, purpose, and command counts. It
   does **not** pretend that filesystem enumeration equals orientation; it recommends the Steward
   workflow.
-- `newfang_record_orientation` — validate and store a snapshot, making it current.
+- `voila_record_orientation` — validate and store a snapshot, making it current.
 
 ## Current limitations
 
-- Orientation content quality depends on the model; NewFang validates structure and safety, not
+- Orientation content quality depends on the model; Voila validates structure and safety, not
   accuracy.
-- Command findings are trusted as recorded — NewFang does not execute them to confirm, which is
+- Command findings are trusted as recorded — Voila does not execute them to confirm, which is
   exactly why nothing is labeled "verified".
 - Staleness does not inspect non-instruction documents.

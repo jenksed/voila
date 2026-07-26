@@ -1,11 +1,11 @@
 // LLM-callable tools for intake, orientation, next action, and project context.
-// The model supplies interpretation; NewFang validates, persists, and gates. A tool never treats
+// The model supplies interpretation; Voila validates, persists, and gates. A tool never treats
 // model intent as user confirmation — applying an intake requires an explicit confirmation flag that
 // the human workflow sets.
 
 import { Type } from "typebox";
 import { StringEnum } from "./schema.ts";
-import type { NewfangTool, NewfangToolResult } from "./index.ts";
+import type { VoilaTool, VoilaToolResult } from "./index.ts";
 import { loadState, updateState } from "../state/store.ts";
 import {
   applyIntake,
@@ -25,7 +25,7 @@ import { readDraft } from "../state/intake-store.ts";
 import { backlogSummary } from "../domain/operations.ts";
 import { INTAKE_SOURCE_TYPES } from "../domain/types.ts";
 
-function text(line: string, details?: unknown): NewfangToolResult {
+function text(line: string, details?: unknown): VoilaToolResult {
   return { content: [{ type: "text", text: line }], details };
 }
 
@@ -117,16 +117,16 @@ const CommandFindingSchema = Type.Object(
   { additionalProperties: false },
 );
 
-export function intakeTools(): NewfangTool[] {
+export function intakeTools(): VoilaTool[] {
   return [
     {
-      name: "newfang_create_intake",
+      name: "voila_create_intake",
       label: "Create Intake",
       description:
         "Preserve a planning document or request as an intake source. Provide EITHER a repository-relative path (read from disk byte-for-byte) OR exact text. Absolute paths, traversal, and symlink escapes are rejected. Preserves the source before reporting success; interprets nothing.",
-      promptSnippet: "Preserve a planning document or request as a NewFang intake source",
+      promptSnippet: "Preserve a planning document or request as a Voila intake source",
       promptGuidelines: [
-        "Use newfang_create_intake to preserve a source before interpreting it; never paste a file's contents as text when a repository path exists.",
+        "Use voila_create_intake to preserve a source before interpreting it; never paste a file's contents as text when a repository path exists.",
       ],
       parameters: Type.Object(
         {
@@ -152,13 +152,13 @@ export function intakeTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_stage_intake_draft",
+      name: "voila_stage_intake_draft",
       label: "Stage Intake Draft",
       description:
         "Submit the complete structured interpretation of a preserved intake. Findings with origin 'source' must cite sourceRefs (line ranges for files); model inferences must use origin 'model_inference'. Changes NO project truth: it stores the draft, regenerates the Understanding Check, and marks the intake review_required.",
-      promptSnippet: "Stage a structured interpretation of a preserved NewFang intake for review",
+      promptSnippet: "Stage a structured interpretation of a preserved Voila intake for review",
       promptGuidelines: [
-        "Use newfang_stage_intake_draft after reading a preserved source; cite line ranges and mark inferences explicitly.",
+        "Use voila_stage_intake_draft after reading a preserved source; cite line ranges and mark inferences explicitly.",
       ],
       parameters: Type.Object(
         {
@@ -202,7 +202,7 @@ export function intakeTools(): NewfangTool[] {
         } else {
           lines.push(...applySummaryLines(result.summary));
         }
-        lines.push("Ask the user to run /newfang intake review.");
+        lines.push("Ask the user to run /voila intake review.");
         return text(lines.join("\n"), {
           intake: result.intake,
           draftRevision: result.draft.draftRevision,
@@ -213,13 +213,13 @@ export function intakeTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_apply_intake",
+      name: "voila_apply_intake",
       label: "Apply Intake",
       description:
         "Apply a reviewed intake draft to canonical project truth. Requires status review_required, the exact reviewed draft revision, no blocking conflicts, and userConfirmed=true which the human review workflow supplies. Model intent alone is NOT confirmation. Idempotent for an already-applied revision.",
-      promptSnippet: "Apply a reviewed NewFang intake after explicit user confirmation",
+      promptSnippet: "Apply a reviewed Voila intake after explicit user confirmation",
       promptGuidelines: [
-        "Use newfang_apply_intake only after the user has reviewed the Understanding Check and explicitly confirmed; never set userConfirmed on your own initiative.",
+        "Use voila_apply_intake only after the user has reviewed the Understanding Check and explicitly confirmed; never set userConfirmed on your own initiative.",
       ],
       parameters: Type.Object(
         {
@@ -255,13 +255,13 @@ export function intakeTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_request_intake_revision",
+      name: "voila_request_intake_revision",
       label: "Request Intake Revision",
       description:
         "Record the user's request for a corrected intake draft. Requires status review_required and the exact current draft revision. Appends one revision_requested record to the append-only review log and changes NO project truth; the intake stays review_required. Staging a corrected draft requires this record first, so the next revision is attributable. Feedback must be the user's concise correction — never your own reasoning, and never a transcript.",
-      promptSnippet: "Record a user's request for a corrected NewFang intake draft",
+      promptSnippet: "Record a user's request for a corrected Voila intake draft",
       promptGuidelines: [
-        "Use newfang_request_intake_revision only to record a correction the user actually asked for; never invent a revision request, and store their concise wording rather than your explanation of it.",
+        "Use voila_request_intake_revision only to record a correction the user actually asked for; never invent a revision request, and store their concise wording rather than your explanation of it.",
       ],
       parameters: Type.Object(
         {
@@ -305,11 +305,11 @@ export function intakeTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_reject_intake",
+      name: "voila_reject_intake",
       label: "Reject Intake",
       description:
         "Reject an intake. The preserved source and drafts stay on disk for the record; no project truth changes.",
-      promptSnippet: "Reject a NewFang intake",
+      promptSnippet: "Reject a Voila intake",
       parameters: Type.Object(
         { intakeId: Type.String(), reason: Type.Optional(Type.String()) },
         { additionalProperties: false },
@@ -322,13 +322,13 @@ export function intakeTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_record_orientation",
+      name: "voila_record_orientation",
       label: "Record Orientation",
       description:
-        "Store a bounded repository-orientation snapshot and make it current. Paths must be repository-relative; secrets, env values, and absolute paths are rejected. Include provenance for what you actually inspected. Commands carry an explicit basis (declared_in_documentation | observed_in_session | candidate); observedResult is only allowed for commands you actually ran. NewFang does not verify commands — do not describe them as verified.",
-      promptSnippet: "Record a bounded NewFang repository-orientation snapshot",
+        "Store a bounded repository-orientation snapshot and make it current. Paths must be repository-relative; secrets, env values, and absolute paths are rejected. Include provenance for what you actually inspected. Commands carry an explicit basis (declared_in_documentation | observed_in_session | candidate); observedResult is only allowed for commands you actually ran. Voila does not verify commands — do not describe them as verified.",
+      promptSnippet: "Record a bounded Voila repository-orientation snapshot",
       promptGuidelines: [
-        "Use newfang_record_orientation after a narrow inspection; cite the files you read in provenance, give each command an honest basis, and do not include secrets or absolute paths.",
+        "Use voila_record_orientation after a narrow inspection; cite the files you read in provenance, give each command an honest basis, and do not include secrets or absolute paths.",
       ],
       parameters: Type.Object(
         {
@@ -353,20 +353,20 @@ export function intakeTools(): NewfangTool[] {
       async execute(_id, params, _signal, _onUpdate, ctx) {
         const result = await recordOrientation(ctx.cwd, params);
         return text(
-          `Recorded orientation ${result.record.id} (current). ${result.artifact.commands.length} command finding(s) (not verified by NewFang), ${result.artifact.instructionFiles.length} instruction file(s).`,
+          `Recorded orientation ${result.record.id} (current). ${result.artifact.commands.length} command finding(s) (not verified by Voila), ${result.artifact.instructionFiles.length} instruction file(s).`,
           { orientation: result.record },
         );
       },
     },
 
     {
-      name: "newfang_set_next_action",
+      name: "voila_set_next_action",
       label: "Set Next Action",
       description:
         "Set the next justified action, an optional rationale explaining why it is next, and optionally the focus work item. Rejects an empty action and an invalid, completed, or cancelled focus item.",
-      promptSnippet: "Set the NewFang next justified action and its rationale",
+      promptSnippet: "Set the Voila next justified action and its rationale",
       promptGuidelines: [
-        "Use newfang_set_next_action to keep the next action and its rationale current; the Steward owns this choice.",
+        "Use voila_set_next_action to keep the next action and its rationale current; the Steward owns this choice.",
       ],
       parameters: Type.Object(
         {
@@ -397,13 +397,13 @@ export function intakeTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_get_project_context",
+      name: "voila_get_project_context",
       label: "Get Project Context",
       description:
-        "Return compact structured NewFang project context: identity, phase, health, focus, next action and rationale, brief reference, pending intake, orientation status, key decisions, assumptions, risks, and a work summary. Never returns source documents or raw event history.",
-      promptSnippet: "Read compact NewFang project context before acting",
+        "Return compact structured Voila project context: identity, phase, health, focus, next action and rationale, brief reference, pending intake, orientation status, key decisions, assumptions, risks, and a work summary. Never returns source documents or raw event history.",
+      promptSnippet: "Read compact Voila project context before acting",
       promptGuidelines: [
-        "Use newfang_get_project_context at the start of project work to read canonical state instead of guessing.",
+        "Use voila_get_project_context at the start of project work to read canonical state instead of guessing.",
       ],
       parameters: Type.Object({}, { additionalProperties: false }),
       async execute(_id, _params, _signal, _onUpdate, ctx) {
@@ -421,7 +421,7 @@ export function intakeTools(): NewfangTool[] {
           focus: s.focus ? { id: s.focus.id, title: s.focus.title, status: s.focus.status } : null,
           nextAction: state.nextAction,
           nextActionRationale: state.nextActionRationale ?? null,
-          briefRef: ".newfang/briefs/PROJECT_BRIEF.md",
+          briefRef: ".voila/briefs/PROJECT_BRIEF.md",
           pendingIntake: pending
             ? { id: pending.id, title: pending.title, draftRevision: pending.draftRevision }
             : null,
@@ -462,11 +462,11 @@ export function intakeTools(): NewfangTool[] {
     },
 
     {
-      name: "newfang_get_intake_draft",
+      name: "voila_get_intake_draft",
       label: "Get Intake Draft",
       description:
         "Read the staged structured draft and Understanding Check status for an intake, to review or revise it.",
-      promptSnippet: "Read a staged NewFang intake draft",
+      promptSnippet: "Read a staged Voila intake draft",
       parameters: Type.Object({ intakeId: Type.String() }, { additionalProperties: false }),
       async execute(_id, params, _signal, _onUpdate, ctx) {
         const p = params as { intakeId: string };

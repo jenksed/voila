@@ -1,9 +1,9 @@
 // Verification execution and immutable receipt artifacts.
 //
-// Ordering invariant: fingerprint -> execute -> write the COMPLETE artifact in a NewFang-owned temp
+// Ordering invariant: fingerprint -> execute -> write the COMPLETE artifact in a Voila-owned temp
 // directory -> atomically promote it into place -> only then link it into canonical state. A failed
 // canonical update therefore never leaves a linked partial receipt; it leaves at most an unreferenced
-// promoted directory, which `/newfang doctor` reports.
+// promoted directory, which `/voila doctor` reports.
 //
 // Safety boundaries (documented, not enforced by a sandbox):
 //   - the command runs with `shell: false`; no pipes, redirection, chaining, or env expansion,
@@ -30,7 +30,7 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { receiptPaths, statePaths } from "./paths.ts";
 import { loadState, updateState } from "./store.ts";
-import { NewfangStateError } from "./errors.ts";
+import { VoilaStateError } from "./errors.ts";
 import { repositoryFingerprint } from "./fingerprint.ts";
 import { resolveRepoRelativeDir, sha256 } from "./source.ts";
 import { allocateId } from "../domain/ids.ts";
@@ -38,7 +38,7 @@ import { ProjectOperationError } from "../domain/errors.ts";
 import { findClaim, linkReceipt } from "../domain/proof.ts";
 import type { ReceiptResult, VerificationReceiptRecord } from "../domain/types.ts";
 
-export class ReceiptNotFoundError extends NewfangStateError {
+export class ReceiptNotFoundError extends VoilaStateError {
   constructor(id: string) {
     super(`Receipt artifact not found: ${id}.`);
     this.name = "ReceiptNotFoundError";
@@ -167,7 +167,7 @@ function validateCommand(request: VerificationRequest): { executable: string; ar
   }
   if (/\s/.test(executable.trim()) || SHELL_METACHARACTERS.test(executable)) {
     throw new ProjectOperationError(
-      `Refusing to run "${executable}" as a shell string. NewFang executes a single program with an argument array and no shell, so pipes, redirection, chaining, quoting, and variable expansion are unavailable. Pass the program in \`executable\` and each argument separately in \`args\`.`,
+      `Refusing to run "${executable}" as a shell string. Voila executes a single program with an argument array and no shell, so pipes, redirection, chaining, quoting, and variable expansion are unavailable. Pass the program in \`executable\` and each argument separately in \`args\`.`,
     );
   }
   const rawArgs = request.args ?? [];
@@ -304,7 +304,7 @@ export async function executeVerification(
     }
 
     child.on("error", (error) => {
-      err.push(Buffer.from(`NewFang could not start the command: ${error.message}\n`, "utf8"));
+      err.push(Buffer.from(`Voila could not start the command: ${error.message}\n`, "utf8"));
       settle("error", null, null);
     });
 
@@ -387,7 +387,7 @@ export async function runVerification(
     pathsNormalized: `repository root -> ${REPO_PATH_MARKER}, home directory -> ~`,
   };
 
-  // Build the COMPLETE artifact in a NewFang-owned staging directory, then promote atomically.
+  // Build the COMPLETE artifact in a Voila-owned staging directory, then promote atomically.
   const tempRoot = statePaths(root).receiptsTempDir;
   await mkdir(tempRoot, { recursive: true });
   const staging = await mkdtemp(join(tempRoot, "rcp-"));

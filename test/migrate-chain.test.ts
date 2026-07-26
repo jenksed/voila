@@ -18,7 +18,7 @@ import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import { V1_FIXTURE, V2_FIXTURE } from "./helpers.ts";
 
 async function seed(raw: unknown): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "newfang-migchain-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-migchain-"));
   const paths = statePaths(root);
   await mkdir(paths.dir, { recursive: true });
   await writeFile(paths.projectJson, `${JSON.stringify(raw, null, 2)}\n`, "utf8");
@@ -105,7 +105,7 @@ test("migration appends one event and refreshes the generated view", async () =>
 });
 
 test("rerunning migration on the current version is a safe no-op", async () => {
-  const root = await mkdtemp(join(tmpdir(), "newfang-migchain-"));
+  const root = await mkdtemp(join(tmpdir(), "voila-migchain-"));
   await initState(root, { displayName: "demo" });
   const report = await runMigration(root, { apply: true });
   assert.equal(report.status, "noop");

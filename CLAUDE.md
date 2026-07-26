@@ -16,7 +16,7 @@ If this file ever conflicts with `AGENTS.md`, follow `AGENTS.md` and flag the co
 ## Claude-specific guidance
 
 - **Phase gate.** This repository is at Phase 0 (research and architecture). Do not begin building
-  the NewFang runtime or production Pi extensions. Producing or editing documents under `docs/` is
+  the Voila runtime or production Pi extensions. Producing or editing documents under `docs/` is
   the expected work until a plan phase is explicitly approved.
 - **Product direction is canonical and preserved verbatim.** `docs/product/PRODUCT_DIRECTION.md`
   is the authored v0.1 source. Do not silently rewrite it; propose edits explicitly.

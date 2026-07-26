@@ -47,7 +47,7 @@ const V4_ADDITIONS: MigrationAddition[] = [
   { name: "claims", detail: "claims about work items; support is derived, never stored (empty)" },
   {
     name: "receipts",
-    detail: "compact verification-receipt metadata; artifacts live in .newfang/receipts/ (empty)",
+    detail: "compact verification-receipt metadata; artifacts live in .voila/receipts/ (empty)",
   },
   {
     name: "workItems[].requiredClaimIds",

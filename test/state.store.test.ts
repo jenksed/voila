@@ -27,7 +27,7 @@ import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import { V1_FIXTURE } from "./helpers.ts";
 
 async function tempRoot(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "newfang-store-"));
+  return mkdtemp(join(tmpdir(), "voila-store-"));
 }
 
 test("initState creates current-schema canonical state with empty collections", async () => {
