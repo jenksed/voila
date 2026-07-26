@@ -1,7 +1,19 @@
 // Immutable view model for the Steward Console. Pure: domain state + runtime context -> view model.
 // UI components read only this model, never canonical state directly.
 
-import type { Assumption, Decision, ProjectState, Risk, WorkItem } from "../../domain/types.ts";
+import type {
+  Assumption,
+  Decision,
+  ProjectState,
+  Risk,
+  VerificationReceiptRecord,
+  WorkItem,
+} from "../../domain/types.ts";
+import type {
+  ClaimEvaluationStatus,
+  CompletionAssessment,
+  ProofSummary,
+} from "../../domain/proof.ts";
 
 export interface RuntimeContext {
   branch?: string;
@@ -30,17 +42,61 @@ export interface OrientationView {
   reasons: string[];
 }
 
+/** One claim as the console shows it: the claim plus its derived status and visible limitations. */
+export interface ClaimView {
+  id: string;
+  workItemId: string;
+  workItemTitle: string;
+  statement: string;
+  confidence: string;
+  status: ClaimEvaluationStatus;
+  reason: string;
+  required: boolean;
+  coveredAcceptanceCriteria: string[];
+  knownLimitations: string[];
+  latestReceiptId: string | null;
+  latestResult: string | null;
+  receiptCount: number;
+}
+
+/** Curated receipt row. The console never renders full command output in a primary view. */
+export interface ReceiptView {
+  id: string;
+  claimId: string;
+  result: string;
+  command: string;
+  cwdRef: string;
+  finishedAt: string;
+  matchesCurrent: boolean;
+  outputTruncated: boolean;
+  artifactRef: string;
+  exitCode?: number;
+}
+
+export interface ProofView {
+  fingerprintAvailable: boolean;
+  summary: ProofSummary;
+  claims: ClaimView[];
+  receipts: ReceiptView[];
+  /** Completion readiness of the focused item, when one is focused. */
+  focusReadiness: CompletionAssessment | null;
+}
+
 export interface ConsoleInput {
   status: ConsoleStatus;
   state?: ProjectState;
   message?: string;
   pendingIntake?: PendingIntakeView | null;
   orientation?: OrientationView | null;
+  proof?: ProofView | null;
 }
 
-export type ConsoleView = "focus" | "work" | "truth" | "understanding";
-/** Views reachable by Tab. The Understanding Check is opened contextually, not cycled into. */
-export const CONSOLE_VIEWS: ConsoleView[] = ["focus", "work", "truth"];
+export type ConsoleView = "focus" | "work" | "proof" | "truth" | "understanding";
+/**
+ * Views reachable by Tab, in navigation order. The Understanding Check is opened contextually rather
+ * than cycled into.
+ */
+export const CONSOLE_VIEWS: ConsoleView[] = ["focus", "work", "proof", "truth"];
 
 export type AttentionSeverity = "high" | "medium" | "info";
 export interface AttentionItem {
@@ -49,7 +105,15 @@ export interface AttentionItem {
   ref?: EntityRef;
 }
 
-export type EntityKind = "work" | "decision" | "assumption" | "risk";
+export type EntityKind =
+  | "work"
+  | "decision"
+  | "assumption"
+  | "risk"
+  | "claim"
+  | "receipt"
+  /** A completion-gate detail for a work item (id is the work-item ID). */
+  | "gate";
 export interface EntityRef {
   kind: EntityKind;
   id: string;
@@ -76,8 +140,48 @@ export interface ConsoleModel {
   /** Intake awaiting review, with its generated Understanding Check. */
   pendingIntake: PendingIntakeView | null;
   orientation: OrientationView | null;
-  /** Reserved insertion point for a future Proof/Delivery rail. Always empty in this packet. */
-  proof: never[];
+  /** Claims, receipts, and completion readiness for the Proof view. */
+  proof: ProofView | null;
+}
+
+const EMPTY_PROOF_SUMMARY: ProofSummary = {
+  total: 0,
+  pending: 0,
+  supported: 0,
+  unsupported: 0,
+  stale: 0,
+  fingerprintAvailable: false,
+};
+
+/** An empty Proof view, for uninitialized/error screens and for projects with no claims yet. */
+export function emptyProofView(): ProofView {
+  return {
+    fingerprintAvailable: false,
+    summary: EMPTY_PROOF_SUMMARY,
+    claims: [],
+    receipts: [],
+    focusReadiness: null,
+  };
+}
+
+/** Curated receipt row from a canonical receipt record. */
+export function toReceiptView(
+  receipt: VerificationReceiptRecord,
+  currentFingerprint: string | null,
+): ReceiptView {
+  return {
+    id: receipt.id,
+    claimId: receipt.claimId,
+    result: receipt.result,
+    command: [receipt.executable, ...receipt.args].join(" "),
+    cwdRef: receipt.cwdRef,
+    finishedAt: receipt.finishedAt,
+    matchesCurrent:
+      currentFingerprint !== null && currentFingerprint === receipt.repositoryFingerprint,
+    outputTruncated: receipt.outputTruncated,
+    artifactRef: receipt.artifactRef,
+    ...(receipt.exitCode !== undefined ? { exitCode: receipt.exitCode } : {}),
+  };
 }
 
 const PRIORITY_RANK: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
@@ -91,9 +195,30 @@ function byPriority(items: WorkItem[]): WorkItem[] {
 /** Derive a concise attention list from existing state (no notification subsystem). */
 export function deriveAttention(
   state: ProjectState,
-  extra: { pendingIntake?: PendingIntakeView | null; orientation?: OrientationView | null } = {},
+  extra: {
+    pendingIntake?: PendingIntakeView | null;
+    orientation?: OrientationView | null;
+    proof?: ProofView | null;
+  } = {},
 ): AttentionItem[] {
   const attention: AttentionItem[] = [];
+  // Evidence problems on required claims outrank everything else: they block completion.
+  for (const c of extra.proof?.claims ?? []) {
+    if (!c.required) continue;
+    if (c.status === "unsupported") {
+      attention.push({
+        severity: "high",
+        label: `Required claim ${c.id} is UNSUPPORTED: ${c.reason}`,
+        ref: { kind: "claim", id: c.id },
+      });
+    } else if (c.status === "stale") {
+      attention.push({
+        severity: "medium",
+        label: `Required claim ${c.id} evidence is stale: ${c.reason}`,
+        ref: { kind: "claim", id: c.id },
+      });
+    }
+  }
   if (extra.pendingIntake) {
     attention.push({
       severity: extra.pendingIntake.blocked ? "high" : "medium",
@@ -176,7 +301,7 @@ export function buildConsoleModel(input: ConsoleInput, runtime: RuntimeContext):
       truth: { decisions: [], assumptions: [], risks: [] },
       pendingIntake: null,
       orientation: null,
-      proof: [],
+      proof: null,
     };
   }
   const s = input.state;
@@ -200,6 +325,7 @@ export function buildConsoleModel(input: ConsoleInput, runtime: RuntimeContext):
     attention: deriveAttention(s, {
       pendingIntake: input.pendingIntake ?? null,
       orientation: input.orientation ?? null,
+      proof: input.proof ?? null,
     }),
     work: {
       counts: {
@@ -219,7 +345,7 @@ export function buildConsoleModel(input: ConsoleInput, runtime: RuntimeContext):
     },
     pendingIntake: input.pendingIntake ?? null,
     orientation: input.orientation ?? null,
-    proof: [],
+    proof: input.proof ?? null,
   };
 }
 
@@ -236,6 +362,17 @@ export function selectableRefs(model: ConsoleModel, view: ConsoleView): EntityRe
     return model.work.groups.flatMap((g) =>
       g.items.map((w) => ({ kind: "work" as const, id: w.id })),
     );
+  }
+  if (view === "proof") {
+    const proof = model.proof;
+    if (!proof) return [];
+    return [
+      ...proof.claims.map((c) => ({ kind: "claim" as const, id: c.id })),
+      ...proof.receipts.map((r) => ({ kind: "receipt" as const, id: r.id })),
+      ...(proof.focusReadiness
+        ? [{ kind: "gate" as const, id: proof.focusReadiness.workItemId }]
+        : []),
+    ];
   }
   return [
     ...model.truth.decisions.map((d) => ({ kind: "decision" as const, id: d.id })),

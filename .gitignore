@@ -40,3 +40,6 @@ bin/
 
 # Local canonical-state backups (not tracked)
 .newfang/backups/
+
+# Receipt staging directories from interrupted verification runs (never committed)
+.newfang/receipts/.tmp/

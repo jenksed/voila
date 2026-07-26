@@ -2,7 +2,7 @@
 // applied via a Styler seam only to already-sized plain segments, so visible width stays correct and
 // no ANSI palette is hardcoded. Tests use `plainStyler` (identity) to assert layout on plain text.
 
-import type { ConsoleModel, ConsoleView, EntityRef } from "./model.ts";
+import type { ClaimView, ConsoleModel, ConsoleView, EntityRef } from "./model.ts";
 import { selectableRefs } from "./model.ts";
 import type { ConsoleUiState } from "./navigation.ts";
 import { layoutClass } from "./layout.ts";
@@ -161,12 +161,26 @@ function tabsLine(view: ConsoleView, width: number, st: Styler): string {
   const labels: Array<[ConsoleView, string]> = [
     ["focus", "Focus"],
     ["work", "Work"],
+    ["proof", "Proof"],
     ["truth", "Project Truth"],
   ];
-  const parts = labels.map(([v, label]) =>
-    v === view ? st.fg("accent", st.bold(`[${label}]`)) : st.fg("muted", ` ${label} `),
-  );
-  return truncate(parts.join(" "), width);
+  // Fit on the PLAIN text and style each segment afterwards. Styling first and truncating the
+  // result makes truncate() count ANSI escape bytes as visible characters, which collapses the
+  // whole row to an ellipsis in a real terminal while looking correct under plainStyler.
+  const out: string[] = [];
+  let used = 0;
+  for (const [v, label] of labels) {
+    const plain = v === view ? `[${label}]` : ` ${label} `;
+    const sep = out.length === 0 ? "" : " ";
+    if (used + len(sep) + len(plain) > width) {
+      if (used + 1 <= width) out.push("…");
+      break;
+    }
+    used += len(sep) + len(plain);
+    const styled = v === view ? st.fg("accent", st.bold(plain)) : st.fg("muted", plain);
+    out.push(sep + styled);
+  }
+  return out.join("");
 }
 
 function attentionLines(
@@ -195,6 +209,140 @@ function workCountLines(model: ConsoleModel, width: number, st: Styler): string[
     padRight(`Blocked ${c.blocked} · Backlog ${c.backlog}`, width),
     padRight(`Open total ${c.open}`, width),
   ];
+}
+
+function claimStatusToken(status: string): StyleToken {
+  if (status === "supported") return "success";
+  if (status === "unsupported") return "error";
+  if (status === "stale") return "warning";
+  return "muted";
+}
+
+function receiptResultToken(result: string): StyleToken {
+  if (result === "passed") return "success";
+  if (result === "failed") return "error";
+  return "warning";
+}
+
+/** Proof readiness of the focused work item, condensed to at most three lines. */
+function proofReadinessLines(model: ConsoleModel, width: number, st: Styler): string[] {
+  const proof = model.proof;
+  if (!proof) return [];
+  const out = [heading("Proof", width, st)];
+  const readiness = proof.focusReadiness;
+  const s = proof.summary;
+  out.push(
+    st.fg(
+      "muted",
+      truncate(
+        `Claims ${s.total} · supported ${s.supported} · unsupported ${s.unsupported} · stale ${s.stale} · pending ${s.pending}`,
+        width,
+      ),
+    ),
+  );
+  if (!readiness) {
+    out.push(
+      st.fg("muted", truncate("No focused work item, so no completion gate to report.", width)),
+    );
+  } else if (readiness.ready) {
+    out.push(
+      st.fg(
+        "success",
+        truncate(
+          `${readiness.workItemId} passes every completion gate — /newfang complete ${readiness.workItemId}`,
+          width,
+        ),
+      ),
+    );
+  } else {
+    const first = readiness.failing[0];
+    out.push(
+      st.fg(
+        "warning",
+        truncate(
+          `${readiness.workItemId} is not completable: ${readiness.failing.length} gate(s) failing${first ? ` — ${first.label}` : ""}`,
+          width,
+        ),
+      ),
+    );
+  }
+  if (!proof.fingerprintAvailable && s.total > 0) {
+    out.push(
+      st.fg("warning", truncate("git unavailable: no evidence can be shown as current.", width)),
+    );
+  }
+  return out;
+}
+
+/**
+ * Proof view: claims by derived status with limitations visible, curated receipt rows, and the
+ * focused item's completion gates. No command output appears here.
+ */
+function proofView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: Styler): string[] {
+  const selected = selectableRefs(model, "proof")[ui.selection];
+  const proof = model.proof;
+  const out: string[] = [];
+  if (!proof || (proof.claims.length === 0 && proof.receipts.length === 0)) {
+    out.push(
+      st.fg("muted", truncate("No claims yet. Nothing can be completed without proof.", width)),
+      st.fg(
+        "muted",
+        truncate("Create one with newfang_create_claim, then run newfang_run_verification.", width),
+      ),
+    );
+    return out;
+  }
+
+  const s = proof.summary;
+  out.push(heading(`Claims (${proof.claims.length})`, width, st));
+  out.push(
+    st.fg(
+      "muted",
+      truncate(
+        `supported ${s.supported} · unsupported ${s.unsupported} · stale ${s.stale} · pending ${s.pending}${proof.fingerprintAvailable ? "" : " · git unavailable"}`,
+        width,
+      ),
+    ),
+  );
+  if (proof.claims.length === 0) out.push(st.fg("muted", "  (none)"));
+  for (const c of proof.claims) {
+    const marker = selectionMarker(refEq({ kind: "claim", id: c.id }, selected), st);
+    const body = `${c.id} [${c.status}]${c.required ? " *" : ""} ${c.workItemId} ${c.statement}`;
+    out.push(marker + st.fg(claimStatusToken(c.status), padRight(body, width - 2)));
+    if (c.knownLimitations.length > 0) {
+      out.push(
+        st.fg("muted", truncate(`      limitations: ${c.knownLimitations.join("; ")}`, width)),
+      );
+    }
+  }
+
+  out.push("");
+  out.push(heading(`Latest receipts (${proof.receipts.length})`, width, st));
+  if (proof.receipts.length === 0) out.push(st.fg("muted", "  (none)"));
+  for (const r of proof.receipts) {
+    const marker = selectionMarker(refEq({ kind: "receipt", id: r.id }, selected), st);
+    const body = `${r.id} [${r.result}] ${r.claimId} ${r.matchesCurrent ? "current" : "stale"} ${r.command}`;
+    out.push(marker + st.fg(receiptResultToken(r.result), padRight(body, width - 2)));
+  }
+
+  if (proof.focusReadiness) {
+    const readiness = proof.focusReadiness;
+    out.push("");
+    out.push(heading("Completion gate", width, st));
+    const marker = selectionMarker(refEq({ kind: "gate", id: readiness.workItemId }, selected), st);
+    const body = `${readiness.workItemId}: ${readiness.ready ? "all gates pass" : `${readiness.failing.length} gate(s) failing`}`;
+    out.push(marker + st.fg(readiness.ready ? "success" : "warning", padRight(body, width - 2)));
+    out.push(st.fg("muted", truncate("      Enter for the full gate list", width)));
+  }
+
+  out.push("");
+  out.push(
+    st.fg(
+      "muted",
+      truncate("* required for completion · full output requires deliberate inspection", width),
+    ),
+  );
+  return out;
 }
 
 function focusView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: Styler): string[] {
@@ -229,6 +377,9 @@ function focusView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
     );
   }
 
+  const proofLines = proofReadinessLines(model, width, st);
+  if (proofLines.length > 0) proofLines.push("");
+
   const truth: string[] = [heading("Project truth", width, st)];
   const topDecisions = model.truth.decisions.filter((d) => d.status === "accepted").slice(0, 2);
   const topRisks = model.truth.risks.filter((r) => r.status === "open").slice(0, 2);
@@ -236,7 +387,7 @@ function focusView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
   for (const r of topRisks) truth.push(st.fg("muted", truncate(`${r.id}  ${r.statement}`, width)));
   if (topDecisions.length + topRisks.length === 0) truth.push(st.fg("muted", "  (none)"));
 
-  return [...body, "", ...intakeLines, ...truth];
+  return [...body, "", ...intakeLines, ...proofLines, ...truth];
 }
 
 /** Understanding Check: the generated review artifact, scrollable, with review actions. */
@@ -379,6 +530,73 @@ function detailView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: 
       for (const c of w.acceptanceCriteria)
         for (const l of wrapText(`  - ${c}`, width)) out.push(l);
     }
+  } else if (ref.kind === "claim") {
+    const c = model.proof?.claims.find((x) => x.id === ref.id);
+    if (!c) return [...out, st.fg("muted", "Not found.")];
+    out.push(st.fg("accent", truncate(`${c.id} — ${c.workItemId} ${c.workItemTitle}`, width)));
+    out.push(field("evidence", `${c.status} — ${c.reason}`));
+    out.push(field("required", c.required ? "yes (completion depends on it)" : "no"));
+    out.push(field("confidence", c.confidence));
+    out.push(
+      field(
+        "receipts",
+        c.receiptCount > 0
+          ? `${c.receiptCount} (latest ${c.latestReceiptId} ${c.latestResult})`
+          : "none",
+      ),
+    );
+    for (const l of wrapText(`claim: ${c.statement}`, width)) out.push(l);
+    // Fixed labels are sized like every other line: at the 20-column floor, "covers acceptance
+    // criteria:" is 27 characters and overflowed until it was truncated here.
+    out.push(st.fg("muted", truncate("covers acceptance criteria:", width)));
+    for (const criterion of c.coveredAcceptanceCriteria) {
+      for (const l of wrapText(`  - ${criterion}`, width)) out.push(st.fg("muted", l));
+    }
+    // Limitations stay visible: a supported claim is still bounded by what it does not establish.
+    out.push(st.fg("warning", truncate("known limitations:", width)));
+    if (c.knownLimitations.length === 0) {
+      out.push(st.fg("warning", truncate("  - (none recorded)", width)));
+    } else {
+      for (const lim of c.knownLimitations) {
+        for (const l of wrapText(`  - ${lim}`, width)) out.push(st.fg("warning", l));
+      }
+    }
+  } else if (ref.kind === "receipt") {
+    const r = model.proof?.receipts.find((x) => x.id === ref.id);
+    if (!r) return [...out, st.fg("muted", "Not found.")];
+    out.push(st.fg("accent", truncate(`${r.id} — ${r.result}`, width)));
+    out.push(field("claim", r.claimId));
+    out.push(field("exit code", r.exitCode === undefined ? "(none)" : String(r.exitCode)));
+    out.push(field("finished", r.finishedAt));
+    out.push(field("cwd", r.cwdRef));
+    out.push(field("evidence", r.matchesCurrent ? "current" : "stale (repository changed)"));
+    out.push(field("output", r.outputTruncated ? "TRUNCATED at cap" : "stored within cap"));
+    for (const l of wrapText(`command: ${r.command}`, width)) out.push(l);
+    out.push(st.fg("muted", truncate(`artifact: .newfang/${r.artifactRef}/`, width)));
+    out.push(
+      st.fg(
+        "muted",
+        truncate("Command output is not shown here; read stdout.txt deliberately.", width),
+      ),
+    );
+  } else if (ref.kind === "gate") {
+    const readiness = model.proof?.focusReadiness;
+    if (!readiness || readiness.workItemId !== ref.id) {
+      return [...out, st.fg("muted", "Not found.")];
+    }
+    out.push(
+      st.fg("accent", truncate(`${readiness.workItemId} completion gate`, width)),
+      readiness.ready
+        ? st.fg("success", truncate("All gates pass; completion is permitted.", width))
+        : st.fg("error", truncate(`${readiness.failing.length} gate(s) failing.`, width)),
+      "",
+    );
+    for (const g of readiness.gates) {
+      const mark = g.passed ? "pass" : "FAIL";
+      for (const l of wrapText(`[${mark}] ${g.label}: ${g.detail}`, width)) {
+        out.push(st.fg(g.passed ? "muted" : "error", l));
+      }
+    }
   } else if (ref.kind === "decision") {
     const d = model.truth.decisions.find((x) => x.id === ref.id);
     if (!d) return [...out, st.fg("muted", "Not found.")];
@@ -415,9 +633,9 @@ function detailView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: 
 const HELP_LINES = [
   "u                          open Understanding Check (pending intake)",
   "a / v / x                  accept+apply / request revision / reject (Understanding Check)",
-  "Tab / Shift-Tab or h / l   switch view",
+  "Tab / Shift-Tab or h / l   switch view (Focus → Work → Proof → Project Truth)",
   "j / k                      move selection",
-  "Enter                      open detail",
+  "Enter                      open detail (claim, receipt, or completion gate in Proof)",
   "Esc                        back / close",
   "r                          reload canonical state",
   "?                          toggle this help",
@@ -458,6 +676,26 @@ function statusScreen(model: ConsoleModel, width: number, st: Styler): string[] 
   ];
 }
 
+/**
+ * Narrowest width the console lays out for. Below this the layout is not merely cramped, it is
+ * unusable, so the console says so instead of rendering.
+ */
+export const MIN_CONSOLE_WIDTH = 20;
+
+/**
+ * Below MIN_CONSOLE_WIDTH the console cannot lay out, but it must still not emit lines wider than
+ * the terminal: clamping content up to the floor makes the terminal wrap every line, which looks
+ * like corruption rather than a narrow window. Render a notice sized to the ACTUAL width instead.
+ */
+function tooNarrowScreen(width: number, st: Styler): string[] {
+  if (width <= 0) return [];
+  return [
+    st.fg("warning", truncate("NewFang", width)),
+    st.fg("muted", truncate(`needs ${MIN_CONSOLE_WIDTH} cols`, width)),
+    st.fg("muted", truncate("widen · q quit", width)),
+  ];
+}
+
 /** Render the whole console to width-correct lines. */
 export function renderConsole(
   model: ConsoleModel,
@@ -465,7 +703,11 @@ export function renderConsole(
   width: number,
   st: Styler = plainStyler,
 ): string[] {
-  const w = Math.max(20, Math.floor(width));
+  const requested = Math.floor(width);
+  // Never render wider than the terminal actually is.
+  if (requested < MIN_CONSOLE_WIDTH) return tooNarrowScreen(requested, st);
+
+  const w = requested;
   if (model.status !== "ok") return statusScreen(model, w, st);
 
   const lines: string[] = [];
@@ -486,6 +728,7 @@ export function renderConsole(
     if (ui.view === "understanding") lines.push(...understandingView(model, ui, w, st));
     else if (ui.view === "focus") lines.push(...focusView(model, ui, w, st));
     else if (ui.view === "work") lines.push(...workView(model, ui, w, st));
+    else if (ui.view === "proof") lines.push(...proofView(model, ui, w, st));
     else lines.push(...truthView(model, ui, w, st));
   }
 

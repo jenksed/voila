@@ -46,3 +46,11 @@
 {"type":"intake_revision_requested","id":"INT-8","reviewedRevision":2,"revision":46,"ts":"2026-07-25T20:35:44.079Z"}
 {"type":"intake_draft_staged","id":"INT-8","draftRevision":3,"blocked":false,"revision":47,"ts":"2026-07-25T20:40:21.543Z"}
 {"type":"intake_applied","id":"INT-8","draftRevision":3,"created":{"decisions":1,"assumptions":0,"risks":0,"workItems":0},"skippedDuplicates":4,"revision":48,"ts":"2026-07-25T20:59:26.992Z"}
+{"type":"schema_migrated","from":3,"to":4,"revision":49,"ts":"2026-07-25T16:37:27.231Z"}
+{"type":"claim_created","id":"CLM-1","workItemId":"NF-3","revision":50,"ts":"2026-07-25T16:38:42.269Z"}
+{"type":"verification_recorded","id":"RCP-1","claimId":"CLM-1","result":"failed","revision":51,"ts":"2026-07-25T16:46:24.935Z"}
+{"type":"verification_recorded","id":"RCP-2","claimId":"CLM-1","result":"passed","revision":52,"ts":"2026-07-25T16:46:50.384Z"}
+{"type":"claim_created","id":"CLM-2","workItemId":"NF-3","revision":53,"ts":"2026-07-25T22:26:09.234Z"}
+{"type":"verification_recorded","id":"RCP-3","claimId":"CLM-2","result":"passed","revision":54,"ts":"2026-07-25T22:26:34.890Z"}
+{"type":"verification_recorded","id":"RCP-4","claimId":"CLM-2","result":"passed","revision":55,"ts":"2026-07-25T22:29:23.997Z"}
+{"type":"next_action_set","revision":56,"ts":"2026-07-25T22:31:37.742Z"}

@@ -2,15 +2,33 @@
 // demanding attention: identity, phase, health, focus, next action, and only non-empty counts.
 
 import type { ProjectState } from "../domain/types.ts";
+import type { ProofSummary } from "../domain/proof.ts";
 import { abbreviate } from "../domain/status.ts";
+
+/**
+ * The single most severe proof problem, as one compact fragment — or null when proof is quiet.
+ * Deliberately at most ONE warning: the widget's two-line contract is not negotiable.
+ */
+export function proofWarning(proof: ProofSummary | null | undefined): string | null {
+  if (!proof || proof.total === 0) return null;
+  if (proof.unsupported > 0) return `${proof.unsupported} unsupported`;
+  if (proof.stale > 0) return `${proof.stale} stale`;
+  if (proof.pending > 0) return `${proof.pending} unproven`;
+  return null;
+}
 
 /**
  * Ambient view. Shape:
  *   NewFang · BUILD · GREEN · Focus NF-2
- *   Next: Build planning-document intake · 3 risks · 1 blocked
+ *   Next: Build planning-document intake · 3 risks · 1 blocked · 2 stale
  * Empty counts are omitted; long text is abbreviated; narrow widths degrade by dropping the tail.
+ * At most one proof warning is added, and the result is always at most two lines.
  */
-export function homeViewLines(state: ProjectState | null, width = 80): string[] {
+export function homeViewLines(
+  state: ProjectState | null,
+  width = 80,
+  proof?: ProofSummary | null,
+): string[] {
   if (state === null) {
     return ["NewFang · not initialized — run /newfang init"];
   }
@@ -24,6 +42,8 @@ export function homeViewLines(state: ProjectState | null, width = 80): string[] 
   const openRisks = state.risks.filter((r) => r.status === "open").length;
   if (openRisks > 0) counts.push(`${openRisks} risk${openRisks === 1 ? "" : "s"}`);
   if (blocked > 0) counts.push(`${blocked} blocked`);
+  const warning = proofWarning(proof);
+  if (warning) counts.push(warning);
 
   const budget = Math.max(20, width);
   const tail = counts.length > 0 ? ` · ${counts.join(" · ")}` : "";

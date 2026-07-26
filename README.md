@@ -7,28 +7,35 @@ not merely generating code.
 
 ## Status
 
-**Phase 0 + Packets 1–3 complete — the first daily-use workflow.** NewFang is a runnable Pi extension:
+**Phase 0 + Packets 1–4 complete — evidence-gated completion.** NewFang is a runnable Pi extension:
 a thin adapter (`.pi/extensions/newfang.ts`), canonical `.newfang/` state with **explicit schema
-versioning/migration** (now v3), a compact **project-operations layer** (work items, decisions,
-assumptions, risks), a keyboard-first **Steward Console** (`/newfang home`), and **planning intake +
-repository orientation**: a source document is preserved byte-for-byte, interpreted into a structured
-draft with line-level provenance, reviewed by you in an Understanding Check, and only then applied to
-canonical project truth. 19 LLM-callable tools, a real **Project Steward** Pi skill, and compact
-automatic context injection. Pinned to `@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via
-mise), tested (**173 tests**). The repo **dogfoods its own** `.newfang/` state.
+versioning/migration** (now v4), a compact **project-operations layer** (work items, decisions,
+assumptions, risks), a keyboard-first **Steward Console** (`/newfang home`), **planning intake +
+repository orientation**, and the **proof engine**: claims tied to exact acceptance criteria,
+executable verification recorded as immutable receipts, evidence freshness derived from a repository
+fingerprint, and a **protected completion transition**. 27 LLM-callable tools, a real **Project
+Steward** Pi skill, and compact automatic context injection. Pinned to
+`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**355 tests**). The
+repo **dogfoods its own** `.newfang/` state.
 
 **The boundary is explicit**: the model interprets (fallibly), NewFang enforces (preservation,
 schemas, provenance, gating, persistence, idempotency), and *you* accept. Nothing enters canonical
 truth without your confirmation.
 
-This is **not** the full MVP. There are no claims, runtime verification receipts, completion gate,
-approval bundles, delegation, background processes, sandboxing, remote execution, model routing, or
-release automation. NewFang **cannot yet mark work complete** — that transition is reserved for a
-future verification-gated tool, which is why NF-1 is still `in_progress`. The authenticated
-Project-Steward acceptance run is **pending**, so daily-use readiness is not yet claimed. See
+**What the completion gate does and does not guarantee.** Canonical state will not mark a work item
+`completed` unless every acceptance criterion is covered by a required claim and every required claim
+is supported by a current passing receipt. That guarantees NewFang's *state transition* — it does
+**not** stop a model from writing unsupported prose in conversation, and a `completed` status typed
+by hand into `project.json` is still schema-valid (`/newfang doctor` reports when such a record no
+longer revalidates). Verification runs a real command with a bounded timeout and no shell; it is
+**not a sandbox**. See [docs/design/PROOF_ENGINE.md](docs/design/PROOF_ENGINE.md).
+
+This is **not** the full MVP. There are no approval bundles, delegation, background processes,
+sandboxing, remote execution, model routing, cost tracking, or release automation. NF-1 and NF-2
+remain open honestly: the interactive Steward Console check and the authenticated Project-Steward
+acceptance run are still **pending**, so daily-use readiness is not yet claimed. See
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
-[docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) for what comes next
-(claims, receipts, and protected completion).
+[docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) for what comes next.
 
 ## What NewFang is (and is not)
 
@@ -63,6 +70,8 @@ The authoritative product statement is [docs/product/PRODUCT_DIRECTION.md](docs/
 | Design | [docs/design/STEWARD_CONSOLE.md](docs/design/STEWARD_CONSOLE.md) | Steward Console design and alternatives |
 | Design | [docs/design/PLANNING_INTAKE.md](docs/design/PLANNING_INTAKE.md) | Intake lifecycle, provenance, and apply semantics |
 | Design | [docs/design/REPOSITORY_ORIENTATION.md](docs/design/REPOSITORY_ORIENTATION.md) | Bounded orientation and staleness |
+| Design | [docs/design/PROOF_ENGINE.md](docs/design/PROOF_ENGINE.md) | Claims, receipts, freshness, protected completion |
+| Verification | [docs/verification/PACKET_4_PROOF_ENGINE.md](docs/verification/PACKET_4_PROOF_ENGINE.md) | Packet 4 proof-engine verification record |
 | Verification | [docs/verification/PACKET_2_5_STEWARD_CONSOLE.md](docs/verification/PACKET_2_5_STEWARD_CONSOLE.md) | Packet 2.5 console verification record |
 | Verification | [docs/verification/PACKET_3_INTAKE_ORIENTATION.md](docs/verification/PACKET_3_INTAKE_ORIENTATION.md) | Packet 3 intake/orientation verification record |
 

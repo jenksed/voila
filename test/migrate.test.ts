@@ -10,6 +10,7 @@ import { loadState, initState, readRawState } from "../src/state/store.ts";
 import { statePaths } from "../src/state/paths.ts";
 import { StateValidationError, UnknownSchemaVersionError } from "../src/state/errors.ts";
 import { renderStatusView } from "../src/domain/status.ts";
+import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import { V1_FIXTURE } from "./helpers.ts";
 
 async function withV1(): Promise<string> {
@@ -25,14 +26,14 @@ test("inspecting a v1 project reports the supported chained migration", async ()
   const report = await runMigration(root, { apply: false });
   assert.equal(report.status, "inspectable");
   assert.equal(report.fromVersion, 1);
-  assert.equal(report.toVersion, 3);
+  assert.equal(report.toVersion, SCHEMA_VERSION);
   assert.ok(report.additions.length >= 4);
   assert.ok(report.safe);
   // No write happened.
   assert.equal((await readRawState(root)).version, 1);
 });
 
-test("applying migration produces valid v3, backup, identity preservation, event, and view", async () => {
+test("applying migration produces valid current state, backup, identity, event, and view", async () => {
   const root = await withV1();
   const before = await readFile(statePaths(root).projectJson, "utf8");
 
@@ -43,25 +44,27 @@ test("applying migration produces valid v3, backup, identity preservation, event
   // Backup contains the original v1 bytes.
   assert.equal(await readFile(report.backupLocation as string, "utf8"), before);
 
-  // Canonical is now valid v2 with preserved identity and bumped revision.
-  const v2 = await loadState(root);
-  assert.equal(v2.schemaVersion, 3);
-  assert.equal(v2.projectId, V1_FIXTURE.projectId);
-  assert.equal(v2.createdAt, V1_FIXTURE.createdAt);
-  assert.equal(v2.displayName, V1_FIXTURE.displayName);
-  assert.equal(v2.revision, V1_FIXTURE.revision + 1);
-  assert.deepEqual(v2.workItems, []);
+  // Canonical is now valid current-schema state with preserved identity and bumped revision.
+  const migrated = await loadState(root);
+  assert.equal(migrated.schemaVersion, SCHEMA_VERSION);
+  assert.equal(migrated.projectId, V1_FIXTURE.projectId);
+  assert.equal(migrated.createdAt, V1_FIXTURE.createdAt);
+  assert.equal(migrated.displayName, V1_FIXTURE.displayName);
+  assert.equal(migrated.revision, V1_FIXTURE.revision + 1);
+  assert.deepEqual(migrated.workItems, []);
 
   // Migration event appended.
   const events = (await readFile(statePaths(root).eventsJsonl, "utf8"))
     .trim()
     .split("\n")
     .map((l) => JSON.parse(l));
-  assert.ok(events.some((e) => e.type === "schema_migrated" && e.from === 1 && e.to === 3));
+  assert.ok(
+    events.some((e) => e.type === "schema_migrated" && e.from === 1 && e.to === SCHEMA_VERSION),
+  );
 
   // Status view regenerated and consistent.
   const view = await readFile(statePaths(root).statusView, "utf8");
-  assert.equal(view, renderStatusView(v2));
+  assert.equal(view, renderStatusView(migrated));
 });
 
 test("rerunning migration on the current version is a safe no-op", async () => {

@@ -3,6 +3,8 @@
 import { loadState } from "../state/store.ts";
 import { MigrationRequiredError, StateNotFoundError } from "../state/errors.ts";
 import { currentOrientationStatus } from "../state/orientation-store.ts";
+import { tryRepositoryFingerprint } from "../state/fingerprint.ts";
+import { proofSummary } from "../domain/proof.ts";
 import { buildContextBlock, type ContextInput } from "./inject.ts";
 
 /** Build the NewFang context block for a project root, degrading gracefully on any problem. */
@@ -25,6 +27,11 @@ export async function assembleContext(root: string): Promise<string> {
             reasons: orientation.staleness.reasons,
           }
         : null,
+      // Only pay for a git fingerprint when claims exist to evaluate.
+      proof:
+        state.claims.length > 0
+          ? proofSummary(state, await tryRepositoryFingerprint(root))
+          : proofSummary(state, null),
     };
   } catch (error) {
     if (error instanceof StateNotFoundError) input = { status: "uninitialized" };

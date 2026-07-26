@@ -80,8 +80,10 @@ test("extension registers the newfang command, tools, and session_start", async 
 
   assert.ok(h.commands.has("newfang"));
   assert.ok(h.events.has("session_start"));
-  assert.equal(h.tools.size, 20);
+  assert.equal(h.tools.size, 28);
   assert.ok(h.tools.has("newfang_create_work_item"));
+  assert.ok(h.tools.has("newfang_request_intake_revision"));
+  assert.ok(h.tools.has("newfang_complete_work_item"));
 });
 
 test("session_start shows init hint when uninitialized", async () => {

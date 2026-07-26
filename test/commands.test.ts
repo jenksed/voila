@@ -101,13 +101,13 @@ test("runMigrate inspects then applies", async () => {
   await writeFile(statePaths(root).projectJson, `${JSON.stringify(V1_FIXTURE, null, 2)}\n`, "utf8");
 
   const inspect = await runMigrate(root, false);
-  assert.match(inspect.lines.join("\n"), /Migration available: v1 -> v3/);
+  assert.match(inspect.lines.join("\n"), /Migration available: v1 -> v4/);
 
   const applied = await runMigrate(root, true);
-  assert.match(applied.lines.join("\n"), /Migrated schema v1 -> v3/);
-  assert.equal((await loadState(root)).schemaVersion, 3);
+  assert.match(applied.lines.join("\n"), /Migrated schema v1 -> v4/);
+  assert.equal((await loadState(root)).schemaVersion, 4);
 
-  assert.match((await runMigrate(root, false)).lines.join("\n"), /already v3/);
+  assert.match((await runMigrate(root, false)).lines.join("\n"), /already v4/);
 });
 
 test("runDoctor passes on a healthy seeded project", async () => {
@@ -135,7 +135,7 @@ test("runDoctor warns migration-required for v1 and fails node below minimum", a
 });
 
 test("runDoctor detects dangling references, cycles, and bad ID counters", async () => {
-  // Hand-craft a schema-valid but referentially broken v2 state.
+  // Hand-craft a schema-valid but referentially broken current-schema state.
   const s = createInitialState({ displayName: "demo", now: "T", projectId: "id" });
   const broken = {
     ...s,
@@ -149,6 +149,7 @@ test("runDoctor detects dangling references, cycles, and bad ID counters", async
         priority: "normal",
         acceptanceCriteria: [],
         dependsOn: ["NF-6", "NF-99"],
+        requiredClaimIds: [],
         createdAt: "T",
         updatedAt: "T",
       },
@@ -160,6 +161,7 @@ test("runDoctor detects dangling references, cycles, and bad ID counters", async
         priority: "normal",
         acceptanceCriteria: [],
         dependsOn: ["NF-5"],
+        requiredClaimIds: [],
         createdAt: "T",
         updatedAt: "T",
       },

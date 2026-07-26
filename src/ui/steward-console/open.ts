@@ -9,7 +9,9 @@ import { readDraft, readUnderstanding } from "../../state/intake-store.ts";
 import { currentOrientationStatus } from "../../state/orientation-store.ts";
 import { blockingConflicts } from "../../domain/intake.ts";
 import { runIntakeApply, runIntakeReject } from "../../commands/intake.ts";
-import { buildConsoleModel, type ConsoleModel } from "./model.ts";
+import { buildProofOverview, completionReadiness } from "../../state/proof-store.ts";
+import { tryRepositoryFingerprint } from "../../state/fingerprint.ts";
+import { buildConsoleModel, toReceiptView, type ConsoleModel, type ProofView } from "./model.ts";
 import { getRuntimeContext } from "./runtime.ts";
 import { createConsoleComponent, type ConsoleComponent } from "./component.ts";
 import type { Styler, StyleToken } from "./render.ts";
@@ -94,7 +96,9 @@ export async function buildModelForRoot(root: string, piVersion?: string): Promi
         }
       : null;
 
-    return buildConsoleModel({ status: "ok", state, pendingIntake, orientation }, runtime);
+    const proof = await buildProofViewForState(root, state);
+
+    return buildConsoleModel({ status: "ok", state, pendingIntake, orientation, proof }, runtime);
   } catch (error) {
     if (error instanceof StateNotFoundError) {
       return buildConsoleModel({ status: "uninitialized" }, runtime);
@@ -104,6 +108,50 @@ export async function buildModelForRoot(root: string, piVersion?: string): Promi
     }
     return buildConsoleModel({ status: "error", message: (error as Error).message }, runtime);
   }
+}
+
+/** Most recent receipts shown in the Proof view. Older receipts stay reachable via /newfang proof. */
+const RECEIPT_ROWS = 5;
+
+/**
+ * Build the console's Proof view from canonical state plus a best-effort repository fingerprint.
+ * Read-only: no derived status is ever written back.
+ */
+export async function buildProofViewForState(
+  root: string,
+  state: Parameters<typeof buildProofOverview>[0],
+): Promise<ProofView> {
+  // Skip the git work entirely when there is nothing to evaluate: no claims means no freshness.
+  const fingerprint =
+    state.claims.length === 0 && state.receipts.length === 0
+      ? null
+      : await tryRepositoryFingerprint(root);
+  const overview = buildProofOverview(state, fingerprint);
+  const focusId = state.focusWorkItemId;
+  return {
+    fingerprintAvailable: fingerprint !== null,
+    summary: overview.summary,
+    claims: overview.claims.map((r) => ({
+      id: r.claim.id,
+      workItemId: r.claim.workItemId,
+      workItemTitle: r.workItem?.title ?? "(missing work item)",
+      statement: r.claim.statement,
+      confidence: r.claim.confidence,
+      status: r.evaluation.status,
+      reason: r.evaluation.reason,
+      required: r.required,
+      coveredAcceptanceCriteria: r.claim.coveredAcceptanceCriteria,
+      knownLimitations: r.claim.knownLimitations,
+      latestReceiptId: r.evaluation.latestReceiptId ?? null,
+      latestResult: r.evaluation.latestResult ?? null,
+      receiptCount: r.evaluation.receiptCount,
+    })),
+    receipts: state.receipts
+      .slice(-RECEIPT_ROWS)
+      .reverse()
+      .map((receipt) => toReceiptView(receipt, fingerprint)),
+    focusReadiness: focusId ? completionReadiness(overview, focusId) : null,
+  };
 }
 
 /** UI surface the console needs from Pi's extension context. */

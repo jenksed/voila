@@ -1,11 +1,14 @@
 // Pure schema migration transforms and plans. No I/O.
-// Chain: v1 (Packet 1) -> v2 (Packet 2 operations) -> v3 (Packet 3 intake + orientation).
+// Chain: v1 (Packet 1) -> v2 (Packet 2 operations) -> v3 (Packet 3 intake + orientation)
+//        -> v4 (Packet 4 claims + receipts + protected completion).
 
 import type { ProjectState } from "./types.ts";
 import type { ProjectStateV1 } from "./schema-v1.ts";
 import { validateProjectStateV1 } from "./schema-v1.ts";
 import type { ProjectStateV2 } from "./schema-v2.ts";
 import { validateProjectStateV2 } from "./schema-v2.ts";
+import type { ProjectStateV3 } from "./schema-v3.ts";
+import { validateProjectStateV3 } from "./schema-v3.ts";
 import { SCHEMA_VERSION } from "./types.ts";
 
 export interface MigrationAddition {
@@ -40,20 +43,47 @@ const V3_ADDITIONS: MigrationAddition[] = [
   },
 ];
 
+const V4_ADDITIONS: MigrationAddition[] = [
+  { name: "claims", detail: "claims about work items; support is derived, never stored (empty)" },
+  {
+    name: "receipts",
+    detail: "compact verification-receipt metadata; artifacts live in .newfang/receipts/ (empty)",
+  },
+  {
+    name: "workItems[].requiredClaimIds",
+    detail:
+      "proof requirements per work item; existing items default to [] and therefore cannot be completed until claims are attached",
+  },
+  {
+    name: "sequences.claim / sequences.receipt",
+    detail: "monotonic CLM-n and RCP-n counters (start at 1)",
+  },
+];
+
 /** Migration steps required to reach the current schema version from `fromVersion`. */
 export function migrationPlan(fromVersion: number): {
   steps: Array<{ from: number; to: number }>;
   additions: MigrationAddition[];
 } | null {
   if (fromVersion === SCHEMA_VERSION) return { steps: [], additions: [] };
-  if (fromVersion === 2) return { steps: [{ from: 2, to: 3 }], additions: V3_ADDITIONS };
+  if (fromVersion === 3) return { steps: [{ from: 3, to: 4 }], additions: V4_ADDITIONS };
+  if (fromVersion === 2) {
+    return {
+      steps: [
+        { from: 2, to: 3 },
+        { from: 3, to: 4 },
+      ],
+      additions: [...V3_ADDITIONS, ...V4_ADDITIONS],
+    };
+  }
   if (fromVersion === 1) {
     return {
       steps: [
         { from: 1, to: 2 },
         { from: 2, to: 3 },
+        { from: 3, to: 4 },
       ],
-      additions: [...V2_ADDITIONS, ...V3_ADDITIONS],
+      additions: [...V2_ADDITIONS, ...V3_ADDITIONS, ...V4_ADDITIONS],
     };
   }
   return null;
@@ -81,23 +111,23 @@ export function migrateV1ToV2(v1: ProjectStateV1): ProjectStateV2 {
 }
 
 /** v2 -> v3: initialize intake and orientation metadata. Preserves everything already present. */
-export function migrateV2ToV3(v2: ProjectStateV2): ProjectState {
+export function migrateV2ToV3(v2: ProjectStateV2): ProjectStateV3 {
   return {
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: 3,
     projectId: v2.projectId,
     displayName: v2.displayName,
-    phase: v2.phase as ProjectState["phase"],
-    health: v2.health as ProjectState["health"],
+    phase: v2.phase,
+    health: v2.health,
     nextAction: v2.nextAction,
     ...(v2.nextActionRationale !== undefined
       ? { nextActionRationale: v2.nextActionRationale }
       : {}),
     focusWorkItemId: v2.focusWorkItemId,
     sequences: { ...v2.sequences, intake: 1, orientation: 1 },
-    workItems: v2.workItems as ProjectState["workItems"],
-    decisions: v2.decisions as ProjectState["decisions"],
-    assumptions: v2.assumptions as ProjectState["assumptions"],
-    risks: v2.risks as ProjectState["risks"],
+    workItems: v2.workItems,
+    decisions: v2.decisions,
+    assumptions: v2.assumptions,
+    risks: v2.risks,
     intakes: [],
     orientations: [],
     createdAt: v2.createdAt,
@@ -107,15 +137,64 @@ export function migrateV2ToV3(v2: ProjectStateV2): ProjectState {
 }
 
 /**
- * Run the full migration chain from an untrusted raw value to a v3 candidate.
+ * v3 -> v4: introduce claims, verification receipts, and per-work-item proof requirements.
+ * Existing work items default to `requiredClaimIds: []`, which means they cannot be completed until
+ * claims are attached deliberately — the migration never invents proof.
+ */
+export function migrateV3ToV4(v3: ProjectStateV3): ProjectState {
+  const workItems = v3.workItems.map((raw) => {
+    if (typeof raw !== "object" || raw === null) return raw;
+    const item = raw as Record<string, unknown>;
+    return {
+      ...item,
+      requiredClaimIds: Array.isArray(item.requiredClaimIds) ? item.requiredClaimIds : [],
+    };
+  });
+
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    projectId: v3.projectId,
+    displayName: v3.displayName,
+    phase: v3.phase as ProjectState["phase"],
+    health: v3.health as ProjectState["health"],
+    nextAction: v3.nextAction,
+    ...(v3.nextActionRationale !== undefined
+      ? { nextActionRationale: v3.nextActionRationale }
+      : {}),
+    focusWorkItemId: v3.focusWorkItemId,
+    sequences: { ...v3.sequences, claim: 1, receipt: 1 },
+    workItems: workItems as ProjectState["workItems"],
+    decisions: v3.decisions as ProjectState["decisions"],
+    assumptions: v3.assumptions as ProjectState["assumptions"],
+    risks: v3.risks as ProjectState["risks"],
+    intakes: v3.intakes as ProjectState["intakes"],
+    orientations: v3.orientations as ProjectState["orientations"],
+    claims: [],
+    receipts: [],
+    ...(v3.currentIntakeId !== undefined ? { currentIntakeId: v3.currentIntakeId } : {}),
+    ...(v3.currentOrientationId !== undefined
+      ? { currentOrientationId: v3.currentOrientationId }
+      : {}),
+    createdAt: v3.createdAt,
+    updatedAt: v3.updatedAt,
+    revision: v3.revision,
+  };
+}
+
+/**
+ * Run the full migration chain from an untrusted raw value to a current-version candidate.
  * Validates each source step; throws on any malformed source. Performs no I/O.
  */
 export function migrateToCurrent(raw: unknown, fromVersion: number): ProjectState {
   if (fromVersion === 1) {
-    return migrateV2ToV3(validateProjectStateV2(migrateV1ToV2(validateProjectStateV1(raw))));
+    const v2 = validateProjectStateV2(migrateV1ToV2(validateProjectStateV1(raw)));
+    return migrateV3ToV4(validateProjectStateV3(migrateV2ToV3(v2)));
   }
   if (fromVersion === 2) {
-    return migrateV2ToV3(validateProjectStateV2(raw));
+    return migrateV3ToV4(validateProjectStateV3(migrateV2ToV3(validateProjectStateV2(raw))));
+  }
+  if (fromVersion === 3) {
+    return migrateV3ToV4(validateProjectStateV3(raw));
   }
   throw new Error(`No migration path from schema version ${fromVersion}.`);
 }

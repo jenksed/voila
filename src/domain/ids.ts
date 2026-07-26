@@ -11,6 +11,8 @@ export const ID_PREFIXES: Record<SequenceKey, string> = {
   risk: "RSK",
   intake: "INT",
   orientation: "ORI",
+  claim: "CLM",
+  receipt: "RCP",
 };
 
 /**

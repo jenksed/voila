@@ -14,11 +14,20 @@ import {
   readUnderstanding,
 } from "../state/intake-store.ts";
 import { currentOrientationStatus } from "../state/orientation-store.ts";
+import {
+  leftoverReceiptTempDirs,
+  readReceiptManifest,
+  readReceiptOutput,
+} from "../state/receipt-store.ts";
+import { receiptPaths } from "../state/paths.ts";
+import { tryRepositoryFingerprint } from "../state/fingerprint.ts";
+import { assessCompletion, criterionCoverage, evaluateClaim } from "../domain/proof.ts";
 import { sha256 } from "../state/source.ts";
 import { loadState, readRawState } from "../state/store.ts";
 import { StateNotFoundError, StateValidationError } from "../state/errors.ts";
 import { renderStatusView } from "../domain/status.ts";
 import { detectCycle } from "../domain/operations.ts";
+import { migrationPlan } from "../domain/migrate.ts";
 import { ID_PREFIXES } from "../domain/ids.ts";
 import { SCHEMA_VERSION } from "../domain/types.ts";
 import type { ProjectState, Sequences } from "../domain/types.ts";
@@ -84,6 +93,8 @@ function stateIntegrityChecks(state: ProjectState): DoctorCheck[] {
     ["decision", state.decisions.map((d) => d.id)],
     ["assumption", state.assumptions.map((a) => a.id)],
     ["risk", state.risks.map((r) => r.id)],
+    ["claim", state.claims.map((c) => c.id)],
+    ["receipt", state.receipts.map((r) => r.id)],
   ];
   const seqProblems: string[] = [];
   for (const [key, ids] of seqSpecs) {
@@ -234,13 +245,16 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
 
   checks.push({ name: "newfang state", level: "pass", detail: "project.json present" });
 
-  if (raw.version === 1) {
-    checks.push({
-      name: "schema migration",
-      level: "warn",
-      detail: "v1 state; run /newfang migrate --apply",
-    });
-    return checks;
+  // Any older version with a known migration path is a WARN with an actionable instruction.
+  if (typeof raw.version === "number" && raw.version !== SCHEMA_VERSION) {
+    if (migrationPlan(raw.version) !== null) {
+      checks.push({
+        name: "schema migration",
+        level: "warn",
+        detail: `v${raw.version} state; migration to v${SCHEMA_VERSION} is required — run /newfang migrate --apply`,
+      });
+      return checks;
+    }
   }
   if (raw.version !== SCHEMA_VERSION) {
     checks.push({
@@ -268,6 +282,7 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   checks.push(...stateIntegrityChecks(state));
   checks.push(...(await intakeChecks(input.root, state)));
   checks.push(...(await orientationChecks(input.root, state)));
+  checks.push(...(await proofChecks(input.root, state)));
 
   // Project brief presence.
   checks.push(
@@ -307,6 +322,267 @@ export function worstLevel(checks: DoctorCheck[]): "info" | "warning" | "error" 
   if (checks.some((c) => c.level === "fail")) return "error";
   if (checks.some((c) => c.level === "warn")) return "warning";
   return "info";
+}
+
+/**
+ * Proof integrity: claim/receipt references, criterion coverage, artifact presence, manifest/canonical
+ * agreement, output hashes, staleness, and leftover staging directories.
+ *
+ * Read-only and non-destructive. In particular, a completed work item whose CURRENT evidence no longer
+ * satisfies its gates is reported as a WARNING — completed work is never silently reverted.
+ */
+async function proofChecks(root: string, state: ProjectState): Promise<DoctorCheck[]> {
+  const checks: DoctorCheck[] = [];
+
+  const leftovers = await leftoverReceiptTempDirs(root);
+  if (leftovers.length > 0) {
+    checks.push({
+      name: "receipt staging directories",
+      level: "warn",
+      detail: `${leftovers.length} leftover temp dir(s) under .newfang/receipts/.tmp/ from an interrupted run (${leftovers.join(", ")}); safe to delete`,
+    });
+  }
+
+  if (state.claims.length === 0 && state.receipts.length === 0) {
+    checks.push({
+      name: "proof",
+      level: "warn",
+      detail: "no claims or receipts recorded; no work item can be completed yet",
+    });
+    return checks;
+  }
+
+  const workIds = new Set(state.workItems.map((w) => w.id));
+  const claimIds = new Set(state.claims.map((c) => c.id));
+  const receiptIds = new Set(state.receipts.map((r) => r.id));
+
+  // --- Reference integrity ---
+  const refProblems: string[] = [];
+  for (const claim of state.claims) {
+    if (!workIds.has(claim.workItemId)) {
+      refProblems.push(`${claim.id} references missing work item ${claim.workItemId}`);
+    }
+    for (const rid of claim.receiptIds) {
+      if (!receiptIds.has(rid)) {
+        refProblems.push(`${claim.id} links missing receipt ${rid}`);
+        continue;
+      }
+      const receipt = state.receipts.find((r) => r.id === rid);
+      if (receipt && receipt.claimId !== claim.id) {
+        refProblems.push(`${claim.id} links ${rid}, which belongs to ${receipt.claimId}`);
+      }
+    }
+  }
+  for (const receipt of state.receipts) {
+    if (!claimIds.has(receipt.claimId)) {
+      refProblems.push(`${receipt.id} references missing claim ${receipt.claimId}`);
+      continue;
+    }
+    const claim = state.claims.find((c) => c.id === receipt.claimId);
+    if (claim && !claim.receiptIds.includes(receipt.id)) {
+      refProblems.push(`${receipt.id} is not linked from its claim ${receipt.claimId}`);
+    }
+  }
+  for (const item of state.workItems) {
+    for (const cid of item.requiredClaimIds) {
+      if (!claimIds.has(cid)) {
+        refProblems.push(`${item.id} requires missing claim ${cid}`);
+        continue;
+      }
+      const claim = state.claims.find((c) => c.id === cid);
+      if (claim && claim.workItemId !== item.id) {
+        refProblems.push(`${item.id} requires ${cid}, which is about ${claim.workItemId}`);
+      }
+    }
+  }
+  checks.push(
+    refProblems.length === 0
+      ? {
+          name: "proof references",
+          level: "pass",
+          detail: "claims, receipts, and requirements resolve",
+        }
+      : { name: "proof references", level: "fail", detail: refProblems.join("; ") },
+  );
+
+  // --- Claim/work-item criterion agreement ---
+  const mismatches: string[] = [];
+  for (const claim of state.claims) {
+    const item = state.workItems.find((w) => w.id === claim.workItemId);
+    if (!item) continue;
+    const known = new Set(item.acceptanceCriteria);
+    for (const criterion of claim.coveredAcceptanceCriteria) {
+      if (!known.has(criterion)) {
+        mismatches.push(
+          `${claim.id} covers a criterion ${item.id} no longer states: "${abbreviateDetail(criterion)}"`,
+        );
+      }
+    }
+  }
+  checks.push(
+    mismatches.length === 0
+      ? {
+          name: "claim criterion agreement",
+          level: "pass",
+          detail: "covered criteria match work items",
+        }
+      : { name: "claim criterion agreement", level: "fail", detail: mismatches.join("; ") },
+  );
+
+  // --- Uncovered acceptance criteria on gated items ---
+  const uncovered: string[] = [];
+  for (const item of state.workItems) {
+    if (item.requiredClaimIds.length === 0) continue;
+    const missing = criterionCoverage(state, item).filter((c) => !c.covered);
+    if (missing.length > 0) {
+      uncovered.push(`${item.id}: ${missing.length} uncovered criterion(s)`);
+    }
+  }
+  if (uncovered.length > 0) {
+    checks.push({
+      name: "acceptance criterion coverage",
+      level: "warn",
+      detail: uncovered.join("; "),
+    });
+  } else if (state.workItems.some((w) => w.requiredClaimIds.length > 0)) {
+    checks.push({
+      name: "acceptance criterion coverage",
+      level: "pass",
+      detail: "every gated item's criteria are covered",
+    });
+  }
+
+  // --- Artifacts, manifest agreement, and output hashes ---
+  const artifactProblems: string[] = [];
+  const hashProblems: string[] = [];
+  for (const receipt of state.receipts) {
+    const paths = receiptPaths(root, receipt.id);
+    if (!existsSync(paths.dir)) {
+      artifactProblems.push(`${receipt.id}: artifact directory missing`);
+      continue;
+    }
+    if (!existsSync(paths.stdout) || !existsSync(paths.stderr)) {
+      artifactProblems.push(`${receipt.id}: stdout.txt or stderr.txt missing`);
+    }
+    if (receipt.artifactRef !== paths.artifactRef) {
+      artifactProblems.push(
+        `${receipt.id}: artifactRef ${receipt.artifactRef} disagrees with ${paths.artifactRef}`,
+      );
+    }
+    let manifest;
+    try {
+      manifest = await readReceiptManifest(root, receipt.id);
+    } catch {
+      artifactProblems.push(`${receipt.id}: manifest.json missing or unreadable`);
+      continue;
+    }
+    const disagreements: string[] = [];
+    if (manifest.receiptId !== receipt.id) disagreements.push("receiptId");
+    if (manifest.claimId !== receipt.claimId) disagreements.push("claimId");
+    if (manifest.result !== receipt.result) disagreements.push("result");
+    if (manifest.executable !== receipt.executable) disagreements.push("executable");
+    if (manifest.args.join(" ") !== receipt.args.join(" ")) disagreements.push("args");
+    if (manifest.cwdRef !== receipt.cwdRef) disagreements.push("cwdRef");
+    if (manifest.repositoryFingerprint !== receipt.repositoryFingerprint) {
+      disagreements.push("repositoryFingerprint");
+    }
+    if (manifest.startedAt !== receipt.startedAt) disagreements.push("startedAt");
+    if (manifest.finishedAt !== receipt.finishedAt) disagreements.push("finishedAt");
+    if (manifest.outputTruncated !== receipt.outputTruncated) disagreements.push("outputTruncated");
+    if ((manifest.exitCode ?? undefined) !== receipt.exitCode) disagreements.push("exitCode");
+    if (disagreements.length > 0) {
+      artifactProblems.push(
+        `${receipt.id}: manifest disagrees with canonical metadata (${disagreements.join(", ")})`,
+      );
+    }
+    try {
+      const output = await readReceiptOutput(root, receipt.id);
+      if (sha256(output.stdout) !== manifest.stdoutSha256) {
+        hashProblems.push(`${receipt.id}: stdout.txt hash mismatch (artifact modified?)`);
+      }
+      if (sha256(output.stderr) !== manifest.stderrSha256) {
+        hashProblems.push(`${receipt.id}: stderr.txt hash mismatch (artifact modified?)`);
+      }
+    } catch {
+      // absence already reported above
+    }
+  }
+  checks.push(
+    artifactProblems.length === 0
+      ? {
+          name: "receipt artifacts",
+          level: "pass",
+          detail: `${state.receipts.length} receipt(s) present and consistent with canonical metadata`,
+        }
+      : { name: "receipt artifacts", level: "fail", detail: artifactProblems.join("; ") },
+  );
+  checks.push(
+    hashProblems.length === 0
+      ? {
+          name: "receipt output hashes",
+          level: "pass",
+          detail: "stored output matches its manifest hashes",
+        }
+      : { name: "receipt output hashes", level: "fail", detail: hashProblems.join("; ") },
+  );
+
+  // --- Freshness (read-only; the fingerprint is never persisted) ---
+  const fingerprint = await tryRepositoryFingerprint(root);
+  if (fingerprint === null) {
+    checks.push({
+      name: "evidence freshness",
+      level: "warn",
+      detail: "git unavailable, so no receipt can be shown as current evidence",
+    });
+  } else {
+    const notCurrent = state.claims
+      .map((c) => evaluateClaim(state, c, fingerprint))
+      .filter((e) => e.status === "stale" || e.status === "unsupported");
+    checks.push(
+      notCurrent.length === 0
+        ? {
+            name: "evidence freshness",
+            level: "pass",
+            detail: `${state.claims.length} claim(s): none stale or unsupported`,
+          }
+        : {
+            name: "evidence freshness",
+            level: "warn",
+            detail: notCurrent.map((e) => `${e.claimId} is ${e.status}`).join("; "),
+          },
+    );
+  }
+
+  // --- Completed work whose CURRENT proof no longer revalidates ---
+  const revalidation: string[] = [];
+  for (const item of state.workItems) {
+    if (item.status !== "completed") continue;
+    // Re-assess ignoring the "not already completed" gate, which necessarily fails for completed work.
+    const assessment = assessCompletion(state, item.id, fingerprint);
+    const relevant = assessment.failing.filter((g) => g.id !== "not_completed");
+    if (relevant.length > 0) {
+      revalidation.push(`${item.id}: ${relevant.map((g) => g.label).join(", ")}`);
+    }
+  }
+  if (revalidation.length > 0) {
+    checks.push({
+      name: "completed work revalidation",
+      level: "warn",
+      detail: `current evidence no longer supports revalidating: ${revalidation.join("; ")}. The completion record stands; re-run verification to restore current evidence.`,
+    });
+  } else if (state.workItems.some((w) => w.status === "completed")) {
+    checks.push({
+      name: "completed work revalidation",
+      level: "pass",
+      detail: "completed items would still pass their gates",
+    });
+  }
+
+  return checks;
+}
+
+function abbreviateDetail(value: string): string {
+  return value.length <= 60 ? value : `${value.slice(0, 59)}…`;
 }
 
 /** Intake metadata/artifact consistency: hashes, drafts, views, apply events, current pointer. */
