@@ -133,6 +133,44 @@ the branch tip.
 
 `mise exec -- npm run verify` — **573 tests, 573 passing, 0 failing.**
 
+## Interactive tier — partial attestation
+
+First real-terminal run, performed by the user at `main` = `fa53d295`, Pi `0.82.0`, Node `22.23.1`.
+Pasted output was the evidence; nothing below is inferred.
+
+| Item | Result |
+| --- | --- |
+| Extension loads with no error | **PASS** — clean startup after the global-shim deferral fix |
+| Only `voila.ts` loads (no duplicate registration) | **PASS** — zero conflict errors |
+| Ambient widget renders | **PASS** — `Voila · BUILD · GREEN · Focus NF-2 · 4 risks · 5 stale` |
+| Widget truncates long text to width | **PASS** — next action elided with `…` |
+| `/voila status` | **PASS** — identity, phase, health, revision, operations, focus, next action, why |
+| `/voila doctor` | **PASS** — 25 checks rendered, 2 honest warnings |
+| `/voila deliver` | **PASS** — full summary: change set, all 5 claims at real status, risks, limitations, discovered commands, next action |
+| Claim honesty in a live UI | **PASS** — `0 of 5 claim(s) currently supported`, every stale claim listed with its reason |
+
+Still owed, and still not claimed: `/voila home` (Steward Console panes), an end-to-end authenticated
+intake, `/voila commit` against a dirty tree, narrow-width resize, `/reload`, and clean exit.
+
+### Two defects this run surfaced
+
+**1. Global shim double-registration (fixed).** Running Pi inside the Voila repository failed
+outright: Pi loads both `~/.pi/agent/extensions/` and the project's `.pi/extensions/`, so the same
+command and all 30 tools registered twice and Pi rejected every duplicate. The shim now defers when
+the project ships its own adapter. The original headless check drove only one adapter at a time,
+which is exactly why it passed while real startup broke. Four regression tests now cover both
+directions.
+
+**2. Stale claim limitations (fixed).** The live delivery summary displayed
+`The fingerprint deliberately excludes everything under .newfang/` — factually wrong about current
+behavior. The rename correction had updated claim *statements* and coverage but not
+`knownLimitations`. The rename guard missed it because `.voila/project.json` is allowlisted wholesale
+for its quoted historical records, and the targeted current-truth test covers only `displayName`,
+`nextAction`, and `nextActionRationale`.
+
+Both were found by *looking at the running product*, not by any automated check. That is the
+argument for this tier existing.
+
 ## What is NOT proven
 
 **The interactive TUI has never been observed in this environment.** `process.stdin.isTTY` is

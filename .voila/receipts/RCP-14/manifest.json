@@ -1,0 +1,29 @@
+{
+  "receiptId": "RCP-14",
+  "claimId": "CLM-5",
+  "result": "passed",
+  "executable": "mise",
+  "args": [
+    "exec",
+    "--",
+    "npm",
+    "run",
+    "verify"
+  ],
+  "cwdRef": ".",
+  "exitCode": 0,
+  "signal": null,
+  "startedAt": "2026-07-26T04:43:53.049Z",
+  "finishedAt": "2026-07-26T04:44:08.764Z",
+  "durationMs": 15715,
+  "timeoutMs": 300000,
+  "repositoryFingerprint": "e7d571c2a3240ffb308e9fedc07d9adea8e2128e607e2a2833bbec34a42ceba6",
+  "gitHead": "d377df671ad26f54cbe17280752ee3a952d7baaf",
+  "stdoutSha256": "351877f23e34c912161589b7c39f37099a0b45c84f17a48a71fdc644edbde401",
+  "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdoutTruncated": false,
+  "stderrTruncated": false,
+  "outputTruncated": false,
+  "capturedEnvironment": "none",
+  "pathsNormalized": "repository root -> <repo>, home directory -> ~"
+}

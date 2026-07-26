@@ -211,69 +211,6 @@
       "removable": true
     },
     {
-      "path": ".voila/receipts/RCP-1/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
-      "immutable": true,
-      "removable": false
-    },
-    {
-      "path": ".voila/receipts/RCP-2/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
-      "immutable": true,
-      "removable": false
-    },
-    {
-      "path": ".voila/receipts/RCP-3/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
-      "immutable": true,
-      "removable": false
-    },
-    {
-      "path": ".voila/receipts/RCP-4/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt artifact recorded under a stored output hash.",
-      "immutable": true,
-      "removable": false
-    },
-    {
-      "path": ".voila/receipts/RCP-5/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
-      "immutable": true,
-      "removable": false
-    },
-    {
-      "path": ".voila/receipts/RCP-6/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
-      "immutable": true,
-      "removable": false
-    },
-    {
-      "path": ".voila/receipts/RCP-7/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
-      "immutable": true,
-      "removable": false
-    },
-    {
-      "path": ".voila/receipts/RCP-8/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
-      "immutable": true,
-      "removable": false
-    },
-    {
-      "path": ".voila/receipts/RCP-9/stdout.txt",
-      "category": "historical-evidence",
-      "reason": "Immutable verification receipt recorded during the Phase 7 gate walk-through. Its captured stdout contains the local checkout path /Users/jenksed/Projects/newfang/, which is the directory name on disk; the receipt is stored under an output hash and must not be edited.",
-      "immutable": true,
-      "removable": false
-    },
-    {
       "path": "README.md",
       "category": "historical-migration-doc",
       "reason": "Rename note telling readers why historical records say NewFang.",
@@ -403,6 +340,13 @@
       "path": "docs/verification/PACKET_5A_DELIVERY_INSPECTOR.md",
       "category": "historical-migration-doc",
       "reason": "Records the Packet 5A rebase onto Voila main, including the legacy .newfang/ misclassification the rename introduced and the fix, so it necessarily quotes the legacy directory name.",
+      "immutable": false,
+      "removable": true
+    },
+    {
+      "path": "docs/verification/PHASE_7_SELF_HOSTING_GATE.md",
+      "category": "historical-migration-doc",
+      "reason": "Phase 7 gate record. It quotes the stale claim limitation that named .newfang/ while describing the defect that was fixed, so the legacy string is the evidence.",
       "immutable": false,
       "removable": true
     },

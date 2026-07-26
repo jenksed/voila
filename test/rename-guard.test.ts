@@ -76,9 +76,29 @@ async function readTextOrNull(rel: string): Promise<string | null> {
   return bytes.toString("utf8");
 }
 
+/**
+ * Captured verification output: the literal bytes a command printed, stored under a hash and never
+ * editable. These are excluded structurally rather than enumerated one by one.
+ *
+ * The reason is that scanning them cannot catch a regression. Nobody authors a receipt's stdout —
+ * it is whatever the command emitted — and this suite's own legacy-migration tests have `.newfang/`
+ * in their names, so *every* future receipt of `npm run verify` contains the legacy brand by
+ * construction. Listing each one would grow the allowlist without adding a single guarantee.
+ *
+ * This is deliberately narrow: only `stdout.txt` and `stderr.txt` directly inside a receipt
+ * directory. `manifest.json` is authored metadata and stays scanned, as does everything else under
+ * `.voila/`.
+ */
+const CAPTURED_OUTPUT = /^\.voila\/receipts\/[^/]+\/(stdout|stderr)\.txt$/;
+
+function isCapturedOutput(rel: string): boolean {
+  return CAPTURED_OUTPUT.test(rel);
+}
+
 async function scan(): Promise<Map<string, string[]>> {
   const hits = new Map<string, string[]>();
   for (const rel of trackedFiles()) {
+    if (isCapturedOutput(rel)) continue;
     const text = await readTextOrNull(rel);
     if (text === null) continue;
     const found = FORBIDDEN.filter((s) => text.includes(s));
@@ -86,6 +106,19 @@ async function scan(): Promise<Map<string, string[]>> {
   }
   return hits;
 }
+
+test("captured receipt output is excluded structurally, but nothing else under it is", () => {
+  assert.ok(isCapturedOutput(".voila/receipts/RCP-1/stdout.txt"));
+  assert.ok(isCapturedOutput(".voila/receipts/RCP-14/stderr.txt"));
+
+  // Authored metadata and every other path stay in scope.
+  assert.ok(!isCapturedOutput(".voila/receipts/RCP-1/manifest.json"));
+  assert.ok(!isCapturedOutput(".voila/receipts/RCP-1/notes.md"));
+  assert.ok(!isCapturedOutput(".voila/receipts/RCP-1/nested/stdout.txt"));
+  assert.ok(!isCapturedOutput(".voila/project.json"));
+  assert.ok(!isCapturedOutput(".voila/intakes/INT-1/source.md"));
+  assert.ok(!isCapturedOutput("src/state/receipt-store.ts"));
+});
 
 test("the allowlist is exact-path only and fully explained", async () => {
   const allowlist = await loadAllowlist();

@@ -93,3 +93,8 @@
 {"type":"next_action_set","revision":93,"ts":"2026-07-26T04:20:15.966Z"}
 {"type":"claim_updated","id":"CLM-1","revision":94,"ts":"2026-07-26T04:42:36.264Z"}
 {"type":"claim_updated","id":"CLM-2","revision":95,"ts":"2026-07-26T04:42:36.266Z"}
+{"type":"verification_recorded","id":"RCP-10","claimId":"CLM-1","result":"passed","revision":96,"ts":"2026-07-26T04:43:06.652Z"}
+{"type":"verification_recorded","id":"RCP-11","claimId":"CLM-2","result":"passed","revision":97,"ts":"2026-07-26T04:43:21.465Z"}
+{"type":"verification_recorded","id":"RCP-12","claimId":"CLM-3","result":"passed","revision":98,"ts":"2026-07-26T04:43:36.519Z"}
+{"type":"verification_recorded","id":"RCP-13","claimId":"CLM-4","result":"passed","revision":99,"ts":"2026-07-26T04:43:52.986Z"}
+{"type":"verification_recorded","id":"RCP-14","claimId":"CLM-5","result":"passed","revision":100,"ts":"2026-07-26T04:44:08.767Z"}
