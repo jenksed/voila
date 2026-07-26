@@ -15,7 +15,7 @@
     "intake": 9,
     "orientation": 4,
     "claim": 6,
-    "receipt": 15
+    "receipt": 20
   },
   "workItems": [
     {
@@ -483,10 +483,11 @@
         "RCP-1",
         "RCP-2",
         "RCP-6",
-        "RCP-10"
+        "RCP-10",
+        "RCP-15"
       ],
       "createdAt": "2026-07-25T16:38:42.263Z",
-      "updatedAt": "2026-07-26T04:43:06.651Z"
+      "updatedAt": "2026-07-26T04:48:32.123Z"
     },
     {
       "id": "CLM-2",
@@ -506,10 +507,11 @@
         "RCP-3",
         "RCP-4",
         "RCP-5",
-        "RCP-11"
+        "RCP-11",
+        "RCP-16"
       ],
       "createdAt": "2026-07-25T22:26:09.232Z",
-      "updatedAt": "2026-07-26T04:43:21.464Z"
+      "updatedAt": "2026-07-26T04:48:47.230Z"
     },
     {
       "id": "CLM-3",
@@ -529,10 +531,11 @@
       ],
       "receiptIds": [
         "RCP-7",
-        "RCP-12"
+        "RCP-12",
+        "RCP-17"
       ],
       "createdAt": "2026-07-26T04:13:58.284Z",
-      "updatedAt": "2026-07-26T04:43:36.518Z"
+      "updatedAt": "2026-07-26T04:49:03.394Z"
     },
     {
       "id": "CLM-4",
@@ -551,10 +554,11 @@
       ],
       "receiptIds": [
         "RCP-8",
-        "RCP-13"
+        "RCP-13",
+        "RCP-18"
       ],
       "createdAt": "2026-07-26T04:14:13.952Z",
-      "updatedAt": "2026-07-26T04:43:52.985Z"
+      "updatedAt": "2026-07-26T04:49:19.471Z"
     },
     {
       "id": "CLM-5",
@@ -573,10 +577,11 @@
       ],
       "receiptIds": [
         "RCP-9",
-        "RCP-14"
+        "RCP-14",
+        "RCP-19"
       ],
       "createdAt": "2026-07-26T04:14:13.958Z",
-      "updatedAt": "2026-07-26T04:44:08.766Z"
+      "updatedAt": "2026-07-26T04:49:35.157Z"
     }
   ],
   "receipts": [
@@ -873,11 +878,116 @@
       "repositoryFingerprint": "e7d571c2a3240ffb308e9fedc07d9adea8e2128e607e2a2833bbec34a42ceba6",
       "gitHead": "d377df671ad26f54cbe17280752ee3a952d7baaf",
       "outputTruncated": false
+    },
+    {
+      "id": "RCP-15",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-15",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:48:16.902Z",
+      "finishedAt": "2026-07-26T04:48:32.120Z",
+      "repositoryFingerprint": "20000e7b679415481f493c1282e211c833090aed74f37e27068dc79cb4c48081",
+      "gitHead": "44cabc4f50cc85273d9636ec7f84c9495171c539",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-16",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-16",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:48:32.210Z",
+      "finishedAt": "2026-07-26T04:48:47.227Z",
+      "repositoryFingerprint": "20000e7b679415481f493c1282e211c833090aed74f37e27068dc79cb4c48081",
+      "gitHead": "44cabc4f50cc85273d9636ec7f84c9495171c539",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-17",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-17",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:48:47.299Z",
+      "finishedAt": "2026-07-26T04:49:03.391Z",
+      "repositoryFingerprint": "20000e7b679415481f493c1282e211c833090aed74f37e27068dc79cb4c48081",
+      "gitHead": "44cabc4f50cc85273d9636ec7f84c9495171c539",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-18",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-18",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:49:03.462Z",
+      "finishedAt": "2026-07-26T04:49:19.468Z",
+      "repositoryFingerprint": "20000e7b679415481f493c1282e211c833090aed74f37e27068dc79cb4c48081",
+      "gitHead": "44cabc4f50cc85273d9636ec7f84c9495171c539",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-19",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-19",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T04:49:19.553Z",
+      "finishedAt": "2026-07-26T04:49:35.155Z",
+      "repositoryFingerprint": "20000e7b679415481f493c1282e211c833090aed74f37e27068dc79cb4c48081",
+      "gitHead": "44cabc4f50cc85273d9636ec7f84c9495171c539",
+      "outputTruncated": false
     }
   ],
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-3",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T04:44:08.766Z",
-  "revision": 100
+  "updatedAt": "2026-07-26T04:49:35.157Z",
+  "revision": 105
 }

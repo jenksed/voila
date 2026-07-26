@@ -98,3 +98,8 @@
 {"type":"verification_recorded","id":"RCP-12","claimId":"CLM-3","result":"passed","revision":98,"ts":"2026-07-26T04:43:36.519Z"}
 {"type":"verification_recorded","id":"RCP-13","claimId":"CLM-4","result":"passed","revision":99,"ts":"2026-07-26T04:43:52.986Z"}
 {"type":"verification_recorded","id":"RCP-14","claimId":"CLM-5","result":"passed","revision":100,"ts":"2026-07-26T04:44:08.767Z"}
+{"type":"verification_recorded","id":"RCP-15","claimId":"CLM-1","result":"passed","revision":101,"ts":"2026-07-26T04:48:32.124Z"}
+{"type":"verification_recorded","id":"RCP-16","claimId":"CLM-2","result":"passed","revision":102,"ts":"2026-07-26T04:48:47.231Z"}
+{"type":"verification_recorded","id":"RCP-17","claimId":"CLM-3","result":"passed","revision":103,"ts":"2026-07-26T04:49:03.395Z"}
+{"type":"verification_recorded","id":"RCP-18","claimId":"CLM-4","result":"passed","revision":104,"ts":"2026-07-26T04:49:19.473Z"}
+{"type":"verification_recorded","id":"RCP-19","claimId":"CLM-5","result":"passed","revision":105,"ts":"2026-07-26T04:49:35.158Z"}

@@ -1,0 +1,29 @@
+{
+  "receiptId": "RCP-17",
+  "claimId": "CLM-3",
+  "result": "passed",
+  "executable": "mise",
+  "args": [
+    "exec",
+    "--",
+    "npm",
+    "run",
+    "verify"
+  ],
+  "cwdRef": ".",
+  "exitCode": 0,
+  "signal": null,
+  "startedAt": "2026-07-26T04:48:47.299Z",
+  "finishedAt": "2026-07-26T04:49:03.391Z",
+  "durationMs": 16092,
+  "timeoutMs": 300000,
+  "repositoryFingerprint": "20000e7b679415481f493c1282e211c833090aed74f37e27068dc79cb4c48081",
+  "gitHead": "44cabc4f50cc85273d9636ec7f84c9495171c539",
+  "stdoutSha256": "73bd85aa1b2eb658459e652e0a165691722744ad5adf024a9c138f532f9f5f16",
+  "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdoutTruncated": false,
+  "stderrTruncated": false,
+  "outputTruncated": false,
+  "capturedEnvironment": "none",
+  "pathsNormalized": "repository root -> <repo>, home directory -> ~"
+}
