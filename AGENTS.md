@@ -22,7 +22,7 @@ migration, a project-operations layer, a Steward Console, planning intake with p
 repository orientation, the proof engine (claims, receipts, freshness, protected completion), and a
 delivery engine. Phase 7's self-hosting gate returned GO on capability, HOLD on backlog closure.
 
-**Current phase: R0 complete, R1 next.** As of 2026-07-26,
+**Current phase: R0 merged, R1 implemented (NF-9 not yet complete), R2 next.** As of 2026-07-26,
 [ADR-0009](docs/decisions/0009-project-steward-operational-realignment.md) superseded Phases 5–8 of
 the old plan. The active roadmap is
 [docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md): R1 friction
@@ -33,7 +33,10 @@ milestone is **Project Steward Operational Loop v1**.
 Build only what the accepted R-packet calls for. Do **not** begin approval bundles, broad model
 routing, arbitrary workflow scripting, remote execution, or release automation before R7 passes.
 Delegation and background execution are no longer optional, but **they do not exist yet** — do not
-describe them, in any document or skill, as though they do.
+describe them, in any document or skill, as though they do. R1's ambient continuity **does** exist
+(focus capsule, action-oriented `Continue.`, content-based orientation freshness, quiet development
+staleness, honest held readiness, verification-grouping seam); its evidence and limitations are in
+[docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md).
 
 ## Core doctrine
 

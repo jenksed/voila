@@ -4,9 +4,10 @@ Self-contained context for picking this project up cold. Written to be harness-n
 into any assistant, or read it yourself after a break.
 
 **Repo:** `git@github.com:jenksed/voila.git` · **Checkout:** `/Users/jenksed/Projects/voila`
-**Branch:** `docs/project-steward-realignment` · **Head at writing:** `62bc434` (the R0 closeout
-commits on top of it) · **Gate:** 588 tests passing
-**Proof:** 5 claims, 5 supported · **Doctor:** 26 checks, 1 warning (orientation staleness — §6)
+**Branch:** `feat/r1-ambient-continuity` · **Head at writing:** `4296387` (the R1 closeout commits on
+top of it) · **Gate:** 624 tests passing
+**Proof:** 5 claims, all stale mid-development (expected; reconciles at the boundary) · **Doctor:** 26
+checks, **0 warnings**, 3 informational — §6
 
 > Canonical revision is deliberately **not** pinned here. It increments on every canonical write,
 > including each verification receipt, so any number written into this file is stale before the
@@ -82,31 +83,48 @@ settlement had all been classified as optional. They are now the critical path.
 
 ### What happens next, in order
 
-**R0 is complete on this branch and is not yet delivered.** Do not start R1 here.
+**R0 is merged into `main` (PR [#9](https://github.com/jenksed/voila/pull/9), commit `4d66c24`). R1 is
+implemented on `feat/r1-ambient-continuity` and its acceptance behavior was observed.** What R1 built:
 
-1. **Immediate action — deliver R0.** Open and merge the R0 realignment pull request. Draft PR
-   [#9](https://github.com/jenksed/voila/pull/9) is open against `main` and is **not merged**; it
-   still needs to be marked ready and reviewed. Merge only once the doctrine is authoritative, the
-   previous roadmap is explicitly superseded, the product documents agree, canonical state points to
-   the new priority, and no runtime capability is falsely claimed
-   ([realignment plan §16](plans/PROJECT_REALIGNMENT_PLAN.md#16-immediate-execution-sequence)).
-2. **After the merge — begin R1.** Create a *new* implementation branch for NF-9 and build the first
-   bounded slice: the focus capsule and the orientation-freshness change. R1's acceptance gate is
-   behavioral: in a fresh Pi session the user says `Continue.` and the Steward identifies the correct
-   work and begins useful action without asking for a recap. If `Continue` still produces a status
-   report, R1 failed.
+- a **focus capsule** injected before every Steward turn — canonical truth, bounded repository
+  observation, and a directive, each labelled ([design](design/FOCUS_CAPSULE.md));
+- **action-oriented continuation**: `Continue.` (and a small closed set of equivalents) instructs the
+  Steward to recover the thread, spend at most four lines, and act in the same turn;
+- **content-based orientation freshness** — HEAD movement no longer stales an orientation, and
+  historical artifacts stay readable ([design](design/REPOSITORY_ORIENTATION.md));
+- **quiet development staleness** — Doctor separates structural health from expected readiness drift,
+  and the widget stops nagging;
+- **honest held readiness** — an item whose gates pass while a required claim still records an
+  unmet human tier reads `HELD`, never `READY to complete`;
+- the **verification-contract grouping seam** R6 needs (identity and grouping only; no execution
+  change).
 
-**NF-9 is the canonical implementation focus** and stays that way through both steps. No R1
-capability is implemented today.
+The fresh-session `Continue.` test **passed**: zero lines of prose before the first tool call, no
+recap, no questions, no state-maintenance requests, no NF-2 work, no claimed workers. Transcript,
+scope, and limitations are in
+[docs/verification/R1_AMBIENT_CONTINUITY.md](verification/R1_AMBIENT_CONTINUITY.md).
+
+1. **Immediate action — close out R1.** NF-9 is **not** complete: four of its five acceptance criteria
+   have no required claim, and criterion 3 overstates the authored plan (it describes R6's execution
+   deduplication under R1's heading). That needs one owner decision, stated in §7 of the verification
+   record. Delivering the branch is the owner's call; Voila never pushes or opens a PR.
+2. **Then — begin R2.** One supervised background terminal (NF-10), which depends on NF-9. R2–R7
+   remain unimplemented: there are no workers, no background processes, and no automatic settlement.
+
+**NF-9 is the canonical implementation focus** and stays that way until its completion is justified.
+R1 makes *invocation* immediately useful; nothing runs between turns.
 
 **What is built** (and is not being walked back): durable per-project state, planning intake with
 preserved provenance, repository orientation, work items and dependencies, claims and deterministic
 receipts, the protected completion transition, the delivery engine, the Steward Console, the ambient
-widget, 30 tools. Phase 7's gate returned GO on capability, HOLD on backlog closure.
+widget, 30 tools, and R1's ambient continuity (focus capsule, action-oriented `Continue.`,
+content-based orientation freshness, quiet development staleness, honest held readiness, the
+verification-grouping seam). Phase 7's gate returned GO on capability, HOLD on backlog closure.
 
-**What is not built:** everything in R1–R7. No delegation, no background processes, no automatic
-settlement, no fresh-session continuity, no quiet boundary reconciliation. The doctrine document
-carries an explicit built/not-built table. Do not describe any of it as present.
+**What is not built:** everything in R2–R7. No delegation, no background processes, no worker
+visibility, no automatic settlement, no fresh-session continuity beyond what ambient context provides,
+no quiet boundary reconciliation, no execution deduplication. The doctrine document carries an explicit
+built/not-built table. Do not describe any of it as present.
 
 Backlog:
 
@@ -116,7 +134,7 @@ NF-2 ready         intake + orientation           HELD: needs authenticated inta
 NF-3 backlog       claims/receipts/completion gate (shipped as Packet 4, dependency-blocked)
 NF-4 backlog       delivery behavior               (shipped as Phase 6, dependency-blocked)
 NF-5..NF-8 backlog
-NF-9  ready        R1 friction containment          <- FOCUS
+NF-9  ready        R1 friction containment          <- FOCUS (implemented; not completed)
 NF-10..NF-15       R2..R7, sequenced by dependency
 ```
 
@@ -150,8 +168,8 @@ Two more are doctrine but **not** test-enforced — they constrain judgment, not
    route tasks by hand, chase worker status, carry results between models, repeatedly say "continue",
    or operate evidence infrastructure during ordinary development is a **defect**. This applies to
    already-shipped capability.
-8. **Never claim capability that does not exist.** R1–R7 are not built. The Steward skill's "do not
-   spawn subagents" instruction is current fact, not permanent doctrine.
+8. **Never claim capability that does not exist.** R2–R7 are not built (R1 is — see §3). The Steward
+   skill's "do not spawn subagents" instruction is current fact, not permanent doctrine.
 
 ---
 
@@ -197,6 +215,21 @@ are recognized as v1 by its absence.
 uncommitted so Proof would show `5 supported`, because committing staled them. ADR-0008 removed that
 trap: `.voila/` is excluded from the digest and `gitHead` is not in it, so recording and committing
 evidence no longer invalidates it. Commit receipts normally.
+
+**Orientation no longer stales on HEAD, and that is deliberate.** Since R1, freshness follows the
+content an orientation actually inspected plus a bounded digest of the canonical work and accepted
+decisions it summarized. A commit that changed nothing it read leaves it current. Historical artifacts
+(ORI-1..ORI-5) carry no policy version, and that absence *is* the one-time transition: they stay
+readable and are judged by content, not re-staled. Do not "fix" this by comparing HEAD again.
+
+**Doctor's `INFO` items are not warnings.** Stale evidence during development, a completed item that
+cannot be revalidated for the same reason, and an un-oriented project are informational and do not
+escalate the notification level. If you find yourself reading them as a chore list, that is the defect
+R1 removed. A receipt that actually *failed* at the current state is still a `WARN`.
+
+**`HELD` is presentation, not a gate.** An item whose gates all pass while a required claim records an
+unmet human tier reads `HELD` everywhere. `voila_complete_work_item` would still accept it — R1
+corrected the label narrowly and did not add a gate. Do not read `HELD` as enforcement.
 
 **The rename guard fails in both directions.** `test/rename-guard.test.ts` fails if an unlisted file
 contains `NewFang`/`newfang`/etc., **and** if an allowlisted path no longer does. Adding a file that
@@ -249,7 +282,9 @@ headlessly — but nothing about the running TUI can be claimed.
 | [`docs/decisions/0009-project-steward-operational-realignment.md`](decisions/0009-project-steward-operational-realignment.md) | What the realignment changed, and why |
 | [`docs/plans/MVP_IMPLEMENTATION_PLAN.md`](plans/MVP_IMPLEMENTATION_PLAN.md) | Phases 0–8. **Phases 5–8 superseded**; retained as history |
 | [`docs/verification/PHASE_7_SELF_HOSTING_GATE.md`](verification/PHASE_7_SELF_HOSTING_GATE.md) | Current status, the reversal, all three defects |
-| [`docs/design/PROOF_ENGINE.md`](design/PROOF_ENGINE.md) | Claims, receipts, freshness, protected completion |
+| [`docs/design/PROOF_ENGINE.md`](design/PROOF_ENGINE.md) | Claims, receipts, freshness, derived readiness, protected completion |
+| [`docs/design/FOCUS_CAPSULE.md`](design/FOCUS_CAPSULE.md) | The injected capsule and `Continue.` semantics (R1) |
+| [`docs/verification/R1_AMBIENT_CONTINUITY.md`](verification/R1_AMBIENT_CONTINUITY.md) | R1 evidence: automated + interactive tiers, and the criterion-3 deviation |
 | [`docs/design/DELIVERY_ENGINE.md`](design/DELIVERY_ENGINE.md) | Delivery summary, commit suggestion, the boundary |
 | [`docs/migrations/NEWFANG_TO_VOILA.md`](migrations/NEWFANG_TO_VOILA.md) | The rename, and why history keeps the old name |
 | [`docs/project/PROJECT_LEDGER.md`](project/PROJECT_LEDGER.md) | Running ledger |
