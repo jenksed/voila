@@ -474,7 +474,7 @@
         "voila_complete_work_item rejects unsupported completion"
       ],
       "knownLimitations": [
-        "Guarantees NewFang's own state transition only; it does not prevent a model from writing unsupported prose in conversation.",
+        "Guarantees Voila own state transition only; it does not prevent a model from writing unsupported prose in conversation.",
         "Evidence is the automated suite; the interactive Steward Console check and the authenticated Project Steward run are still PENDING.",
         "Support is scoped to one repository fingerprint: a new commit or any tracked change makes this evidence stale until verification is re-run.",
         "Verification runs the command without a sandbox; it bounds time and output but does not contain side effects."
@@ -485,7 +485,7 @@
         "RCP-6"
       ],
       "createdAt": "2026-07-25T16:38:42.263Z",
-      "updatedAt": "2026-07-26T04:12:56.743Z"
+      "updatedAt": "2026-07-26T04:42:36.261Z"
     },
     {
       "id": "CLM-2",
@@ -498,7 +498,7 @@
       "knownLimitations": [
         "Scoped to the automated gate only: it is evidence that the suite passes, not that the interactive Proof view or any human-attested tier passed.",
         "Support is scoped to one repository fingerprint; any commit or tracked change makes this evidence stale until verification is re-run.",
-        "The fingerprint deliberately excludes everything under .newfang/, so a change confined to NewFang bookkeeping does not invalidate this evidence.",
+        "The fingerprint deliberately excludes everything under .voila/ (and a legacy .newfang/ while one exists), so a change confined to Voila bookkeeping does not invalidate this evidence.",
         "Verification runs the command without a sandbox; it bounds time and output but does not contain side effects."
       ],
       "receiptIds": [
@@ -507,7 +507,7 @@
         "RCP-5"
       ],
       "createdAt": "2026-07-25T22:26:09.232Z",
-      "updatedAt": "2026-07-26T04:12:32.973Z"
+      "updatedAt": "2026-07-26T04:42:36.266Z"
     },
     {
       "id": "CLM-3",
@@ -768,6 +768,6 @@
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-3",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T04:20:15.954Z",
-  "revision": 93
+  "updatedAt": "2026-07-26T04:42:36.266Z",
+  "revision": 95
 }

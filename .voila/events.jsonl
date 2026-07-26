@@ -91,3 +91,5 @@
 {"type":"decision_recorded","id":"DEC-12","status":"accepted","revision":91,"ts":"2026-07-26T04:19:24.538Z"}
 {"type":"focus_set","id":"NF-2","revision":92,"ts":"2026-07-26T04:20:15.949Z"}
 {"type":"next_action_set","revision":93,"ts":"2026-07-26T04:20:15.966Z"}
+{"type":"claim_updated","id":"CLM-1","revision":94,"ts":"2026-07-26T04:42:36.264Z"}
+{"type":"claim_updated","id":"CLM-2","revision":95,"ts":"2026-07-26T04:42:36.266Z"}
