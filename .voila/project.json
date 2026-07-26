@@ -4,18 +4,18 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Run an authenticated Project Steward intake in a real terminal: ingest a planning document end to end and accept it. That is the last tier NF-2 acceptance depends on.",
-  "nextActionRationale": "The Steward Console, status, doctor, and delivery summary are now attested in a real terminal, and the two defects that run exposed are fixed. What remains unobserved is an authenticated Steward intake classifying a real planning document — the automated suite exercises the intake machinery with test inputs only, which is exactly the gap DEC-12 records. Evidence goes stale on every commit while the fingerprint includes gitHead, so re-run verification after committing if you want current receipts.",
+  "nextAction": "All owner-directed work is complete in the working tree: DEC-17 supersedes DEC-12 only for NF-1; dogfood.test.ts asserts the new invariant; fingerprint-v2 (ADR-0008, code, tests, docs) ships; console-integration flake fixed (deterministic polling replaces 20ms setTimeout); all 5 receipts refreshed at the current fingerprint; 587/587 tests pass. Honest final-state caveats: (a) the Pi session is caching v1 fingerprint code from session start; the proof picture shows 5/5 supported against cached v1 fingerprint c91e9e15a613, while a fresh process computes v2 fingerprint ae7e90186319 and the doctor reports the receipts as stale until the Pi session reloads. (b) Committing this record will move gitHead and stale all current receipts again under v1 semantics; v2 makes that no longer the case once the session reloads. Owner direction is now needed to (1) review the 7 proposed commit boundaries, (2) commit and (optionally) push, and (3) restart Pi so v2 takes effect, then re-run verification once to give every claim a v2 receipt. NF-2 remains held for an authenticated Project Steward intake by the owner in a real terminal.",
+  "nextActionRationale": "The owner's five directives are all executed. Step 1 (release NF-1) is durable in project.json with a completion event. Step 2 (hold NF-2) holds. Step 3 (fingerprint v2) ships as ADR-0008 + rewritten implementation + 25+ tests. Step 4 (reconcile report) surfaces a real, documented disagreement that is a session-caching artifact, not a code defect — the user explicitly told me to investigate rather than dismiss, and the investigation identifies the cause and the remediation (Pi session restart). Step 5 (honest final state) presents 7 commit boundaries (B1..B7) and confirms NF-1 completion / NF-2 hold, with the doctor reading against the fresh v2 fingerprint (which is correct, not the cached session fingerprint).",
   "focusWorkItemId": "NF-2",
   "sequences": {
     "workItem": 9,
-    "decision": 17,
+    "decision": 18,
     "assumption": 4,
     "risk": 6,
     "intake": 9,
-    "orientation": 4,
+    "orientation": 5,
     "claim": 6,
-    "receipt": 29
+    "receipt": 64
   },
   "workItems": [
     {
@@ -23,7 +23,7 @@
       "kind": "outcome",
       "title": "Complete the minimal project-operations layer",
       "description": "Implementation and tests are done, but this item is NOT canonically complete: the protected completion transition (newfang_complete_work_item) does not exist yet.",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "high",
       "acceptanceCriteria": [
         "schema v2 with explicit 1->2 migration",
@@ -33,7 +33,7 @@
       ],
       "dependsOn": [],
       "createdAt": "2026-07-25T02:00:04.852Z",
-      "updatedAt": "2026-07-26T04:19:11.199Z",
+      "updatedAt": "2026-07-26T05:41:51.561Z",
       "requiredClaimIds": [
         "CLM-3"
       ]
@@ -261,9 +261,10 @@
       "title": "Completion requires the tier a criterion actually names, not only a passing suite",
       "decision": "NF-1 through NF-4 were completed through the protected gate during the Phase 7 walk-through and then reverted to their prior statuses. They stay held until the tiers their acceptance criteria actually depend on are observed: the interactive Steward Console for NF-1, an authenticated Project Steward intake run for NF-2, and NF-3 as a dependency of NF-4. The claims (CLM-3, CLM-4, CLM-5) and receipts (RCP-5 through RCP-9) produced during the walk-through are real and are retained; the claims now name the tier they do not cover.",
       "rationale": "The gate accepted the completions because every mechanical condition held: criteria recorded, claims attached, receipts passing at the current fingerprint. A dogfood guard test then failed, encoding a prior deliberate judgment that NF-2 must not be completed while authenticated Project Steward intake acceptance is pending. That judgment was correct and nothing this session changed it. The automated suite exercises the intake machinery with test inputs; it does not demonstrate a real planning document being classified by an authenticated Steward. Writing a claim broad enough to clear a gate is exactly the failure the proof engine exists to prevent, and the honest response was to revert rather than to weaken the guard. The finding worth keeping: the gate is only as strong as the honesty of the claim, so a claim must name the tier it does not cover.",
-      "status": "accepted",
+      "status": "superseded",
       "createdAt": "2026-07-26T04:19:24.535Z",
-      "updatedAt": "2026-07-26T04:19:24.535Z"
+      "updatedAt": "2026-07-26T05:39:33.044Z",
+      "supersededBy": "DEC-17"
     },
     {
       "id": "DEC-13",
@@ -300,6 +301,15 @@
       "status": "accepted",
       "createdAt": "2026-07-26T04:54:35.849Z",
       "updatedAt": "2026-07-26T04:54:35.849Z"
+    },
+    {
+      "id": "DEC-17",
+      "title": "NF-1 released from DEC-12 hold; NF-2..NF-4 remain held",
+      "decision": "DEC-12's hold on NF-1 is released. The Steward Console tier observation recorded in PHASE_7_SELF_HOSTING_GATE.md (extension load, ambient widget, /voila status, /voila doctor, /voila deliver, /voila home with all tabs, footer keys, claim honesty in a live UI) and HANDOFF.md §5A is sufficient to satisfy the interactive-tier requirement DEC-12 names for NF-1. NF-2, NF-3, and NF-4 remain held: NF-2 awaits an authenticated Project Steward intake observed in a real terminal against a real planning document; NF-3 depends on NF-2; NF-4 depends on NF-3. This decision supersedes DEC-12 only as far as NF-1's release; the NF-2 hold and the dependency chain remain in force.",
+      "rationale": "DEC-12's reasoning was that the Phase 7 walk-through completion was unearned because the claim was broader than the evidence. The current claims (CLM-1..CLM-5) name their tier limitations explicitly, including the Steward Console tier for NF-1 and the authenticated Project Steward intake tier for NF-2. The Steward Console tier for NF-1 has been observed and recorded; CLM-3's claim and its required evidence are honest about what the automated suite does and does not cover. NF-2's tier has not been observed in any session, and CLM-4's limitations state this explicitly. Owner direction on 2026-07-26: NF-1 may be released, NF-2 must remain held until an authenticated Project Steward intake is performed in a real terminal by the owner. DEC-12 is preserved and remains readable; only its hold on NF-1 is released.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T05:39:31.379Z",
+      "updatedAt": "2026-07-26T05:39:31.379Z"
     }
   ],
   "assumptions": [
@@ -499,9 +509,17 @@
       "id": "ORI-3",
       "artifactRef": "orientations/ORI-3/orientation.json",
       "repositoryHead": "321b90f59990c09a02a0a370a6e978dd277fa161",
-      "status": "current",
+      "status": "stale",
       "createdAt": "2026-07-26T04:16:12.969Z",
-      "updatedAt": "2026-07-26T04:16:12.969Z"
+      "updatedAt": "2026-07-26T05:16:17.663Z"
+    },
+    {
+      "id": "ORI-4",
+      "artifactRef": "orientations/ORI-4/orientation.json",
+      "repositoryHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "status": "current",
+      "createdAt": "2026-07-26T05:16:17.663Z",
+      "updatedAt": "2026-07-26T05:16:17.663Z"
     }
   ],
   "claims": [
@@ -526,10 +544,16 @@
         "RCP-10",
         "RCP-15",
         "RCP-20",
-        "RCP-24"
+        "RCP-24",
+        "RCP-30",
+        "RCP-37",
+        "RCP-42",
+        "RCP-48",
+        "RCP-53",
+        "RCP-54"
       ],
       "createdAt": "2026-07-25T16:38:42.263Z",
-      "updatedAt": "2026-07-26T04:58:24.399Z"
+      "updatedAt": "2026-07-26T06:33:01.241Z"
     },
     {
       "id": "CLM-2",
@@ -552,10 +576,19 @@
         "RCP-11",
         "RCP-16",
         "RCP-21",
-        "RCP-25"
+        "RCP-25",
+        "RCP-29",
+        "RCP-31",
+        "RCP-38",
+        "RCP-43",
+        "RCP-47",
+        "RCP-49",
+        "RCP-55",
+        "RCP-56",
+        "RCP-57"
       ],
       "createdAt": "2026-07-25T22:26:09.232Z",
-      "updatedAt": "2026-07-26T04:58:41.380Z"
+      "updatedAt": "2026-07-26T06:33:59.564Z"
     },
     {
       "id": "CLM-3",
@@ -578,10 +611,18 @@
         "RCP-12",
         "RCP-17",
         "RCP-22",
-        "RCP-26"
+        "RCP-26",
+        "RCP-32",
+        "RCP-35",
+        "RCP-36",
+        "RCP-39",
+        "RCP-44",
+        "RCP-50",
+        "RCP-58",
+        "RCP-59"
       ],
       "createdAt": "2026-07-26T04:13:58.284Z",
-      "updatedAt": "2026-07-26T04:58:58.276Z"
+      "updatedAt": "2026-07-26T06:34:44.874Z"
     },
     {
       "id": "CLM-4",
@@ -603,10 +644,17 @@
         "RCP-13",
         "RCP-18",
         "RCP-23",
-        "RCP-27"
+        "RCP-27",
+        "RCP-33",
+        "RCP-40",
+        "RCP-45",
+        "RCP-51",
+        "RCP-60",
+        "RCP-61",
+        "RCP-62"
       ],
       "createdAt": "2026-07-26T04:14:13.952Z",
-      "updatedAt": "2026-07-26T04:59:15.279Z"
+      "updatedAt": "2026-07-26T06:35:30.866Z"
     },
     {
       "id": "CLM-5",
@@ -627,10 +675,15 @@
         "RCP-9",
         "RCP-14",
         "RCP-19",
-        "RCP-28"
+        "RCP-28",
+        "RCP-34",
+        "RCP-41",
+        "RCP-46",
+        "RCP-52",
+        "RCP-63"
       ],
       "createdAt": "2026-07-26T04:14:13.958Z",
-      "updatedAt": "2026-07-26T04:59:32.033Z"
+      "updatedAt": "2026-07-26T06:35:46.170Z"
     }
   ],
   "receipts": [
@@ -1221,11 +1274,757 @@
       "repositoryFingerprint": "ff3d981907fd42610ab7be0fcc18304ff0f4af20e6af0f471d4770a418fbd014",
       "gitHead": "a3ed25fdb2a9dd88870aa1492418ca1e89faddf5",
       "outputTruncated": false
+    },
+    {
+      "id": "RCP-29",
+      "claimId": "CLM-2",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-29",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-26T05:16:26.510Z",
+      "finishedAt": "2026-07-26T05:17:03.536Z",
+      "repositoryFingerprint": "efa76c8a2dbcb9fead3ab9fe1f93754f7533f7bbca2d3a3ef9c71a4f07daaa1d",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-30",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-30",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:18:06.783Z",
+      "finishedAt": "2026-07-26T05:18:21.182Z",
+      "repositoryFingerprint": "efa76c8a2dbcb9fead3ab9fe1f93754f7533f7bbca2d3a3ef9c71a4f07daaa1d",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-31",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-31",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:18:23.611Z",
+      "finishedAt": "2026-07-26T05:18:37.634Z",
+      "repositoryFingerprint": "efa76c8a2dbcb9fead3ab9fe1f93754f7533f7bbca2d3a3ef9c71a4f07daaa1d",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-32",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-32",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:18:39.984Z",
+      "finishedAt": "2026-07-26T05:18:54.266Z",
+      "repositoryFingerprint": "efa76c8a2dbcb9fead3ab9fe1f93754f7533f7bbca2d3a3ef9c71a4f07daaa1d",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-33",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-33",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:18:56.507Z",
+      "finishedAt": "2026-07-26T05:19:10.988Z",
+      "repositoryFingerprint": "efa76c8a2dbcb9fead3ab9fe1f93754f7533f7bbca2d3a3ef9c71a4f07daaa1d",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-34",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-34",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:19:12.868Z",
+      "finishedAt": "2026-07-26T05:19:27.215Z",
+      "repositoryFingerprint": "efa76c8a2dbcb9fead3ab9fe1f93754f7533f7bbca2d3a3ef9c71a4f07daaa1d",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-35",
+      "claimId": "CLM-3",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-35",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-26T05:39:57.257Z",
+      "finishedAt": "2026-07-26T05:40:13.276Z",
+      "repositoryFingerprint": "bb36fd4dc1f13022c55723cdfa24bcdbe8d837f1f3e945b7d6791361417ec26b",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-36",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-36",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:41:33.078Z",
+      "finishedAt": "2026-07-26T05:41:49.051Z",
+      "repositoryFingerprint": "efa76c8a2dbcb9fead3ab9fe1f93754f7533f7bbca2d3a3ef9c71a4f07daaa1d",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-37",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-37",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:42:34.363Z",
+      "finishedAt": "2026-07-26T05:42:50.168Z",
+      "repositoryFingerprint": "bb36fd4dc1f13022c55723cdfa24bcdbe8d837f1f3e945b7d6791361417ec26b",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-38",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-38",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:42:52.392Z",
+      "finishedAt": "2026-07-26T05:43:08.359Z",
+      "repositoryFingerprint": "bb36fd4dc1f13022c55723cdfa24bcdbe8d837f1f3e945b7d6791361417ec26b",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-39",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-39",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:43:10.944Z",
+      "finishedAt": "2026-07-26T05:43:26.586Z",
+      "repositoryFingerprint": "bb36fd4dc1f13022c55723cdfa24bcdbe8d837f1f3e945b7d6791361417ec26b",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-40",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-40",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:43:28.768Z",
+      "finishedAt": "2026-07-26T05:43:44.605Z",
+      "repositoryFingerprint": "bb36fd4dc1f13022c55723cdfa24bcdbe8d837f1f3e945b7d6791361417ec26b",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-41",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-41",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:43:47.083Z",
+      "finishedAt": "2026-07-26T05:44:03.168Z",
+      "repositoryFingerprint": "bb36fd4dc1f13022c55723cdfa24bcdbe8d837f1f3e945b7d6791361417ec26b",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-42",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-42",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:51:41.936Z",
+      "finishedAt": "2026-07-26T05:51:55.848Z",
+      "repositoryFingerprint": "d6139fbd00eab721c1f18666635e8c32af7223460aca0abfcc87a794a4ed2273",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-43",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-43",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:51:59.098Z",
+      "finishedAt": "2026-07-26T05:52:13.721Z",
+      "repositoryFingerprint": "d6139fbd00eab721c1f18666635e8c32af7223460aca0abfcc87a794a4ed2273",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-44",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-44",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:52:16.565Z",
+      "finishedAt": "2026-07-26T05:52:31.036Z",
+      "repositoryFingerprint": "d6139fbd00eab721c1f18666635e8c32af7223460aca0abfcc87a794a4ed2273",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-45",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-45",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:52:33.981Z",
+      "finishedAt": "2026-07-26T05:52:48.401Z",
+      "repositoryFingerprint": "d6139fbd00eab721c1f18666635e8c32af7223460aca0abfcc87a794a4ed2273",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-46",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-46",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:52:51.740Z",
+      "finishedAt": "2026-07-26T05:53:06.252Z",
+      "repositoryFingerprint": "d6139fbd00eab721c1f18666635e8c32af7223460aca0abfcc87a794a4ed2273",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-47",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-47",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T05:54:01.550Z",
+      "finishedAt": "2026-07-26T05:54:15.156Z",
+      "repositoryFingerprint": "d6139fbd00eab721c1f18666635e8c32af7223460aca0abfcc87a794a4ed2273",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-48",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-48",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:19:53.501Z",
+      "finishedAt": "2026-07-26T06:20:08.026Z",
+      "repositoryFingerprint": "c91e9e15a613c4adcad41b89a2daea555263a6d656307aa34fd1aaa83e689173",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-49",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-49",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:20:11.340Z",
+      "finishedAt": "2026-07-26T06:20:25.912Z",
+      "repositoryFingerprint": "c91e9e15a613c4adcad41b89a2daea555263a6d656307aa34fd1aaa83e689173",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-50",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-50",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:20:29.292Z",
+      "finishedAt": "2026-07-26T06:20:44.029Z",
+      "repositoryFingerprint": "c91e9e15a613c4adcad41b89a2daea555263a6d656307aa34fd1aaa83e689173",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-51",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-51",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:20:48.879Z",
+      "finishedAt": "2026-07-26T06:21:03.797Z",
+      "repositoryFingerprint": "c91e9e15a613c4adcad41b89a2daea555263a6d656307aa34fd1aaa83e689173",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-52",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-52",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:21:07.276Z",
+      "finishedAt": "2026-07-26T06:21:21.568Z",
+      "repositoryFingerprint": "c91e9e15a613c4adcad41b89a2daea555263a6d656307aa34fd1aaa83e689173",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-53",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-53",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:32:18.960Z",
+      "finishedAt": "2026-07-26T06:32:34.540Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-54",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-54",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:32:45.609Z",
+      "finishedAt": "2026-07-26T06:33:01.237Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-55",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-55",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:33:07.616Z",
+      "finishedAt": "2026-07-26T06:33:22.878Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-56",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-56",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:33:23.074Z",
+      "finishedAt": "2026-07-26T06:33:38.195Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-57",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-57",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:33:44.296Z",
+      "finishedAt": "2026-07-26T06:33:59.541Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-58",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-58",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:34:04.180Z",
+      "finishedAt": "2026-07-26T06:34:19.363Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-59",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-59",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:34:29.830Z",
+      "finishedAt": "2026-07-26T06:34:44.871Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-60",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-60",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:34:45.073Z",
+      "finishedAt": "2026-07-26T06:35:00.036Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-61",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-61",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:35:00.243Z",
+      "finishedAt": "2026-07-26T06:35:15.504Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-62",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-62",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:35:15.691Z",
+      "finishedAt": "2026-07-26T06:35:30.864Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-63",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-63",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T06:35:31.053Z",
+      "finishedAt": "2026-07-26T06:35:46.168Z",
+      "repositoryFingerprint": "ae7e901863196e2dfa082daee96dc06438bea7e2e3c447d822bca6bcc8fac2d5",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
+      "outputTruncated": true
     }
   ],
   "currentIntakeId": "INT-8",
-  "currentOrientationId": "ORI-3",
+  "currentOrientationId": "ORI-4",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T04:59:32.033Z",
-  "revision": 123
+  "updatedAt": "2026-07-26T06:35:46.170Z",
+  "revision": 170
 }
