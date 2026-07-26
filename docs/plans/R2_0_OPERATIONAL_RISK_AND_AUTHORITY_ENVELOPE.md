@@ -6,6 +6,12 @@ R2-0 is **planning only**. It does not introduce runtime behavior, code, or APIs
 the risk classes, authority boundaries, and response sequence that R2 implementation must respect,
 and to draft the first behavioral scenarios the implementation must satisfy.
 
+**Status:** R2-0 is the accepted planning foundation. R2A is the first implementation packet; it is
+implemented on `feat/r2a-finite-operation` with the bounded scope recorded in DEC-21 and the
+capability boundary recorded in
+[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). The
+remaining R2 follow-up packets (R2B onward) are not built.
+
 ---
 
 ## 1. Scope and non-goals

@@ -54,13 +54,16 @@ had become responsible for operating Voila. The active roadmap is
 toward **Project Steward Operational Loop v1**. Delegation and background execution moved from
 "deferred, optional" to product-critical. Approval-bundle self-hosting is **paused**.
 
-**Not built yet:** background terminals (R2), Pi child workers (R3), automatic settlement (R4),
-fresh-session continuity (R5), quiet boundary reconciliation (R6). None of it exists today. See the
-doctrine's built/not-built table. R1 (friction containment and ambient continuity) is implemented on
-`feat/r1-ambient-continuity`: its automated and interactive tiers pass and NF-9 was completed through
-the protected transition with five required claims covered by current receipts. Approval bundles
-remain paused. The behavioral evidence and criterion-level limitations are recorded in
-[docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md).
+**Not built yet:** multi-operation concurrency, watcher, dev server, and the `list`/`wait` tools
+(R2B onward), Pi child workers (R3), automatic settlement and integration (R4), fresh-session
+continuity (R5), quiet boundary reconciliation (R6). None of it exists today. See the doctrine's
+built/not-built table. R1 (friction containment and ambient continuity) is implemented on
+`feat/r1-ambient-continuity`: its automated and interactive tiers pass and NF-9 was completed
+through the protected transition with five required claims covered by current receipts. R2A (one
+finite supervised operation, `r2a.state-store-tests`) is implemented on
+`feat/r2a-finite-operation`; its contract, capability boundary, and known limitations are recorded
+in [docs/verification/R2A_FINITE_OPERATION.md](docs/verification/R2A_FINITE_OPERATION.md).
+Approval bundles remain paused.
 
 **What is built — Phase 0 + Packets 1–4 + Phase 6.** Voila is a runnable Pi extension:
 a thin adapter (`.pi/extensions/voila.ts`), canonical `.voila/` state with **explicit schema

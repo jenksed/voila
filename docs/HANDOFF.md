@@ -119,13 +119,16 @@ honest limitations are recorded
 **What is built** (and is not being walked back): durable per-project state, planning intake with
 preserved provenance, repository orientation, work items and dependencies, claims and deterministic
 receipts, the protected completion transition, the delivery engine, the Steward Console, the ambient
-widget, 30 tools, and R1's ambient continuity (focus capsule, action-oriented `Continue.`,
+widget, 34 tools, R1's ambient continuity (focus capsule, action-oriented `Continue.`,
 content-based orientation freshness, quiet development staleness, honest held readiness, the
-verification-grouping seam). Phase 7's gate returned GO on capability, HOLD on backlog closure.
+verification-grouping seam), and **R2A's finite-operation supervision** (one explicit accepted
+operation, the lifecycle supervisor, the four operation tools, and the bounded focus-capsule
+operation summary). Phase 7's gate returned GO on capability, HOLD on backlog closure.
 
-**What is not built:** everything in R2–R7. No delegation, no background processes, no worker
-visibility, no automatic settlement, no fresh-session continuity beyond what ambient context provides,
-no quiet boundary reconciliation, no execution deduplication. The doctrine document carries an explicit
+**What is not built:** R2B onward (multiple concurrent operations, watcher, dev server, `list`
+and `wait` tools), R3 (Pi child workers), R4 (automatic settlement and integration), R5
+(fresh-session continuity), R6 (quiet boundary reconciliation), R7 (uncoached dogfood
+acceptance), and any cross-process coordination. The doctrine document carries an explicit
 built/not-built table. Do not describe any of it as present.
 
 Backlog:
@@ -137,14 +140,21 @@ NF-3 backlog       claims/receipts/completion gate (shipped as Packet 4, depende
 NF-4 backlog       delivery behavior               (shipped as Phase 6, dependency-blocked)
 NF-5..NF-8 backlog
 NF-9  completed    R1 friction containment          (R1, completed 4d108fc)
-NF-10..NF-15       R2..R7, sequenced by dependency
+NF-10 backlog      R2 background terminal          (R2A vertical slice shipped, R2B–R7 not built)
+NF-16 in_progress  R2A finite operation supervision (this packet)
+NF-11..NF-15       R3..R7, sequenced by dependency
 ```
 
 **NF-2..NF-4 are code-complete but deliberately not marked complete.** They were completed through
 the gate during the walk-through and then reverted — see §5. The realignment does **not** release
 them; NF-2's authenticated intake is still owed.
 
-10 claims (CLM-1..CLM-10), 103 receipts, 20 decisions (15 accepted).
+**R2A ships on `feat/r2a-finite-operation` but does NOT complete NF-10.** NF-10 remains backlog
+because the full R2 packet (multiple concurrent operations, watcher, dev server, `list`/`wait`
+tools, R2B+) is unimplemented. R2A proves one finite supervised operation end-to-end.
+
+10 claims (CLM-1..CLM-10), 103 receipts, 20 decisions (15 accepted). After R2A: 11 decisions,
+1 additional work item (NF-16), 2 risks, 1 assumption.
 
 ---
 

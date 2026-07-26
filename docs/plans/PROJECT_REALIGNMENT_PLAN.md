@@ -360,32 +360,45 @@ If `Continue` still produces primarily a status report rather than useful action
 
 The R2 packet is planned first by [R2-0 — Operational Risk and Authority Envelope](R2_0_OPERATIONAL_RISK_AND_AUTHORITY_ENVELOPE.md).
 R2-0 fixes the risk classes, authority boundaries, response sequence, and first Gherkin scenarios
-the R2 implementation must respect. R2A is the first finite demonstration packet selected when the
-implementation prompt is written. No process-supervisor code lives in this section.
+the R2 implementation must respect. R2A is the first finite demonstration packet; it is now
+implemented on `feat/r2a-finite-operation` and its capability boundary is recorded in
+[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). No further
+R2 runtime behavior is built. R2B and later packets remain unimplemented.
 
 ### Objective
 
 Allow the Steward to launch and supervise one long-running local process without blocking the parent
 conversation.
 
-### Initial supported uses
+### R2A status (first vertical slice — implemented)
 
-- focused test suite;
-- test watcher;
-- development server;
-- build;
-- log stream;
-- bounded verification command.
+R2A ships one explicit finite operation: `r2a.state-store-tests` v1, executable `mise` with argv
+`["exec","--","node","--test","test/state.store.test.ts"]`, working directory `repository_root`, risk
+class `safe_and_expected`. The supervisor owns the process group on POSIX platforms, captures bounded
+redacted output, enforces the operation's own time budgets, and records exactly one canonical
+settlement. The four model-callable tools are `voila_start_operation`, `voila_get_operation`,
+`voila_read_operation_output`, and `voila_cancel_operation`. The focus capsule surfaces one
+bounded active or settled operation line; it does not inject output or imply services, watchers,
+workers, or multiple terminals.
+
+The remaining R2 plan items (full process list, the `wait` tool, watcher-style commands,
+long-running development servers, persistent services) remain R2B onward and are not built.
+
+### Initial supported uses (R2A only)
+
+- one focused test suite, run via the supervisor;
+- bounded verification commands through the same registry;
+- controlled fixtures used to prove lifecycle, cancellation, timeout, and redaction.
 
 ### Required operations
 
 ```text
 start
-list
+list          # omitted in R2A: only one accepted operation exists
 inspect
 read output
-stop
-wait
+stop          # implemented as cancel
+wait          # omitted in R2A: settlement is delivered through canonical state, not polling
 ```
 
 ### Required properties
@@ -393,7 +406,7 @@ wait
 Each process records:
 
 - operation ID;
-- associated work item;
+- associated work item (optional);
 - structured executable and arguments;
 - working directory;
 - owner;
