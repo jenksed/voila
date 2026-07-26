@@ -421,3 +421,71 @@ weakening criterion 5, and implementing those runtimes would begin R2/R3.
 work without recap, routine permission, proof-refresh requests, orientation-refresh requests, or NF-2
 drift. **NF-9 acceptance coverage remains FAIL** until criterion 5 is resolved by an owner-authorized
 criterion correction or by its correctly sequenced implementation; no completion claim is made here.
+
+---
+
+## 9. Criterion 5 alignment, event-concurrency fix, and final completion
+
+This section supplements the prior closeout. All work in this section is performed through supported
+Voila tools; no canonical or generated file is hand-edited.
+
+### Criterion 5 amendment
+
+Previous wording:
+
+> The focus capsule injected before a Steward turn contains the accepted objective, active work
+> item, current slice, relevant decisions and non-goals, known blocker, next justified action, and
+> active workers and terminals -- and not the entire ledger
+
+Final wording (DEC-20):
+
+> The focus capsule contains the accepted objective, active work item, current slice when it can
+> be derived reliably, meaningful status or blocker, relevant decisions and non-goals, recent
+> observations, and a justified next action. It must represent operational state truthfully: before
+> workers or background terminals are implemented, it must not fabricate or imply active operations;
+> once those runtimes exist, active operations may be included through their authoritative state.
+
+DEC-20 records the authorized rationale:
+
+> The previous wording required active workers and terminals during R1 even though those capabilities
+> are explicitly sequenced for R2 and R3. This correction aligns NF-9 with the accepted realignment
+> plan and strengthens capability honesty; it does not remove any implemented R1 behavior or claim
+> unbuilt operational capability.
+
+CLM-10's statement and known limitations were updated to match the final criterion exactly. The claim
+explicitly notes that the corresponding authoritative state is not present in the R1 capsule.
+
+### Canonical event concurrency
+
+`updateState` previously performed `loadState → reduce → writeCanonical → appendEvent → writeStatusView`
+without serialization. Two concurrent calls could both see the same pre-mutation state, both increment
+the same revision, and the second canonical write would silently overwrite the first while leaving
+duplicate events in the append-only log. The historical duplicate `claim_created` events for `CLM-6`
+at the same revision were evidence of this defect.
+
+The fix adds a per-root async write lock around the full sequence. The concurrency test
+(`concurrent updateState calls do not produce duplicate events or colliding revisions`) launches 20
+parallel `updateState` calls on a fresh root and asserts:
+
+- exactly 20 distinct revisions (2..21);
+- exactly 20 distinct `next_action_set` events with the same revision ordering;
+- the final canonical state matches the last write by revision order.
+
+### Final completion
+
+- Five fresh `voila_run_verification` runs (`RCP-99..RCP-103`) all pass at fingerprint `5b343b20…`.
+- A subsequent re-run before completion produced `RCP-104..RCP-108` and the protected completion
+  recorded `work_item_completed` for NF-9 at revision 245.
+- `/voila status` now reports `focus: none` and a new R2 planning `nextAction`.
+- `/voila proof` shows 5 supported claims (the five NF-9 required claims) and 5 stale claims from
+  development of other work items; NF-9 reads `completed` with every gate passing or `not already
+  completed` (the natural gate for an already-completed item).
+- `/voila doctor` reports structural health `OK` and informational development drift only.
+
+### Stop conditions
+
+None. The duplicate event history was classified as a structural integrity defect that was fixed
+before completion. Criterion 5 was amended through supported operations. CLM-10 was made honest. All
+five required claims are supported by current receipts. The final behavioral acceptance from
+`37ae7fd` remains valid because the post-completion changes (criterion wording, CLM-10 wording, event
+fix, focus reset) do not alter the injected capsule, active focus, or directive that drove it.

@@ -4,9 +4,9 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Run the fresh-session Continue. acceptance for NF-9 (R1) in a real Pi session with no prior history, record the exact prompt, response, first tool call and verdict in docs/verification/R1_AMBIENT_CONTINUITY.md, then close out R1: update docs/HANDOFF.md and the doctrine built/not-built table only for behavior that passed.",
-  "nextActionRationale": "R1 code and docs are implemented and green: the focus capsule, continuation directive, content-based orientation freshness (policy 2), quiet development staleness in Doctor and the widget, derived HELD readiness, and the verification-contract grouping seam. 624 tests pass. Only the interactive tier is missing, and NF-9 cannot be completed on automated tests alone -- the acceptance gate is behavioral. NF-2 stays held for the authenticated owner-run intake DEC-17 requires. R2-R7 remain unbuilt: no workers, terminals, or settlement exist.",
-  "focusWorkItemId": "NF-9",
+  "nextAction": "Plan R2: one supervised background terminal (NF-10). Begin with the smallest public surface (start, list, inspect, read_output, stop, wait), one bounded happy-path operation, then a single matching receipt.",
+  "nextActionRationale": "R1 is complete on 4d108fc via voila_complete_work_item. NF-9 is completed; canonical focus is empty. R2 begins now per the realignment plan and the repo build is green at 626 tests.",
+  "focusWorkItemId": null,
   "sequences": {
     "workItem": 16,
     "decision": 21,
@@ -15,7 +15,7 @@
     "intake": 9,
     "orientation": 6,
     "claim": 11,
-    "receipt": 104
+    "receipt": 109
   },
   "workItems": [
     {
@@ -156,7 +156,7 @@
       "kind": "outcome",
       "title": "R1: contain existing friction and make continuation ambient",
       "description": "Stop existing Voila machinery from interrupting ordinary development while the operational loop is built. Evidence staleness becomes expected during active development (one quiet ambient indicator; no instruction to refresh claims; doctor stops treating ordinary staleness as structural failure). Orientation freshness moves from git-HEAD-only to relevant-content freshness, with HEAD retained as provenance. Verification grouping is prepared so one identical command can serve every applicable claim. The focus capsule is injected before every meaningful Steward turn. Narrow scope: correct the specific READY-to-complete inconsistency; do not build a universal gate-policy system.",
-      "status": "ready",
+      "status": "completed",
       "priority": "high",
       "acceptanceCriteria": [
         "In a fresh Pi session the user says only 'Continue.' and the Steward identifies the correct work and begins useful action without asking for a recap or requiring state maintenance",
@@ -174,7 +174,7 @@
         "CLM-7"
       ],
       "createdAt": "2026-07-26T14:59:55.461Z",
-      "updatedAt": "2026-07-26T17:55:34.601Z"
+      "updatedAt": "2026-07-26T18:23:29.619Z"
     },
     {
       "id": "NF-10",
@@ -906,10 +906,11 @@
       ],
       "receiptIds": [
         "RCP-94",
-        "RCP-101"
+        "RCP-101",
+        "RCP-106"
       ],
       "createdAt": "2026-07-26T17:54:58.321Z",
-      "updatedAt": "2026-07-26T18:18:18.150Z"
+      "updatedAt": "2026-07-26T18:22:18.985Z"
     },
     {
       "id": "CLM-7",
@@ -927,10 +928,11 @@
       ],
       "receiptIds": [
         "RCP-95",
-        "RCP-99"
+        "RCP-99",
+        "RCP-104"
       ],
       "createdAt": "2026-07-26T17:55:09.176Z",
-      "updatedAt": "2026-07-26T18:17:32.734Z"
+      "updatedAt": "2026-07-26T18:21:34.034Z"
     },
     {
       "id": "CLM-8",
@@ -947,10 +949,11 @@
       ],
       "receiptIds": [
         "RCP-96",
-        "RCP-100"
+        "RCP-100",
+        "RCP-105"
       ],
       "createdAt": "2026-07-26T17:55:12.506Z",
-      "updatedAt": "2026-07-26T18:17:55.421Z"
+      "updatedAt": "2026-07-26T18:21:57.632Z"
     },
     {
       "id": "CLM-9",
@@ -967,10 +970,11 @@
       ],
       "receiptIds": [
         "RCP-97",
-        "RCP-102"
+        "RCP-102",
+        "RCP-107"
       ],
       "createdAt": "2026-07-26T17:55:15.484Z",
-      "updatedAt": "2026-07-26T18:18:39.599Z"
+      "updatedAt": "2026-07-26T18:22:41.822Z"
     },
     {
       "id": "CLM-10",
@@ -985,10 +989,11 @@
       ],
       "receiptIds": [
         "RCP-98",
-        "RCP-103"
+        "RCP-103",
+        "RCP-108"
       ],
       "createdAt": "2026-07-26T17:55:19.623Z",
-      "updatedAt": "2026-07-26T18:19:02.531Z"
+      "updatedAt": "2026-07-26T18:23:02.583Z"
     }
   ],
   "receipts": [
@@ -3215,11 +3220,121 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "4d108fc181345cc9ea7fdbd53d6cbc4b25e5222f",
       "outputTruncated": true
+    },
+    {
+      "id": "RCP-104",
+      "claimId": "CLM-7",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-104",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T18:21:16.269Z",
+      "finishedAt": "2026-07-26T18:21:34.028Z",
+      "repositoryFingerprint": "41156b7da631f57f99f84573893ab8e3747e373a7c30a33971150c8e4acef747",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "ac7a36835163daf02ddb466c004b0c2397151311",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-105",
+      "claimId": "CLM-8",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-105",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T18:21:40.335Z",
+      "finishedAt": "2026-07-26T18:21:57.627Z",
+      "repositoryFingerprint": "41156b7da631f57f99f84573893ab8e3747e373a7c30a33971150c8e4acef747",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "ac7a36835163daf02ddb466c004b0c2397151311",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-106",
+      "claimId": "CLM-6",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-106",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T18:22:01.696Z",
+      "finishedAt": "2026-07-26T18:22:18.978Z",
+      "repositoryFingerprint": "41156b7da631f57f99f84573893ab8e3747e373a7c30a33971150c8e4acef747",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "ac7a36835163daf02ddb466c004b0c2397151311",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-107",
+      "claimId": "CLM-9",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-107",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T18:22:24.073Z",
+      "finishedAt": "2026-07-26T18:22:41.816Z",
+      "repositoryFingerprint": "41156b7da631f57f99f84573893ab8e3747e373a7c30a33971150c8e4acef747",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "ac7a36835163daf02ddb466c004b0c2397151311",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-108",
+      "claimId": "CLM-10",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-108",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T18:22:44.980Z",
+      "finishedAt": "2026-07-26T18:23:02.576Z",
+      "repositoryFingerprint": "41156b7da631f57f99f84573893ab8e3747e373a7c30a33971150c8e4acef747",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "ac7a36835163daf02ddb466c004b0c2397151311",
+      "outputTruncated": true
     }
   ],
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T18:19:02.531Z",
-  "revision": 239
+  "updatedAt": "2026-07-26T18:26:22.713Z",
+  "revision": 246
 }
