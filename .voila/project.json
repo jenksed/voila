@@ -4,8 +4,8 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "All owner-directed work is complete in the working tree: DEC-17 supersedes DEC-12 only for NF-1; dogfood.test.ts asserts the new invariant; fingerprint-v2 (ADR-0008, code, tests, docs) ships; console-integration flake fixed (deterministic polling replaces 20ms setTimeout); all 5 receipts refreshed at the current fingerprint; 587/587 tests pass. Honest final-state caveats: (a) the Pi session is caching v1 fingerprint code from session start; the proof picture shows 5/5 supported against cached v1 fingerprint c91e9e15a613, while a fresh process computes v2 fingerprint ae7e90186319 and the doctor reports the receipts as stale until the Pi session reloads. (b) Committing this record will move gitHead and stale all current receipts again under v1 semantics; v2 makes that no longer the case once the session reloads. Owner direction is now needed to (1) review the 7 proposed commit boundaries, (2) commit and (optionally) push, and (3) restart Pi so v2 takes effect, then re-run verification once to give every claim a v2 receipt. NF-2 remains held for an authenticated Project Steward intake by the owner in a real terminal.",
-  "nextActionRationale": "The owner's five directives are all executed. Step 1 (release NF-1) is durable in project.json with a completion event. Step 2 (hold NF-2) holds. Step 3 (fingerprint v2) ships as ADR-0008 + rewritten implementation + 25+ tests. Step 4 (reconcile report) surfaces a real, documented disagreement that is a session-caching artifact, not a code defect — the user explicitly told me to investigate rather than dismiss, and the investigation identifies the cause and the remediation (Pi session restart). Step 5 (honest final state) presents 7 commit boundaries (B1..B7) and confirms NF-1 completion / NF-2 hold, with the doctor reading against the fresh v2 fingerprint (which is correct, not the cached session fingerprint).",
+  "nextAction": "In a real authenticated Pi terminal, the owner should use the Project Steward workflow to ingest a real planning document for NF-2, review the generated Understanding Check, and explicitly accept or request revision; record only the actually observed result. Do not complete NF-2 until that evidence exists.",
+  "nextActionRationale": "Canonical state keeps NF-2 focused and ready, and DEC-17 explicitly holds NF-2 pending this authenticated owner-run intake. NF-3 depends on NF-2 and NF-4 depends on NF-3, so neither may be completed first. ORI-5 re-established current repository orientation at HEAD e2835bd7780198c0ecf65401a8bd0cbad95c82db without supplying the missing authenticated intake evidence.",
   "focusWorkItemId": "NF-2",
   "sequences": {
     "workItem": 9,
@@ -13,9 +13,9 @@
     "assumption": 4,
     "risk": 6,
     "intake": 9,
-    "orientation": 5,
+    "orientation": 6,
     "claim": 6,
-    "receipt": 64
+    "receipt": 69
   },
   "workItems": [
     {
@@ -517,9 +517,17 @@
       "id": "ORI-4",
       "artifactRef": "orientations/ORI-4/orientation.json",
       "repositoryHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
-      "status": "current",
+      "status": "stale",
       "createdAt": "2026-07-26T05:16:17.663Z",
-      "updatedAt": "2026-07-26T05:16:17.663Z"
+      "updatedAt": "2026-07-26T08:22:43.117Z"
+    },
+    {
+      "id": "ORI-5",
+      "artifactRef": "orientations/ORI-5/orientation.json",
+      "repositoryHead": "e2835bd7780198c0ecf65401a8bd0cbad95c82db",
+      "status": "current",
+      "createdAt": "2026-07-26T08:22:43.117Z",
+      "updatedAt": "2026-07-26T08:22:43.117Z"
     }
   ],
   "claims": [
@@ -550,10 +558,11 @@
         "RCP-42",
         "RCP-48",
         "RCP-53",
-        "RCP-54"
+        "RCP-54",
+        "RCP-64"
       ],
       "createdAt": "2026-07-25T16:38:42.263Z",
-      "updatedAt": "2026-07-26T06:33:01.241Z"
+      "updatedAt": "2026-07-26T07:58:57.146Z"
     },
     {
       "id": "CLM-2",
@@ -585,10 +594,11 @@
         "RCP-49",
         "RCP-55",
         "RCP-56",
-        "RCP-57"
+        "RCP-57",
+        "RCP-65"
       ],
       "createdAt": "2026-07-25T22:26:09.232Z",
-      "updatedAt": "2026-07-26T06:33:59.564Z"
+      "updatedAt": "2026-07-26T07:59:13.680Z"
     },
     {
       "id": "CLM-3",
@@ -619,10 +629,11 @@
         "RCP-44",
         "RCP-50",
         "RCP-58",
-        "RCP-59"
+        "RCP-59",
+        "RCP-66"
       ],
       "createdAt": "2026-07-26T04:13:58.284Z",
-      "updatedAt": "2026-07-26T06:34:44.874Z"
+      "updatedAt": "2026-07-26T07:59:37.304Z"
     },
     {
       "id": "CLM-4",
@@ -651,10 +662,11 @@
         "RCP-51",
         "RCP-60",
         "RCP-61",
-        "RCP-62"
+        "RCP-62",
+        "RCP-67"
       ],
       "createdAt": "2026-07-26T04:14:13.952Z",
-      "updatedAt": "2026-07-26T06:35:30.866Z"
+      "updatedAt": "2026-07-26T07:59:54.134Z"
     },
     {
       "id": "CLM-5",
@@ -680,10 +692,11 @@
         "RCP-41",
         "RCP-46",
         "RCP-52",
-        "RCP-63"
+        "RCP-63",
+        "RCP-68"
       ],
       "createdAt": "2026-07-26T04:14:13.958Z",
-      "updatedAt": "2026-07-26T06:35:46.170Z"
+      "updatedAt": "2026-07-26T08:00:48.216Z"
     }
   ],
   "receipts": [
@@ -2020,11 +2033,131 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "b64fe162f0a3a804a846b5e5025c0b37eef497dd",
       "outputTruncated": true
+    },
+    {
+      "id": "RCP-64",
+      "claimId": "CLM-1",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-64",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T07:58:42.425Z",
+      "finishedAt": "2026-07-26T07:58:57.141Z",
+      "repositoryFingerprint": "2bdac21f2540a62f112fc84d3cd8561d405b58d7446251953fe6375b25893398",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "e2835bd7780198c0ecf65401a8bd0cbad95c82db",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-65",
+      "claimId": "CLM-2",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-65",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T07:58:58.858Z",
+      "finishedAt": "2026-07-26T07:59:13.677Z",
+      "repositoryFingerprint": "2bdac21f2540a62f112fc84d3cd8561d405b58d7446251953fe6375b25893398",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "e2835bd7780198c0ecf65401a8bd0cbad95c82db",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-66",
+      "claimId": "CLM-3",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-66",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T07:59:21.930Z",
+      "finishedAt": "2026-07-26T07:59:37.301Z",
+      "repositoryFingerprint": "2bdac21f2540a62f112fc84d3cd8561d405b58d7446251953fe6375b25893398",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "e2835bd7780198c0ecf65401a8bd0cbad95c82db",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-67",
+      "claimId": "CLM-4",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-67",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify",
+        "/voila",
+        "verify",
+        "CLM-5",
+        "--",
+        "mise",
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T07:59:39.770Z",
+      "finishedAt": "2026-07-26T07:59:54.131Z",
+      "repositoryFingerprint": "2bdac21f2540a62f112fc84d3cd8561d405b58d7446251953fe6375b25893398",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "e2835bd7780198c0ecf65401a8bd0cbad95c82db",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-68",
+      "claimId": "CLM-5",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-68",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T08:00:33.185Z",
+      "finishedAt": "2026-07-26T08:00:48.213Z",
+      "repositoryFingerprint": "2bdac21f2540a62f112fc84d3cd8561d405b58d7446251953fe6375b25893398",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "e2835bd7780198c0ecf65401a8bd0cbad95c82db",
+      "outputTruncated": true
     }
   ],
   "currentIntakeId": "INT-8",
-  "currentOrientationId": "ORI-4",
+  "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T06:35:46.170Z",
-  "revision": 170
+  "updatedAt": "2026-07-26T08:22:52.408Z",
+  "revision": 177
 }
