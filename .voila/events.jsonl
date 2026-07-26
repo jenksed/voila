@@ -214,3 +214,5 @@
 {"type":"verification_recorded","id":"RCP-93","claimId":"CLM-5","result":"passed","revision":212,"ts":"2026-07-26T15:58:19.434Z"}
 {"type":"next_action_set","focus":"NF-9","revision":213,"ts":"2026-07-26T16:54:47.901Z"}
 {"type":"next_action_set","focus":"NF-9","revision":214,"ts":"2026-07-26T17:03:40.091Z"}
+{"type":"work_item_updated","id":"NF-9","revision":215,"ts":"2026-07-26T17:47:37.208Z"}
+{"type":"decision_recorded","id":"DEC-19","status":"accepted","revision":216,"ts":"2026-07-26T17:47:45.503Z"}

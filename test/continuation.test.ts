@@ -163,13 +163,16 @@ test("current slices prefer trustworthy sentence boundaries over punctuation ins
     if (expectedSlice === undefined) {
       assert.doesNotMatch(capsule, /Current slice:/, nextAction);
     } else {
-      assert.match(capsule, new RegExp(expectedSlice.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")), nextAction);
+      assert.match(
+        capsule,
+        new RegExp(expectedSlice.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")),
+        nextAction,
+      );
     }
     assert.match(capsule, /Next action:/, "required next action survives");
     assert.ok(capsule.length <= CAPSULE_HARD_MAX, "capsule hard limit holds");
   }
 });
-
 
 test("a continuation turn receives project, objective, focus, next action, and an instruction to act", () => {
   const state = r1LikeState();

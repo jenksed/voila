@@ -9,7 +9,7 @@
   "focusWorkItemId": "NF-9",
   "sequences": {
     "workItem": 16,
-    "decision": 19,
+    "decision": 20,
     "assumption": 4,
     "risk": 6,
     "intake": 9,
@@ -161,14 +161,14 @@
       "acceptanceCriteria": [
         "In a fresh Pi session the user says only 'Continue.' and the Steward identifies the correct work and begins useful action without asking for a recap or requiring state maintenance",
         "A commit that changes no orientation-relevant content does not mark orientation stale",
-        "One identical verification command can serve every applicable claim without being re-executed per claim",
+        "Voila deterministically identifies and groups claims with equivalent verification contracts, reports the unique contract count, and exposes a stable integration seam for later shared execution. R1 does not execute each group once or distribute a shared execution result across claims; execution deduplication remains R6 scope.",
         "A work item does not display READY to complete while a known required human or authenticated activity remains pending",
         "The focus capsule injected before a Steward turn contains the accepted objective, active work item, current slice, relevant decisions and non-goals, known blocker, next justified action, and active workers and terminals -- and not the entire ledger"
       ],
       "dependsOn": [],
       "requiredClaimIds": [],
       "createdAt": "2026-07-26T14:59:55.461Z",
-      "updatedAt": "2026-07-26T14:59:55.461Z"
+      "updatedAt": "2026-07-26T17:47:37.205Z"
     },
     {
       "id": "NF-10",
@@ -454,6 +454,15 @@
       "status": "accepted",
       "createdAt": "2026-07-26T14:59:55.449Z",
       "updatedAt": "2026-07-26T14:59:55.449Z"
+    },
+    {
+      "id": "DEC-19",
+      "title": "Amend NF-9 criterion 3 to the accepted R1 grouping seam",
+      "decision": "NF-9 criterion 3 is narrowed to deterministic verification-contract grouping and a stable seam for later shared execution; R1 does not execute each group once or distribute shared results, and execution deduplication remains R6 scope.",
+      "rationale": "This amendment aligns NF-9 with the accepted Project Realignment Plan. It corrects a sequencing mismatch and does not claim execution deduplication that has not been implemented.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T17:47:45.501Z",
+      "updatedAt": "2026-07-26T17:47:45.501Z"
     }
   ],
   "assumptions": [
@@ -2877,6 +2886,6 @@
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T17:03:40.087Z",
-  "revision": 214
+  "updatedAt": "2026-07-26T17:47:45.501Z",
+  "revision": 216
 }
