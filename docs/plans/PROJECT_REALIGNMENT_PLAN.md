@@ -356,6 +356,13 @@ If `Continue` still produces primarily a status report rather than useful action
 
 ## 8. R2 — Background terminal v1
 
+### Planning foundation
+
+The R2 packet is planned first by [R2-0 — Operational Risk and Authority Envelope](R2_0_OPERATIONAL_RISK_AND_AUTHORITY_ENVELOPE.md).
+R2-0 fixes the risk classes, authority boundaries, response sequence, and first Gherkin scenarios
+the R2 implementation must respect. R2A is the first finite demonstration packet selected when the
+implementation prompt is written. No process-supervisor code lives in this section.
+
 ### Objective
 
 Allow the Steward to launch and supervise one long-running local process without blocking the parent
