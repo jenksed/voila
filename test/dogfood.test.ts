@@ -8,19 +8,25 @@ import { join } from "node:path";
 import { loadState } from "../src/state/store.ts";
 import { leftoverReceiptTempDirs, OUTPUT_CAP_BYTES } from "../src/state/receipt-store.ts";
 import { runDoctor } from "../src/commands/doctor.ts";
+import { SCHEMA_VERSION } from "../src/domain/types.ts";
 
 // The Voila repository dogfoods its own canonical state. These assertions load the committed
 // .voila/project.json from the repo root (the test runner's cwd).
 
-test("repository loads its own dogfooded v4 canonical state", async () => {
+test("repository loads its own dogfooded canonical state", async () => {
   const state = await loadState(process.cwd());
-  assert.equal(state.schemaVersion, 4);
+  assert.equal(state.schemaVersion, SCHEMA_VERSION);
   assert.equal(state.phase, "build");
   assert.ok(state.workItems.length >= 7);
-  // R1 (NF-9) was completed through the protected transition. Canonical focus is empty and the next
-  // action points at R2 planning. NF-2 is still held and still owed its authenticated intake —
-  // asserted below, which is where that invariant belongs.
-  assert.equal(state.focusWorkItemId, null);
+  // R1 (NF-9) and bounded R2A (NF-16) completed through protected transitions. A later accepted
+  // item may now hold focus; completion must not leave focus pointing at completed/cancelled work.
+  // NF-2 is still held and still owed its authenticated intake — asserted below.
+  if (state.focusWorkItemId !== null) {
+    const focused = state.workItems.find((item) => item.id === state.focusWorkItemId);
+    assert.ok(focused, "focus references an existing work item");
+    assert.notEqual(focused.status, "completed", "focus never points at completed work");
+    assert.notEqual(focused.status, "cancelled", "focus never points at cancelled work");
+  }
   assert.ok(state.nextActionRationale && state.nextActionRationale.length > 0);
   assert.ok(state.decisions.filter((d) => d.status === "accepted").length >= 6);
   assert.ok(state.risks.length >= 4);
@@ -34,8 +40,9 @@ test("the realignment is recorded in canonical state and the R-sequence is seque
   assert.ok(dec18, "DEC-18 records the operational realignment");
   assert.equal(dec18.status, "accepted");
 
-  // R1..R7 exist as work items and form a dependency chain. R1 (NF-9) is completed; R2..R7
-  // remain uncompleted, so no later R-packet can be picked up before its predecessor.
+  // R1..R7 exist as work items and form a dependency chain. R1 (NF-9) is completed; R2..R7 remain
+  // uncompleted. The broader R2 item additionally waits for its bounded R2A slice (NF-16), rather
+  // than making NF-16 depend on completion of all broader R2 work.
   const chain = ["NF-9", "NF-10", "NF-11", "NF-12", "NF-13", "NF-14", "NF-15"];
   for (const [i, id] of chain.entries()) {
     const item = state.workItems.find((w) => w.id === id);
@@ -49,23 +56,42 @@ test("the realignment is recorded in canonical state and the R-sequence is seque
         "completed",
         `${id} is unbuilt; nothing here may claim otherwise`,
       );
-      assert.deepEqual(item.dependsOn, [chain[i - 1]], `${id} depends on ${chain[i - 1]}`);
+      const expectedDependencies = id === "NF-10" ? ["NF-9", "NF-16"] : [chain[i - 1]];
+      assert.deepEqual(
+        item.dependsOn,
+        expectedDependencies,
+        `${id} carries the accepted R-sequence dependencies`,
+      );
     }
     assert.ok(item.acceptanceCriteria.length > 0, `${id} states how it will be judged`);
   }
 });
 
-test("dogfooded state stays honest: completed set is exactly {NF-1, NF-9}; NF-2..NF-4 remain held", async () => {
+test("dogfooded state recognizes protected completions while NF-2..NF-4 remain held", async () => {
   const state = await loadState(process.cwd());
-  const completed = state.workItems
-    .filter((w) => w.status === "completed")
-    .map((w) => w.id)
-    .sort();
-  assert.deepEqual(
-    completed,
-    ["NF-1", "NF-9"],
-    "only NF-1 and NF-9 have satisfied every completion gate; NF-2..NF-4 remain held",
-  );
+  const events = (await readFile(join(process.cwd(), ".voila", "events.jsonl"), "utf8"))
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as { type?: string; id?: string });
+  const completed = state.workItems.filter((item) => item.status === "completed");
+
+  // Known accepted milestones cannot silently regress. Additional completions are allowed only when
+  // their canonical shape and event history show they traversed the protected path; this avoids an
+  // exact-list fixture that breaks every time a new item completes legitimately.
+  for (const id of ["NF-1", "NF-9", "NF-16", "NF-17", "NF-18", "NF-19"]) {
+    assert.ok(
+      completed.some((item) => item.id === id),
+      `${id} remains completed`,
+    );
+  }
+  for (const item of completed) {
+    assert.ok(item.acceptanceCriteria.length > 0, `${item.id} completed with acceptance criteria`);
+    assert.ok(item.requiredClaimIds.length > 0, `${item.id} completed with required claims`);
+    assert.ok(
+      events.some((event) => event.type === "work_item_completed" && event.id === item.id),
+      `${item.id} has a protected completion event`,
+    );
+  }
 
   const nf1 = state.workItems.find((w) => w.id === "NF-1");
   assert.ok(nf1);

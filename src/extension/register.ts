@@ -22,7 +22,7 @@ import {
 } from "../commands/intake.ts";
 import { runClaims, runComplete, runProof, runVerify } from "../commands/proof.ts";
 import { runCommitSuggestion, runDeliver } from "../commands/deliver.ts";
-import { assembleContext } from "../context/assemble.ts";
+import { assembleContextEnvelope } from "../context/assemble.ts";
 import { isContinuationRequest } from "../context/continuation.ts";
 import { formatDoctor, runDoctor, worstLevel } from "../commands/doctor.ts";
 import type { CommandResult } from "../commands/types.ts";
@@ -32,6 +32,8 @@ import { LegacyStateMigrationRequiredError, StateDirectoryConflictError } from "
 import { homeViewLines } from "../ui/homeview.ts";
 import { voilaTools, type VoilaTool } from "../tools/index.ts";
 import { openStewardConsole, type ConsoleUiSurface } from "../ui/steward-console/open.ts";
+import { operationSupervisor } from "../state/operations-runtime.ts";
+import { protectedMutationTarget } from "../state/path-boundary.ts";
 
 export interface VoilaUi {
   notify(message: string, level?: "info" | "warning" | "error"): void;
@@ -163,7 +165,12 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
     await restoreHomeView(ctx);
   });
 
-  // Inject the deterministic focus capsule before agent work. Read-only: never mutates state.
+  // Hard boundary for general structured file tools. Supported Voila tools do not expose a raw
+  // path and therefore continue through their own state/artifact invariants.
+  host.on("tool_call", async (event, ctx) => enforceProtectedPathMutation(event, ctx.cwd));
+
+  // Assemble the deterministic capsule read-only. When it includes one delivered settlement, the
+  // host then acknowledges that exact run so the same settlement is not injected twice.
   //
   // The turn's prompt is read here, at the single host boundary, so an explicit "Continue." produces
   // an action-oriented directive instead of a bare context dump. Anything that is not an explicit
@@ -171,14 +178,50 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
   host.on("before_agent_start", async (event, ctx) => {
     try {
       const prompt = (event as { prompt?: unknown } | null | undefined)?.prompt;
-      const content = await assembleContext(ctx.cwd, {
+      const envelope = await assembleContextEnvelope(ctx.cwd, {
         continuation: isContinuationRequest(typeof prompt === "string" ? prompt : undefined),
       });
-      return { message: { customType: "voila-context", content, display: false } };
+      if (envelope.deliveredSettlementRunId) {
+        try {
+          await operationSupervisor(ctx.cwd).acknowledge(envelope.deliveredSettlementRunId);
+        } catch {
+          // The capsule still carries the settlement. A failed acknowledgement leaves it visible on
+          // the next turn rather than silently losing delivery.
+        }
+      }
+      return {
+        message: { customType: "voila-context", content: envelope.content, display: false },
+      };
     } catch {
       return undefined;
     }
   });
+}
+
+export async function enforceProtectedPathMutation(
+  event: unknown,
+  root: string,
+): Promise<{ block: true; reason: string } | undefined> {
+  if (typeof event !== "object" || event === null) return undefined;
+  const call = event as { toolName?: unknown; input?: unknown };
+  if (call.toolName !== "write" && call.toolName !== "edit") return undefined;
+  if (typeof call.input !== "object" || call.input === null) return undefined;
+  const path = (call.input as { path?: unknown }).path;
+  if (typeof path !== "string") return undefined;
+  try {
+    const protectedTarget = await protectedMutationTarget(root, path);
+    if (!protectedTarget) return undefined;
+    return {
+      block: true,
+      reason:
+        `Protected Voila canonical path: ${protectedTarget.relativePath}. ` +
+        "Direct model file mutation is forbidden; use the corresponding supported voila_* state transition.",
+    };
+  } catch {
+    // Built-in tools retain responsibility for malformed, missing-parent, and outside-repository
+    // targets. This interceptor owns only the canonical Voila path boundary.
+    return undefined;
+  }
 }
 
 /** A leading `INT-n` argument selects that intake rather than the current one. */

@@ -24,6 +24,12 @@ The boundary is enforced by a test that drives the whole engine against a real r
 asserts `HEAD` did not move, no commit was created, `git status --porcelain` is byte-identical, and
 `.git/index` was not rewritten.
 
+The read-only boundary does not justify a vague handoff. When owner action is required to open a pull
+request, the Project Steward inspects the host and CLI availability and recommends an explicit
+paste-safe command (for GitHub with `gh`, a one-line `gh pr create` command with base, head, title,
+and body). The Steward does not execute it or assume authentication. If the CLI is unavailable, it
+provides the host's exact compare/new-PR URL as the actionable fallback.
+
 ## Layering
 
 ```text

@@ -9,7 +9,7 @@ import { join } from "node:path";
 import * as pi from "@earendil-works/pi-coding-agent";
 // Loads the thin adapter (which type-imports Pi and imports src/).
 import voilaExtension from "../.pi/extensions/voila.ts";
-import { loadState } from "../src/state/store.ts";
+import { loadState, updateState } from "../src/state/store.ts";
 
 interface CapturedCommand {
   description?: string;
@@ -80,7 +80,7 @@ test("extension registers the voila command, tools, and session_start", async ()
 
   assert.ok(h.commands.has("voila"));
   assert.ok(h.events.has("session_start"));
-  assert.equal(h.tools.size, 30);
+  assert.equal(h.tools.size, 35);
   assert.ok(h.tools.has("voila_create_work_item"));
   assert.ok(h.tools.has("voila_request_intake_revision"));
   assert.ok(h.tools.has("voila_complete_work_item"));
@@ -93,6 +93,71 @@ test("session_start shows init hint when uninitialized", async () => {
   await h.events.get("session_start")!(undefined, h.ctx);
   const last = h.widgets.at(-1);
   assert.match((last?.lines ?? []).join(" "), /run \/voila init/);
+});
+
+test("a delivered settlement is injected and acknowledged exactly once", async () => {
+  const root = await mkdtemp(join(tmpdir(), "voila-int-"));
+  const h = makeHarness(root);
+  (voilaExtension as unknown as (pi: unknown) => void)(h.host);
+  await h.commands.get("voila")!.handler("init", h.ctx);
+
+  await updateState(
+    root,
+    (cur) => ({
+      ...cur,
+      sequences: { ...cur.sequences, operationRun: 2 },
+      operationRuns: [
+        {
+          id: "RUN-1",
+          definitionId: "r2a.state-store-tests",
+          definitionVersion: 1,
+          definitionFingerprint: "f".repeat(64),
+          projectId: cur.projectId,
+          repositoryRoot: root,
+          worktreeIdentity: root,
+          ownership: { requester: "test", owner: "project-steward" },
+          startingFingerprint: "a".repeat(64),
+          endingFingerprint: "a".repeat(64),
+          changedDuringRun: false,
+          lifecycleState: "passed",
+          createdAt: "2026-07-26T22:30:00.000Z",
+          startedAt: "2026-07-26T22:30:00.100Z",
+          settledAt: "2026-07-26T22:30:00.200Z",
+          exitCode: 0,
+          settlementReason: "passed",
+          outputSummary: {
+            truncated: false,
+            droppedBytes: 0,
+            redactionCount: 0,
+            redactedSecrets: false,
+          },
+          deliveryState: "delivered",
+          admission: {
+            result: "allow",
+            ruleId: "ADMIT.OPERATIONS.ALLOW_NEW",
+            policyVersion: 1,
+            authorityReference: { kind: "decision", id: "DEC-22" },
+            decidedAt: "2026-07-26T22:30:00.000Z",
+          },
+        },
+      ],
+    }),
+    { type: "operation_run_fixture" },
+  );
+
+  const before = h.events.get("before_agent_start")!;
+  const first = (await before({ prompt: "Continue." }, h.ctx)) as {
+    message: { content: string };
+  };
+  assert.match(first.message.content, /Settled operation: r2a\.state-store-tests · passed/);
+  assert.equal((await loadState(root)).operationRuns[0]?.deliveryState, "acknowledged");
+
+  const second = (await before({ prompt: "Continue." }, h.ctx)) as {
+    message: { content: string };
+  };
+  assert.doesNotMatch(second.message.content, /Settled operation:/);
+  const events = await readFile(join(root, ".voila/events.jsonl"), "utf8");
+  assert.equal(events.match(/operation_run_acknowledged/g)?.length, 1);
 });
 
 test("init command then create-work-item tool run end to end through Pi wiring", async () => {

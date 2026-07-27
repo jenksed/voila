@@ -113,7 +113,9 @@ gate is still a gate.
 ## Honest capability status
 
 As of 2026-07-26, most of the operational loop this document describes is **doctrine, not
-implementation**. R1 is the exception: it is implemented and its acceptance behavior was observed.
+implementation**. R1 is implemented and its acceptance behavior was observed. R2A's DEC-22 pivot is
+implemented in the working tree and bounded to one explicit finite operation, but it is not yet
+accepted: canonical counter repair, current receipt evidence, and fresh-session acceptance remain.
 
 | Capability                              | Status                                                       |
 | --------------------------------------- | ------------------------------------------------------------ |
@@ -128,7 +130,8 @@ implementation**. R1 is the exception: it is implemented and its acceptance beha
 | Quiet development staleness             | Built (R1) — Doctor separates structure from readiness drift  |
 | Honest held readiness                   | Built (R1) — presentation only; no new gate                  |
 | Verification grouping                   | Seam only (R1) — identity and grouping; execution is R6       |
-| Background terminals                    | Not built (R2)                                               |
+| One finite supervised operation         | Built and accepted (bounded R2A only)                        |
+| Background terminals                    | Not built (R2B onward)                                       |
 | Pi child workers                        | Not built (R3)                                               |
 | Automatic settlement and integration    | Not built (R4)                                               |
 | Fresh-session continuity                | Not built (R5)                                               |
@@ -142,14 +145,25 @@ was aligned with R1 capability honesty under DEC-20, the canonical-event concurr
 fixed, and the five NF-9 required claims are supported by current receipts. Honest limitations remain
 visible on each claim.
 
-What R1 makes true is narrow: **invocation is immediately useful**. Nothing runs between turns. R1 is
-not background autonomy, automatic settlement, persistent execution, worker orchestration, or
-self-running project management, and no document may describe it as any of those.
+R2A's evidence and capability boundary are recorded in
+[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). Its working-tree
+implementation contains a single explicit finite operation (`r2a.state-store-tests`), deterministic
+admission, a finite-operation supervisor, the canonical operation-run lifecycle, four model-callable
+operation tools, structured-file protection for canonical state, and a bounded focus-capsule
+summary. It does **not** introduce services, watchers, PTYs, child workers, multiple concurrent
+operations, operation discovery, cross-process coordination, or persistent execution across Pi or
+OS restart.
 
-No document, skill, README, or canonical record may describe R2–R7 capabilities as present. The
-Steward skill currently instructs the model **not** to spawn subagents, because there is no runtime
-delegation to spawn them with. That instruction is a statement of current fact and gets revised when
-R3 lands — not before.
+The capability claim remains conditional until acceptance: **once the pending gates pass, the
+Steward can supervise one local, non-interactive finite operation and receive one canonical
+settlement without developer monitoring**. R2A does not make arbitrary commands runnable;
+operations are explicit and registered.
+
+No document, skill, README, or canonical record may describe R2B–R7 capabilities as present. The
+Steward skill currently instructs the model **not** to spawn subagents, because R3 child-worker
+delegation does not exist yet. That instruction is a statement of current fact and gets revised
+when R3 lands — not before. R2A does not change that instruction; the operation supervisor is
+child-process supervision, not subagent delegation.
 
 ## What to build next
 

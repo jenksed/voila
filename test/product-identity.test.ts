@@ -113,7 +113,7 @@ test("the full subcommand set survived the rename", () => {
 
 test("every registered tool uses the voila_ prefix and none uses newfang_", () => {
   const { tools } = captureRegistrations();
-  assert.equal(tools.size, 30, "exact registered tool count");
+  assert.equal(tools.size, 35, "exact registered tool count");
   for (const name of tools.keys()) {
     assert.ok(name.startsWith("voila_"), `${name} does not use the voila_ prefix`);
     assert.ok(!name.startsWith("newfang_"), `${name} is a legacy tool name`);

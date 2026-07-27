@@ -1,21 +1,23 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 6,
   "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Plan R2: one supervised background terminal (NF-10). Begin with the smallest public surface (start, list, inspect, read_output, stop, wait), one bounded happy-path operation, then a single matching receipt.",
-  "nextActionRationale": "R1 is complete on 4d108fc via voila_complete_work_item. NF-9 is completed; canonical focus is empty. R2 begins now per the realignment plan and the repo build is green at 626 tests.",
+  "nextAction": "Owner commits and pushes completed NF-19, then runs the host-aware paste-safe `gh pr create` command to open the R2A pull request against main; do not begin R2B.",
+  "nextActionRationale": "The Steward now requires actionable PR commands and verifies the contract through RCP-127. GitHub CLI 2.96.0 and a GitHub origin are observed locally; authentication is intentionally not assumed. Current boundary receipts RCP-128 through RCP-131 also refresh NF-16, NF-17, and NF-18 at the same fingerprint, so one final owner commit and push can precede the explicit PR command.",
   "focusWorkItemId": null,
   "sequences": {
-    "workItem": 16,
-    "decision": 21,
-    "assumption": 4,
-    "risk": 6,
+    "workItem": 20,
+    "decision": 23,
+    "assumption": 5,
+    "risk": 10,
     "intake": 9,
     "orientation": 6,
-    "claim": 11,
-    "receipt": 109
+    "claim": 16,
+    "receipt": 132,
+    "operationDefinition": 1,
+    "operationRun": 6
   },
   "workItems": [
     {
@@ -189,11 +191,12 @@
         "A process result is delivered as one completion event and is never injected into an active stream"
       ],
       "dependsOn": [
-        "NF-9"
+        "NF-9",
+        "NF-16"
       ],
       "requiredClaimIds": [],
       "createdAt": "2026-07-26T15:00:18.268Z",
-      "updatedAt": "2026-07-26T15:00:18.268Z"
+      "updatedAt": "2026-07-26T23:19:44.872Z"
     },
     {
       "id": "NF-11",
@@ -291,6 +294,93 @@
       "requiredClaimIds": [],
       "createdAt": "2026-07-26T15:00:18.284Z",
       "updatedAt": "2026-07-26T15:00:18.284Z"
+    },
+    {
+      "id": "NF-16",
+      "kind": "task",
+      "title": "R2A — one finite supervised project operation",
+      "description": "First bounded R2 implementation packet.",
+      "status": "completed",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "One accepted finite operation exists and uses executable plus argv.",
+        "Start returns before settlement and the Steward remains available for other work.",
+        "Exactly one canonical settlement is produced per run, including under racing exit, timeout, and cancellation.",
+        "Equivalent active requests reuse the existing run; different requests at capacity are rejected.",
+        "Output is bounded, classified secrets are redacted, and prompt-injection content is treated as data.",
+        "Start and end fingerprints are recorded; changed-during-run results are not treated as current completion evidence automatically.",
+        "Wrong project or wrong worktree execution is rejected.",
+        "The parent Steward receives settlement without developer monitoring.",
+        "The focus capsule shows only authoritative bounded operation state.",
+        "The fresh-session interactive acceptance for R2A passes."
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [
+        "CLM-11",
+        "CLM-13"
+      ],
+      "createdAt": "2026-07-26T19:19:56.855Z",
+      "updatedAt": "2026-07-26T23:21:28.585Z"
+    },
+    {
+      "id": "NF-17",
+      "kind": "defect",
+      "title": "Repair canonical DEC sequence after DEC-22",
+      "description": "The accepted DEC-22 record exists while sequences.decision remains 22, so /voila doctor reports `DEC next=22 <= max used 22` and the dogfood health test fails. Repair through an explicit supported canonical-state transition; never edit .voila by hand. This repair now directly unblocks R2A structural admission, which must deny unhealthy canonical state.",
+      "status": "completed",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "Canonical sequences.decision is greater than every recorded DEC-n identifier.",
+        "/voila doctor reports no ID-counter consistency failure.",
+        "The repository dogfood test passes without weakening its structural-health assertion."
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [
+        "CLM-12"
+      ],
+      "createdAt": "2026-07-26T22:02:06.743Z",
+      "updatedAt": "2026-07-26T23:12:15.125Z"
+    },
+    {
+      "id": "NF-18",
+      "kind": "defect",
+      "title": "Make recommended shell commands paste-safe",
+      "description": "Prevent Steward recommendations from relying on fragile backslash-newline continuations or formatting that can acquire whitespace when copied from the TUI. User-run commands must be easy to copy and paste without shell reinterpretation.",
+      "status": "completed",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "Project Steward instructions require user-run commands to be presented in fenced code blocks with explanations outside the block.",
+        "Each recommended shell command is one physical line with no backslash-newline continuation; multi-step sequences use one complete command per line.",
+        "When a truly multi-line input is unavoidable, the Steward uses a self-contained paste-safe script block and states what it will change.",
+        "Regression tests enforce the paste-safe command-presentation contract on active Steward instruction surfaces."
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [
+        "CLM-14"
+      ],
+      "createdAt": "2026-07-26T23:52:11.972Z",
+      "updatedAt": "2026-07-26T23:54:32.052Z"
+    },
+    {
+      "id": "NF-19",
+      "kind": "defect",
+      "title": "Recommend actionable pull-request commands",
+      "description": "When delivery reaches an owner-operated pull-request boundary, the Project Steward must provide a paste-safe command that opens the PR instead of stopping at prose such as “open a PR.” It must inspect the hosting remote and CLI availability, never execute the external action, and never assume authentication.",
+      "status": "completed",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "When opening a pull request is the next owner action, active Steward instructions require an accompanying paste-safe PR command.",
+        "The Steward checks the repository host and relevant CLI availability before recommending a host-specific PR command.",
+        "For a GitHub remote with GitHub CLI available, the recommended form uses one physical-line `gh pr create` command with explicit base, head, title, and body.",
+        "The Steward never runs the PR command or assumes authentication; missing prerequisites are stated with an actionable fallback.",
+        "Regression tests enforce the pull-request command recommendation contract on active Steward instruction surfaces."
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [
+        "CLM-15"
+      ],
+      "createdAt": "2026-07-27T00:07:25.439Z",
+      "updatedAt": "2026-07-27T00:10:09.128Z"
     }
   ],
   "decisions": [
@@ -478,6 +568,24 @@
       "status": "accepted",
       "createdAt": "2026-07-26T18:14:46.171Z",
       "updatedAt": "2026-07-26T18:14:46.171Z"
+    },
+    {
+      "id": "DEC-21",
+      "title": "Accept R2A — one finite supervised project operation",
+      "decision": "R2A (one finite, local, non-interactive project operation supervised through a language-neutral lifecycle) is the accepted implementation packet under R2-0. The packet is bounded to:\n- exactly one explicit accepted operation: r2a.state-store-tests v1, executable `mise` with argv `[\"exec\",\"--\",\"node\",\"--test\",\"test/state.store.test.ts\"]`, working directory = repository root, risk class Safe and expected.\n- risk classification: Safe and expected. Impact: local read with bounded temporary writes. Network: not required. Privileges: normal user. Interaction: non-interactive. Reversibility: automatic. Trust source: explicit accepted project operation. Concurrency: one active operation per project root.\n- retry policy: zero automatic retries on every failure class; one transient supervisor startup retry is allowed.\n- time budgets (R2A-only): startup 10s, total 120s, graceful 5s, forced 5s.\n- output limits (R2A-only): 16 KiB per chunk, 256 KiB in-memory tail, 1 MiB durable redacted output per run.\n- concurrency: maximum one active operation per project root; equivalent requests reuse the existing run; different requests while capacity is occupied are rejected with a structured capacity result (never queued, never auto-cancelled).\n- cross-process boundary: one controlling Node/Pi process only. Multiple Pi processes, multiple Node processes, future worker processes, external state writers, process crashes during persistence, network filesystems, and stale inter-process locks are NOT claimed safe by R2A. No filesystem lock is implemented for the sake of appearing complete.\n- explicit non-goals: operation discovery, stack adapters, operation manifests, user-authored workflows, queues, multiple concurrent operations, services, watchers, PTYs, child workers, cross-session recovery, cross-process coordination, remote execution, approval bundles.\n- the Project Steward selects and explains the operation; the supervisor owns the child process; canonical state retains run metadata; output content lives under .voila/operations/.",
+      "rationale": "R1 is canonically completed and the R2-0 planning envelope is accepted. R2A is the smallest vertical slice that exercises end-to-end finite-operation supervision with bounded risk, and it is the only runtime slice permitted in R2. Building it proves select→start→observe→continue→settle→react→retain without overstating R2 capability. NF-10 stays open until all of R2 is delivered; R2A claims its own narrow capability honestly.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T19:19:43.236Z",
+      "updatedAt": "2026-07-26T19:19:43.236Z"
+    },
+    {
+      "id": "DEC-22",
+      "title": "R2A authority and operation contract (pivot)",
+      "decision": "Replace the single risk class with five separated concepts: effect profile (closed vocabulary), authority requirement (closed vocabulary), admission decision (pure deterministic, model-independent), execution outcome (post-execution), recovery response (post-observation). The accepted r2a.state-store-tests declares effects {local_read, bounded_temporary_write} and requires authority accepted_project_operation sourced from this DEC-22. The pure admission kernel refuses model identity, prompt prose, conversation history, and operation output as policy inputs. Equivalent active runs reuse; capacity is one per project root; protected canonical paths are hard-blocked through structured file-mutation tools and shadow-classified for bash and unknown third-party tools.",
+      "rationale": "The first R2A packet folded effects and authority into one risk class and used the supervisor as the admission boundary. The pivot adds the policy/admission/interception layer the second packet requires without rewriting the supervisor.",
+      "status": "accepted",
+      "createdAt": "2026-07-26T21:25:03.678Z",
+      "updatedAt": "2026-07-26T21:25:03.678Z"
     }
   ],
   "assumptions": [
@@ -504,6 +612,14 @@
       "status": "open",
       "createdAt": "2026-07-25T04:51:01.991Z",
       "updatedAt": "2026-07-25T04:51:01.991Z"
+    },
+    {
+      "id": "ASM-4",
+      "statement": "The accepted R2A operation (mise exec -- node --test test/state.store.test.ts) requires Node 22.19+ (project toolchain) and the project's existing test fixture path. R2A therefore depends on the same toolchain that the current verify gate already requires and does not introduce new runtime requirements.",
+      "confidence": "high",
+      "status": "open",
+      "createdAt": "2026-07-26T19:19:43.242Z",
+      "updatedAt": "2026-07-26T19:19:43.242Z"
     }
   ],
   "risks": [
@@ -558,6 +674,58 @@
       "status": "open",
       "createdAt": "2026-07-25T04:51:01.991Z",
       "updatedAt": "2026-07-25T04:51:01.991Z"
+    },
+    {
+      "id": "RSK-6",
+      "statement": "Cross-process state mutation: R2A supervisor and Steward live in the same Node/Pi process. If a second process opens this project root and mutates `.voila/project.json`, the supervisor's per-root async mutex does not protect it, and operation run state could be silently overwritten.",
+      "likelihood": "low",
+      "impact": "high",
+      "status": "open",
+      "mitigation": "Document the boundary explicitly in operation metadata and the R2A verification record; do not claim cross-process safety; reject `cwdRef` that does not match the focused worktree. Re-evaluate at R2B if a second process is introduced.",
+      "linkedWorkItems": [
+        "NF-10"
+      ],
+      "createdAt": "2026-07-26T19:19:43.244Z",
+      "updatedAt": "2026-07-26T19:19:43.244Z"
+    },
+    {
+      "id": "RSK-7",
+      "statement": "Settlement race: process exit, timeout, cancellation, startup failure, and output closure can race. Without an idempotent boundary the same run could record two settlements or two canonical writes for one transition.",
+      "likelihood": "medium",
+      "impact": "high",
+      "status": "open",
+      "mitigation": "Single async settlement guard keyed on run identity with state transition validation (only one of queued→starting→running→{passed|failed|cancelled|timed_out|supervisor_error}). Focused regression test races two settlement paths and asserts exactly one canonical result.",
+      "linkedWorkItems": [
+        "NF-10"
+      ],
+      "createdAt": "2026-07-26T19:19:43.251Z",
+      "updatedAt": "2026-07-26T19:19:43.251Z"
+    },
+    {
+      "id": "RSK-8",
+      "statement": "Prompt injection through captured output: a malicious or coerced child process could emit text resembling instructions. If the Steward treats it as authoritative, arbitrary commands could be triggered by output alone.",
+      "likelihood": "medium",
+      "impact": "high",
+      "status": "open",
+      "mitigation": "Treat all child output as untrusted data. Output is redacted, classified secrets are stripped, and the settlement message marks output as data. Tool surface accepts only structured inputs from the model; no tool accepts free-text commands. Skill and focus-capsule text say so explicitly.",
+      "linkedWorkItems": [
+        "NF-10"
+      ],
+      "createdAt": "2026-07-26T19:19:43.254Z",
+      "updatedAt": "2026-07-26T19:19:43.254Z"
+    },
+    {
+      "id": "RSK-9",
+      "statement": "A long-lived Pi process can expose an older loaded Voila module graph after repository source changes, so an interactive acceptance may exercise stale runtime code unless the extension is explicitly reloaded first.",
+      "likelihood": "medium",
+      "impact": "medium",
+      "status": "mitigated",
+      "mitigation": "The 2026-07-26 acceptance explicitly reloaded the Pi extension before invoking corrected tools; the start schema exposed operationId and RUN-5 exercised the corrected DEC-22 runtime. Keep explicit reload as the required mitigation after source changes. Consider a runtime/source build fingerprint in later hardening only if reload remains unreliable.",
+      "linkedWorkItems": [
+        "NF-16"
+      ],
+      "createdAt": "2026-07-26T22:54:09.997Z",
+      "updatedAt": "2026-07-26T23:19:33.974Z"
     }
   ],
   "intakes": [
@@ -994,6 +1162,116 @@
       ],
       "createdAt": "2026-07-26T17:55:19.623Z",
       "updatedAt": "2026-07-26T18:23:02.583Z"
+    },
+    {
+      "id": "CLM-11",
+      "workItemId": "NF-16",
+      "statement": "The R2A finite-operation implementation enforces the accepted deterministic admission, supervision, output, fingerprint, worktree, settlement-delivery, and bounded-capsule contracts under the repository verification suite.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "One accepted finite operation exists and uses executable plus argv.",
+        "Start returns before settlement and the Steward remains available for other work.",
+        "Exactly one canonical settlement is produced per run, including under racing exit, timeout, and cancellation.",
+        "Equivalent active requests reuse the existing run; different requests at capacity are rejected.",
+        "Output is bounded, classified secrets are redacted, and prompt-injection content is treated as data.",
+        "Start and end fingerprints are recorded; changed-during-run results are not treated as current completion evidence automatically.",
+        "Wrong project or wrong worktree execution is rejected.",
+        "The focus capsule shows only authoritative bounded operation state."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-109",
+        "RCP-112",
+        "RCP-113",
+        "RCP-115",
+        "RCP-116",
+        "RCP-121",
+        "RCP-122",
+        "RCP-128"
+      ],
+      "createdAt": "2026-07-26T23:11:09.110Z",
+      "updatedAt": "2026-07-27T00:11:36.978Z"
+    },
+    {
+      "id": "CLM-12",
+      "workItemId": "NF-17",
+      "statement": "The supported canonical repair advanced the DEC sequence beyond DEC-22, and the unchanged structural-health and repository dogfood assertions now pass in the full verification suite.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "Canonical sequences.decision is greater than every recorded DEC-n identifier.",
+        "/voila doctor reports no ID-counter consistency failure.",
+        "The repository dogfood test passes without weakening its structural-health assertion."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-110",
+        "RCP-118",
+        "RCP-123",
+        "RCP-129"
+      ],
+      "createdAt": "2026-07-26T23:11:45.031Z",
+      "updatedAt": "2026-07-27T00:11:55.470Z"
+    },
+    {
+      "id": "CLM-13",
+      "workItemId": "NF-16",
+      "statement": "In the explicitly reloaded Pi runtime, RUN-5 was admitted by operation ID under DEC-22, returned while running, allowed useful parent review without polling, and was delivered as one passing settlement in the next continuation capsule before exact-once acknowledgement.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "The parent Steward receives settlement without developer monitoring.",
+        "The fresh-session interactive acceptance for R2A passes."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-111",
+        "RCP-114",
+        "RCP-117",
+        "RCP-124",
+        "RCP-130"
+      ],
+      "createdAt": "2026-07-26T23:17:46.428Z",
+      "updatedAt": "2026-07-27T00:12:03.627Z"
+    },
+    {
+      "id": "CLM-14",
+      "workItemId": "NF-18",
+      "statement": "Active Project Steward instruction surfaces require paste-safe user commands: fenced bash blocks, one physical command per line without backslash continuations, explanations outside executable content, and a self-contained fallback for unavoidable multi-line input.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "Project Steward instructions require user-run commands to be presented in fenced code blocks with explanations outside the block.",
+        "Each recommended shell command is one physical line with no backslash-newline continuation; multi-step sequences use one complete command per line.",
+        "When a truly multi-line input is unavoidable, the Steward uses a self-contained paste-safe script block and states what it will change.",
+        "Regression tests enforce the paste-safe command-presentation contract on active Steward instruction surfaces."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-119",
+        "RCP-120",
+        "RCP-125",
+        "RCP-131"
+      ],
+      "createdAt": "2026-07-26T23:53:17.367Z",
+      "updatedAt": "2026-07-27T00:12:21.858Z"
+    },
+    {
+      "id": "CLM-15",
+      "workItemId": "NF-19",
+      "statement": "Active Project Steward delivery instructions require an actionable paste-safe pull-request command, derived from the observed host and available CLI, with explicit GitHub arguments and an honest fallback while preserving the owner-only external boundary.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "When opening a pull request is the next owner action, active Steward instructions require an accompanying paste-safe PR command.",
+        "The Steward checks the repository host and relevant CLI availability before recommending a host-specific PR command.",
+        "For a GitHub remote with GitHub CLI available, the recommended form uses one physical-line `gh pr create` command with explicit base, head, title, and body.",
+        "The Steward never runs the PR command or assumes authentication; missing prerequisites are stated with an actionable fallback.",
+        "Regression tests enforce the pull-request command recommendation contract on active Steward instruction surfaces."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-126",
+        "RCP-127"
+      ],
+      "createdAt": "2026-07-27T00:09:39.348Z",
+      "updatedAt": "2026-07-27T00:11:02.565Z"
     }
   ],
   "receipts": [
@@ -3330,11 +3608,839 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "ac7a36835163daf02ddb466c004b0c2397151311",
       "outputTruncated": true
+    },
+    {
+      "id": "RCP-109",
+      "claimId": "CLM-11",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-109",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:11:16.395Z",
+      "finishedAt": "2026-07-26T23:11:34.834Z",
+      "repositoryFingerprint": "e648cb21f38301cebd2720acf53cbec06939ec6cb4f26fa5b0727027df558f15",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-110",
+      "claimId": "CLM-12",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-110",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:11:49.683Z",
+      "finishedAt": "2026-07-26T23:12:05.678Z",
+      "repositoryFingerprint": "e648cb21f38301cebd2720acf53cbec06939ec6cb4f26fa5b0727027df558f15",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-111",
+      "claimId": "CLM-13",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-111",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import assert from 'node:assert/strict'; import { readFile } from 'node:fs/promises'; import { loadState } from './src/state/store.ts'; const state = await loadState('.'); const run = state.operationRuns.find((item) => item.id === 'RUN-5'); assert.ok(run); assert.equal(run.definitionId, 'r2a.state-store-tests'); assert.equal(run.lifecycleState, 'passed'); assert.equal(run.settlementReason, 'passed'); assert.equal(run.exitCode, 0); assert.equal(run.deliveryState, 'acknowledged'); assert.equal(run.admission.result, 'allow'); assert.equal(run.admission.ruleId, 'ADMIT.OPERATIONS.ALLOW_NEW'); assert.equal(run.ownership.workItemId, 'NF-16'); const events = (await readFile('.voila/events.jsonl', 'utf8')).trim().split('\\n').map(JSON.parse); assert.equal(events.filter((event) => event.type === 'operation_run_reserved' && event.runId === 'RUN-5').length, 1); assert.equal(events.filter((event) => event.type === 'operation_run_acknowledged' && event.runId === 'RUN-5').length, 1); console.log('RUN-5 passed and was acknowledged exactly once.');"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:17:57.135Z",
+      "finishedAt": "2026-07-26T23:17:57.285Z",
+      "repositoryFingerprint": "e648cb21f38301cebd2720acf53cbec06939ec6cb4f26fa5b0727027df558f15",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-112",
+      "claimId": "CLM-11",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-112",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-26T23:19:49.312Z",
+      "finishedAt": "2026-07-26T23:20:04.061Z",
+      "repositoryFingerprint": "c765971aa186b874b029a143a9b297ed3574f95e6d786304b34995e12a90d2fe",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-113",
+      "claimId": "CLM-11",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-113",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:20:38.057Z",
+      "finishedAt": "2026-07-26T23:20:52.273Z",
+      "repositoryFingerprint": "b424bd6a846975020694c326f8f340c60c108d75816c5079e86cd96dfda405d8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-114",
+      "claimId": "CLM-13",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-114",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import assert from 'node:assert/strict'; import { readFile } from 'node:fs/promises'; import { loadState } from './src/state/store.ts'; const state = await loadState('.'); const run = state.operationRuns.find((item) => item.id === 'RUN-5'); assert.ok(run); assert.equal(run.definitionId, 'r2a.state-store-tests'); assert.equal(run.lifecycleState, 'passed'); assert.equal(run.settlementReason, 'passed'); assert.equal(run.exitCode, 0); assert.equal(run.deliveryState, 'acknowledged'); assert.equal(run.admission.result, 'allow'); assert.equal(run.admission.ruleId, 'ADMIT.OPERATIONS.ALLOW_NEW'); assert.equal(run.ownership.workItemId, 'NF-16'); const events = (await readFile('.voila/events.jsonl', 'utf8')).trim().split('\\n').map(JSON.parse); assert.equal(events.filter((event) => event.type === 'operation_run_reserved' && event.runId === 'RUN-5').length, 1); assert.equal(events.filter((event) => event.type === 'operation_run_acknowledged' && event.runId === 'RUN-5').length, 1); console.log('RUN-5 passed and was acknowledged exactly once.');"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:21:01.944Z",
+      "finishedAt": "2026-07-26T23:21:02.110Z",
+      "repositoryFingerprint": "b424bd6a846975020694c326f8f340c60c108d75816c5079e86cd96dfda405d8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-115",
+      "claimId": "CLM-11",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-115",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-26T23:22:17.331Z",
+      "finishedAt": "2026-07-26T23:22:32.149Z",
+      "repositoryFingerprint": "66936b032a84b6b7177e09a53de6dc5e612da521ce297d511d9c23840df61f1c",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-116",
+      "claimId": "CLM-11",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-116",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:22:43.303Z",
+      "finishedAt": "2026-07-26T23:22:57.856Z",
+      "repositoryFingerprint": "bd22130db2addcf232c2d5f818109d67985b7ee829095da6fce6767a6fa685d4",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-117",
+      "claimId": "CLM-13",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-117",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import assert from 'node:assert/strict'; import { readFile } from 'node:fs/promises'; import { loadState } from './src/state/store.ts'; const state = await loadState('.'); const run = state.operationRuns.find((item) => item.id === 'RUN-5'); assert.ok(run); assert.equal(run.definitionId, 'r2a.state-store-tests'); assert.equal(run.lifecycleState, 'passed'); assert.equal(run.settlementReason, 'passed'); assert.equal(run.exitCode, 0); assert.equal(run.deliveryState, 'acknowledged'); assert.equal(run.admission.result, 'allow'); assert.equal(run.admission.ruleId, 'ADMIT.OPERATIONS.ALLOW_NEW'); assert.equal(run.ownership.workItemId, 'NF-16'); const events = (await readFile('.voila/events.jsonl', 'utf8')).trim().split('\\n').map(JSON.parse); assert.equal(events.filter((event) => event.type === 'operation_run_reserved' && event.runId === 'RUN-5').length, 1); assert.equal(events.filter((event) => event.type === 'operation_run_acknowledged' && event.runId === 'RUN-5').length, 1); console.log('RUN-5 passed and was acknowledged exactly once.');"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:23:05.890Z",
+      "finishedAt": "2026-07-26T23:23:06.044Z",
+      "repositoryFingerprint": "bd22130db2addcf232c2d5f818109d67985b7ee829095da6fce6767a6fa685d4",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-118",
+      "claimId": "CLM-12",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-118",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:23:39.809Z",
+      "finishedAt": "2026-07-26T23:23:54.431Z",
+      "repositoryFingerprint": "bd22130db2addcf232c2d5f818109d67985b7ee829095da6fce6767a6fa685d4",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "4e0e9d7e46751b5003c4076a448ad647f574113a",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-119",
+      "claimId": "CLM-14",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-119",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-26T23:53:25.947Z",
+      "finishedAt": "2026-07-26T23:53:41.222Z",
+      "repositoryFingerprint": "7bc92ed9857b082bd716a1fe4029ae3cd1fc14a671b151960269e04166e67dc6",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "87d79fc17c1c6afe2827bb1847532fca9919b57f",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-120",
+      "claimId": "CLM-14",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-120",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-26T23:54:07.035Z",
+      "finishedAt": "2026-07-26T23:54:22.182Z",
+      "repositoryFingerprint": "0ee6112f1ce786fb8dcbf44b84d04deb900adfd86540a79f77856e14608803d8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "87d79fc17c1c6afe2827bb1847532fca9919b57f",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-121",
+      "claimId": "CLM-11",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-121",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-27T00:02:44.870Z",
+      "finishedAt": "2026-07-27T00:03:00.594Z",
+      "repositoryFingerprint": "0ee6112f1ce786fb8dcbf44b84d04deb900adfd86540a79f77856e14608803d8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-122",
+      "claimId": "CLM-11",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-122",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:03:41.235Z",
+      "finishedAt": "2026-07-27T00:03:56.368Z",
+      "repositoryFingerprint": "c6808912a268a9e2f67950b12869172b09d872117faba5ef013822c78928e95e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-123",
+      "claimId": "CLM-12",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-123",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:03:59.389Z",
+      "finishedAt": "2026-07-27T00:04:14.693Z",
+      "repositoryFingerprint": "c6808912a268a9e2f67950b12869172b09d872117faba5ef013822c78928e95e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-124",
+      "claimId": "CLM-13",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-124",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import assert from 'node:assert/strict'; import { readFile } from 'node:fs/promises'; import { loadState } from './src/state/store.ts'; const state = await loadState('.'); const run = state.operationRuns.find((item) => item.id === 'RUN-5'); assert.ok(run); assert.equal(run.lifecycleState, 'passed'); assert.equal(run.settlementReason, 'passed'); assert.equal(run.deliveryState, 'acknowledged'); assert.equal(run.admission.result, 'allow'); assert.equal(run.admission.ruleId, 'ADMIT.OPERATIONS.ALLOW_NEW'); const events = (await readFile('.voila/events.jsonl', 'utf8')).trim().split('\\n').map(JSON.parse); assert.equal(events.filter((event) => event.type === 'operation_run_reserved' && event.runId === 'RUN-5').length, 1); assert.equal(events.filter((event) => event.type === 'operation_run_acknowledged' && event.runId === 'RUN-5').length, 1); console.log('RUN-5 remains passed and acknowledged exactly once.');"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:04:25.250Z",
+      "finishedAt": "2026-07-27T00:04:25.426Z",
+      "repositoryFingerprint": "c6808912a268a9e2f67950b12869172b09d872117faba5ef013822c78928e95e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-125",
+      "claimId": "CLM-14",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-125",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:04:31.440Z",
+      "finishedAt": "2026-07-27T00:04:46.613Z",
+      "repositoryFingerprint": "c6808912a268a9e2f67950b12869172b09d872117faba5ef013822c78928e95e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-126",
+      "claimId": "CLM-15",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-126",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:09:47.587Z",
+      "finishedAt": "2026-07-27T00:10:03.562Z",
+      "repositoryFingerprint": "5710819ff5e7e04e80e1693cc36280c33a4955fffc03d37e042d12ff1f17b480",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "90f57e9bdb2a4bd80c95713dee3750adbd83c345",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-127",
+      "claimId": "CLM-15",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-127",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:10:47.288Z",
+      "finishedAt": "2026-07-27T00:11:02.561Z",
+      "repositoryFingerprint": "43f8af87c48814c53304a82ab1d67bbb6f993be3d58d30ab8fed1578909548e8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "90f57e9bdb2a4bd80c95713dee3750adbd83c345",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-128",
+      "claimId": "CLM-11",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-128",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:11:21.831Z",
+      "finishedAt": "2026-07-27T00:11:36.974Z",
+      "repositoryFingerprint": "43f8af87c48814c53304a82ab1d67bbb6f993be3d58d30ab8fed1578909548e8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "90f57e9bdb2a4bd80c95713dee3750adbd83c345",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-129",
+      "claimId": "CLM-12",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-129",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:11:39.571Z",
+      "finishedAt": "2026-07-27T00:11:55.466Z",
+      "repositoryFingerprint": "43f8af87c48814c53304a82ab1d67bbb6f993be3d58d30ab8fed1578909548e8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "90f57e9bdb2a4bd80c95713dee3750adbd83c345",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-130",
+      "claimId": "CLM-13",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-130",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import assert from 'node:assert/strict'; import { readFile } from 'node:fs/promises'; import { loadState } from './src/state/store.ts'; const state = await loadState('.'); const run = state.operationRuns.find((item) => item.id === 'RUN-5'); assert.ok(run); assert.equal(run.lifecycleState, 'passed'); assert.equal(run.settlementReason, 'passed'); assert.equal(run.deliveryState, 'acknowledged'); assert.equal(run.admission.result, 'allow'); assert.equal(run.admission.ruleId, 'ADMIT.OPERATIONS.ALLOW_NEW'); const events = (await readFile('.voila/events.jsonl', 'utf8')).trim().split('\\n').map(JSON.parse); assert.equal(events.filter((event) => event.type === 'operation_run_reserved' && event.runId === 'RUN-5').length, 1); assert.equal(events.filter((event) => event.type === 'operation_run_acknowledged' && event.runId === 'RUN-5').length, 1); console.log('RUN-5 remains passed and acknowledged exactly once.');"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:12:03.457Z",
+      "finishedAt": "2026-07-27T00:12:03.625Z",
+      "repositoryFingerprint": "43f8af87c48814c53304a82ab1d67bbb6f993be3d58d30ab8fed1578909548e8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "90f57e9bdb2a4bd80c95713dee3750adbd83c345",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-131",
+      "claimId": "CLM-14",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-131",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:12:06.187Z",
+      "finishedAt": "2026-07-27T00:12:21.847Z",
+      "repositoryFingerprint": "43f8af87c48814c53304a82ab1d67bbb6f993be3d58d30ab8fed1578909548e8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "90f57e9bdb2a4bd80c95713dee3750adbd83c345",
+      "outputTruncated": true
+    }
+  ],
+  "operationDefinitions": [
+    {
+      "id": "r2a.state-store-tests",
+      "version": 1,
+      "purpose": "test",
+      "kind": "finite",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "node",
+        "--test",
+        "test/state.store.test.ts"
+      ],
+      "workingDirectory": "repository_root",
+      "environmentPolicy": {
+        "kind": "inherit"
+      },
+      "riskClassification": {
+        "riskClass": "safe_and_expected",
+        "impact": "Local read with bounded temporary writes inside the worktree.",
+        "externalEffects": "None expected.",
+        "networkRequired": false,
+        "privilegesRequired": "Normal user.",
+        "interactive": false,
+        "reversible": true,
+        "trustSource": "Explicit accepted project operation.",
+        "concurrency": "One active operation per project root."
+      },
+      "successContract": {
+        "exitCode": 0,
+        "description": "Process exits with code 0 within the total time budget."
+      },
+      "timeoutContract": {
+        "startupMs": 10000,
+        "totalMs": 120000,
+        "gracefulMs": 5000,
+        "forcedMs": 5000
+      },
+      "cancellationContract": {
+        "gracefulSignal": "SIGTERM",
+        "escalationSignal": "SIGKILL"
+      },
+      "outputPolicy": {
+        "maxChunkBytes": 16384,
+        "maxInMemoryTailBytes": 262144,
+        "maxDurableBytes": 1048576
+      },
+      "redactionPolicy": {
+        "secretVariableNames": [
+          "TOKEN",
+          "SECRET",
+          "PASSWORD",
+          "PASSWD",
+          "API_KEY",
+          "PRIVATE_KEY",
+          "AUTH",
+          "AUTHORIZATION",
+          "COOKIE",
+          "SESSION",
+          "CREDENTIAL"
+        ],
+        "redactAuthorizationHeaders": true,
+        "skipShortValues": true,
+        "minSecretLength": 6
+      },
+      "createdAt": "2026-07-26T19:46:59.609Z",
+      "updatedAt": "2026-07-26T21:39:09.459Z",
+      "effectProfile": [
+        "local_read",
+        "bounded_temporary_write"
+      ],
+      "authorityRequirement": "accepted_project_operation",
+      "authoritySourceRef": {
+        "kind": "decision",
+        "id": "DEC-22"
+      }
+    }
+  ],
+  "operationRuns": [
+    {
+      "id": "RUN-1",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "fd04f5b81dea83d5028133167de110d638498bd1fb964327d2113e210049de81",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "real-acceptance",
+        "owner": "project-steward"
+      },
+      "startingFingerprint": "e92220deb2269336d554aa01161677408df69186029718ef0423a6bfe1e70cc8",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T19:46:59.759Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "delivered",
+      "startedAt": "2026-07-26T19:46:59.764Z",
+      "processIdentity": {
+        "pid": 49428,
+        "processGroupId": 49428,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T19:46:59.825Z",
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "outputArtifactRef": "operations/RUN-1",
+      "cwdRef": ".",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.MIGRATION_LEGACY",
+        "policyVersion": 1,
+        "decidedAt": "2026-07-26T21:39:09.459Z",
+        "legacy": {
+          "reason": "pre_policy_kernel",
+          "note": "Run was admitted by the pre-v6 supervisor. Authority provenance is preserved for traceability but is not relied on by the v6 policy kernel."
+        }
+      }
+    },
+    {
+      "id": "RUN-2",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "fd04f5b81dea83d5028133167de110d638498bd1fb964327d2113e210049de81",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "real-acceptance",
+        "owner": "project-steward"
+      },
+      "startingFingerprint": "e4082f581b41ecee8e72f012eb69d0ce29e469f9b70417b7caf844cb583a8835",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T19:47:32.656Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "delivered",
+      "startedAt": "2026-07-26T19:47:32.666Z",
+      "processIdentity": {
+        "pid": 61091,
+        "processGroupId": 61091,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T19:47:32.729Z",
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "outputArtifactRef": "operations/RUN-2",
+      "cwdRef": ".",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.MIGRATION_LEGACY",
+        "policyVersion": 1,
+        "decidedAt": "2026-07-26T21:39:09.459Z",
+        "legacy": {
+          "reason": "pre_policy_kernel",
+          "note": "Run was admitted by the pre-v6 supervisor. Authority provenance is preserved for traceability but is not relied on by the v6 policy kernel."
+        }
+      }
+    },
+    {
+      "id": "RUN-3",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "fd04f5b81dea83d5028133167de110d638498bd1fb964327d2113e210049de81",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "real-acceptance",
+        "owner": "project-steward"
+      },
+      "startingFingerprint": "1a8bdd710fee108752ba0024c03851f1b3040f8a80f9525306d6278e44bbe659",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T19:50:05.757Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "delivered",
+      "startedAt": "2026-07-26T19:50:05.764Z",
+      "processIdentity": {
+        "pid": 1145,
+        "processGroupId": 1145,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T19:50:05.827Z",
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "outputArtifactRef": "operations/RUN-3",
+      "cwdRef": ".",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.MIGRATION_LEGACY",
+        "policyVersion": 1,
+        "decidedAt": "2026-07-26T21:39:09.459Z",
+        "legacy": {
+          "reason": "pre_policy_kernel",
+          "note": "Run was admitted by the pre-v6 supervisor. Authority provenance is preserved for traceability but is not relied on by the v6 policy kernel."
+        }
+      }
+    },
+    {
+      "id": "RUN-4",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "fd04f5b81dea83d5028133167de110d638498bd1fb964327d2113e210049de81",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "manual",
+        "owner": "manual"
+      },
+      "startingFingerprint": "60782a31f4ceacce332699e2dea0bc73fb2e19cb7b2263d6e55199c0cb4e1504",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T19:53:50.157Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "acknowledged",
+      "startedAt": "2026-07-26T19:53:50.166Z",
+      "processIdentity": {
+        "pid": 68583,
+        "processGroupId": 68583,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T19:53:50.403Z",
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "outputArtifactRef": "operations/RUN-4",
+      "cwdRef": ".",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.MIGRATION_LEGACY",
+        "policyVersion": 1,
+        "decidedAt": "2026-07-26T21:39:09.459Z",
+        "legacy": {
+          "reason": "pre_policy_kernel",
+          "note": "Run was admitted by the pre-v6 supervisor. Authority provenance is preserved for traceability but is not relied on by the v6 policy kernel."
+        }
+      }
+    },
+    {
+      "id": "RUN-5",
+      "definitionId": "r2a.state-store-tests",
+      "definitionVersion": 1,
+      "definitionFingerprint": "3b9bedd8d7428688d1d197ad1bb37f859f40e282281a8666a00321f012b369fa",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "steward",
+        "owner": "steward",
+        "workItemId": "NF-16"
+      },
+      "startingFingerprint": "e648cb21f38301cebd2720acf53cbec06939ec6cb4f26fa5b0727027df558f15",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-26T23:12:23.688Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "acknowledged",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.ALLOW_NEW",
+        "policyVersion": 1,
+        "explanationData": {
+          "operationId": "r2a.state-store-tests",
+          "definitionVersion": 1
+        },
+        "decidedAt": "2026-07-26T23:12:23.688Z",
+        "authorityReference": {
+          "kind": "decision",
+          "id": "DEC-22"
+        }
+      },
+      "startedAt": "2026-07-26T23:12:23.699Z",
+      "processIdentity": {
+        "pid": 73668,
+        "processGroupId": 73668,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-26T23:12:23.977Z",
+      "processGroupCleaned": true,
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "endingFingerprint": "e648cb21f38301cebd2720acf53cbec06939ec6cb4f26fa5b0727027df558f15",
+      "outputArtifactRef": "operations/RUN-5"
     }
   ],
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T18:26:22.713Z",
-  "revision": 246
+  "updatedAt": "2026-07-27T00:12:29.281Z",
+  "revision": 360
 }

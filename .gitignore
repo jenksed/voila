@@ -43,3 +43,5 @@ bin/
 
 # Receipt staging directories from interrupted verification runs (never committed)
 .voila/receipts/.tmp/
+# Operation-run artifact directories from interrupted runs (never committed)
+.voila/operations/.tmp/

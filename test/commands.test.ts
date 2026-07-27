@@ -14,6 +14,7 @@ import { initState, loadState, updateState } from "../src/state/store.ts";
 import { statePaths } from "../src/state/paths.ts";
 import { createWorkItem, recordDecision, recordRisk } from "../src/domain/operations.ts";
 import { createInitialState } from "../src/domain/defaults.ts";
+import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import { V1_FIXTURE } from "./helpers.ts";
 
 async function tempRoot(): Promise<string> {
@@ -101,13 +102,19 @@ test("runMigrate inspects then applies", async () => {
   await writeFile(statePaths(root).projectJson, `${JSON.stringify(V1_FIXTURE, null, 2)}\n`, "utf8");
 
   const inspect = await runMigrate(root, false);
-  assert.match(inspect.lines.join("\n"), /Migration available: v1 -> v4/);
+  assert.match(
+    inspect.lines.join("\n"),
+    new RegExp(`Migration available: v1 -> v${SCHEMA_VERSION}`),
+  );
 
   const applied = await runMigrate(root, true);
-  assert.match(applied.lines.join("\n"), /Migrated schema v1 -> v4/);
-  assert.equal((await loadState(root)).schemaVersion, 4);
+  assert.match(applied.lines.join("\n"), new RegExp(`Migrated schema v1 -> v${SCHEMA_VERSION}`));
+  assert.equal((await loadState(root)).schemaVersion, SCHEMA_VERSION);
 
-  assert.match((await runMigrate(root, false)).lines.join("\n"), /already v4/);
+  assert.match(
+    (await runMigrate(root, false)).lines.join("\n"),
+    new RegExp(`already v${SCHEMA_VERSION}`),
+  );
 });
 
 test("runDoctor passes on a healthy seeded project", async () => {

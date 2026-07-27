@@ -54,23 +54,27 @@ had become responsible for operating Voila. The active roadmap is
 toward **Project Steward Operational Loop v1**. Delegation and background execution moved from
 "deferred, optional" to product-critical. Approval-bundle self-hosting is **paused**.
 
-**Not built yet:** background terminals (R2), Pi child workers (R3), automatic settlement (R4),
-fresh-session continuity (R5), quiet boundary reconciliation (R6). None of it exists today. See the
-doctrine's built/not-built table. R1 (friction containment and ambient continuity) is implemented on
-`feat/r1-ambient-continuity`: its automated and interactive tiers pass and NF-9 was completed through
-the protected transition with five required claims covered by current receipts. Approval bundles
-remain paused. The behavioral evidence and criterion-level limitations are recorded in
-[docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md).
+**Not built yet:** multi-operation concurrency, watcher, dev server, and the `list`/`wait` tools
+(R2B onward), Pi child workers (R3), automatic settlement and integration (R4), fresh-session
+continuity (R5), quiet boundary reconciliation (R6). None of it exists today. See the doctrine's
+built/not-built table. R1 (friction containment and ambient continuity) is implemented on
+`feat/r1-ambient-continuity`: its automated and interactive tiers pass and NF-9 was completed
+through the protected transition with five required claims covered by current receipts. R2A (one
+finite supervised operation, `r2a.state-store-tests`) is in progress on
+`feat/r2a-finite-operation`: the DEC-22 implementation is present, but canonical counter repair,
+current receipt evidence, and fresh-session acceptance remain. Its exact status is recorded in
+[docs/verification/R2A_FINITE_OPERATION.md](docs/verification/R2A_FINITE_OPERATION.md). Approval
+bundles remain paused.
 
 **What is built — Phase 0 + Packets 1–4 + Phase 6.** Voila is a runnable Pi extension:
 a thin adapter (`.pi/extensions/voila.ts`), canonical `.voila/` state with **explicit schema
-versioning/migration** (now v4), a compact **project-operations layer** (work items, decisions,
+versioning/migration** (now v6), a compact **project-operations layer** (work items, decisions,
 assumptions, risks), a keyboard-first **Steward Console** (`/voila home`), **planning intake +
 repository orientation**, and the **proof engine**: claims tied to exact acceptance criteria,
 executable verification recorded as immutable receipts, evidence freshness derived from a repository
 fingerprint, a **protected completion transition**, and a **delivery engine** that proposes
 commit boundaries and an evidence-backed delivery summary (`/voila deliver`, `/voila commit`) without
-ever committing, staging, or pushing. 30 LLM-callable tools, a real **Project
+ever committing, staging, or pushing. 35 LLM-callable tools, a real **Project
 Steward** Pi skill, and a **focus capsule** injected before every Steward turn: canonical truth,
 bounded repository observation, and a directive that turns `Continue.` into work instead of a status
 report ([docs/design/FOCUS_CAPSULE.md](docs/design/FOCUS_CAPSULE.md)). Evidence freshness is
@@ -92,9 +96,10 @@ by hand into `project.json` is still schema-valid (`/voila doctor` reports when 
 longer revalidates). Verification runs a real command with a bounded timeout and no shell; it is
 **not a sandbox**. See [docs/design/PROOF_ENGINE.md](docs/design/PROOF_ENGINE.md).
 
-This is **not** the full product. There is no delegation, no background processes, no automatic
-settlement, no approval bundles, no sandboxing, no remote execution, no model routing, no cost
-tracking, and no release automation. NF-2 remains open honestly: the authenticated Project-Steward
+This is **not** the full product. There is no delegation or general background-terminal runtime;
+R2A's one explicit finite operation passed bounded acceptance on 2026-07-26. There is no automatic integration,
+approval bundles, sandboxing, remote execution, broad model routing, cost tracking, or release
+automation. NF-2 remains open honestly: the authenticated Project-Steward
 acceptance run is still **pending**, so daily-use readiness is not yet claimed. See
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
 [docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md) for what comes next.

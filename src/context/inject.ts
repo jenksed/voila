@@ -19,6 +19,13 @@ import type { ProjectState } from "../domain/types.ts";
 import type { ProofSummary } from "../domain/proof.ts";
 import { abbreviate } from "../domain/status.ts";
 import { heldWork, holdSummary, outstandingLimitations } from "../domain/readiness.ts";
+import {
+  activeRun,
+  latestSettlement,
+  summarizeRun,
+  isFinalState,
+} from "../domain/operations-runtime.ts";
+import type { OperationSummary } from "../domain/operations-runtime.ts";
 
 /** Default budget: the capsule aims to stay this small so it never crowds the real conversation. */
 export const CAPSULE_TARGET_CHARS = 1800;
@@ -77,6 +84,8 @@ export interface CapsuleInput {
   proof?: ProofSummary | null;
   /** Bounded git observation, when available. */
   repository?: RepositoryObservation | null;
+  /** Authoritative active or recently settled operation summary, when one exists. */
+  operation?: OperationSummary | null;
 }
 
 /**
@@ -214,6 +223,24 @@ function observationLines(input: CapsuleInput): string[] {
   return lines.slice(0, MAX_OBSERVATIONS);
 }
 
+/** Build the bounded operation-summary line(s). */
+function operationLines(input: CapsuleInput): string[] {
+  const op = input.operation;
+  if (!op) return [];
+  const secs = op.durationMs === null ? "" : ` · ${(op.durationMs / 1000).toFixed(1)}s`;
+  const truncated = op.outputSummary.truncated ? " · output truncated" : "";
+  const redacted = op.outputSummary.redactedSecrets ? " · secrets redacted" : "";
+  if (op.pendingAcknowledgement) {
+    return [
+      `  Settled operation: ${op.definitionId} · ${op.settlementReason ?? "settled"}${secs}${truncated}${redacted} — acknowledge on this turn`,
+    ];
+  }
+  if (!isFinalState(op.lifecycleState)) {
+    return [`  Active operation: ${op.definitionId} · ${op.lifecycleState}${secs}`];
+  }
+  return [];
+}
+
 function directiveLines(input: CapsuleInput, focusId: string | null): string[] {
   if (input.continuation) {
     const target = focusId ? ` ${focusId}` : " the accepted focus";
@@ -318,6 +345,13 @@ export function buildFocusCapsule(input: CapsuleInput): string {
       "Repository observation (observed now, not canonical truth):",
       ...observations,
     ]);
+  }
+
+  // Operation state (authoritative; from canonical state, not from logs). Always inside the
+  // repository observation block to keep the three-class separation intact.
+  const opLines = operationLines(input);
+  if (opLines.length > 0) {
+    add(10, 1, false, opLines);
   }
 
   // --- Steward directive ---
