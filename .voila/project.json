@@ -4,18 +4,18 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Owner creates one reviewed local commit for the complete bounded R2B change set, then returns so the Steward can verify the clean boundary and prepare—not execute—the host-specific PR handoff. Do not push, open a PR, merge, or start R3 yet.",
-  "nextActionRationale": "The implementation, acceptance records, tests, and canonical evidence are coupled and were reviewed together. A single intent-based commit preserves that protected-complete boundary without creating intermediate states whose dogfood assertions and canonical truth disagree.",
+  "nextAction": "Owner reviews and commits the protected-complete NF-21 CI fix, pushes feat/r2b-operation-visibility, and lets GitHub rerun the existing PR checks. If CI passes, return for final merge handoff; do not merge or start R3 yet.",
+  "nextActionRationale": "RCP-138 passes the complete local gate after replacing mise-dependent test fixtures, fixing fast-child output capture, and narrowing the rename-guard artifact exclusion. The remaining boundary is an owner-controlled commit and push so the Linux CI environment can confirm the fix.",
   "focusWorkItemId": null,
   "sequences": {
-    "workItem": 21,
+    "workItem": 22,
     "decision": 24,
     "assumption": 5,
     "risk": 10,
     "intake": 10,
     "orientation": 6,
-    "claim": 18,
-    "receipt": 138,
+    "claim": 19,
+    "receipt": 141,
     "operationDefinition": 1,
     "operationRun": 10
   },
@@ -408,6 +408,25 @@
       ],
       "createdAt": "2026-07-27T00:19:45.559Z",
       "updatedAt": "2026-07-27T02:46:51.034Z"
+    },
+    {
+      "id": "NF-21",
+      "kind": "defect",
+      "title": "Stabilize R2B CI and captured-output rename guard",
+      "description": "Investigate CI job 89878091765's three operation-test failures and one rename-guard failure on commit 0444dd52. Fix verified deterministic/timing causes without weakening operation lifecycle, output, presentation, or rename invariants.",
+      "status": "completed",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "The operation lifecycle, capsule, and supervisor tests pass reliably under the repository test runner without weakening their assertions about bounded refresh, active presentation, or durable output.",
+        "The rename guard structurally excludes only bounded captured stdout/stderr artifacts under .voila/operations while continuing to scan canonical state, manifests, source, and other active surfaces.",
+        "The complete repository verification gate passes with current receipt evidence after the fix is documented."
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [
+        "CLM-18"
+      ],
+      "createdAt": "2026-07-27T03:13:28.426Z",
+      "updatedAt": "2026-07-27T03:19:54.538Z"
     }
   ],
   "decisions": [
@@ -1345,10 +1364,11 @@
       "receiptIds": [
         "RCP-133",
         "RCP-135",
-        "RCP-136"
+        "RCP-136",
+        "RCP-139"
       ],
       "createdAt": "2026-07-27T02:44:41.072Z",
-      "updatedAt": "2026-07-27T02:49:19.762Z"
+      "updatedAt": "2026-07-27T03:21:02.349Z"
     },
     {
       "id": "CLM-17",
@@ -1363,10 +1383,28 @@
       "knownLimitations": [],
       "receiptIds": [
         "RCP-134",
-        "RCP-137"
+        "RCP-137",
+        "RCP-140"
       ],
       "createdAt": "2026-07-27T02:44:50.095Z",
-      "updatedAt": "2026-07-27T02:49:38.416Z"
+      "updatedAt": "2026-07-27T03:21:20.349Z"
+    },
+    {
+      "id": "CLM-18",
+      "workItemId": "NF-21",
+      "statement": "The R2B CI follow-up replaces external-tool-dependent presentation fixtures with controlled Node processes, captures fast child output before any awaited canonical write, and narrowly excludes only direct captured receipt/operation stdout and stderr from the legacy-brand guard while retaining all lifecycle, presentation, output, and rename protections.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "The operation lifecycle, capsule, and supervisor tests pass reliably under the repository test runner without weakening their assertions about bounded refresh, active presentation, or durable output.",
+        "The rename guard structurally excludes only bounded captured stdout/stderr artifacts under .voila/operations while continuing to scan canonical state, manifests, source, and other active surfaces.",
+        "The complete repository verification gate passes with current receipt evidence after the fix is documented."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-138"
+      ],
+      "createdAt": "2026-07-27T03:19:21.337Z",
+      "updatedAt": "2026-07-27T03:19:45.103Z"
     }
   ],
   "receipts": [
@@ -4346,6 +4384,72 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "b5e955ec61e0cd90c82fb53e5c2ebed9f08df47e",
       "outputTruncated": true
+    },
+    {
+      "id": "RCP-138",
+      "claimId": "CLM-18",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-138",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T03:19:29.781Z",
+      "finishedAt": "2026-07-27T03:19:45.100Z",
+      "repositoryFingerprint": "42b32cea27d7a2625b658ad1042faad61695a4730dd8eda87c06edcafa2fed54",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0444dd52dfa79f9fd85fcb443cc19277563e5a9f",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-139",
+      "claimId": "CLM-16",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-139",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T03:20:46.775Z",
+      "finishedAt": "2026-07-27T03:21:02.345Z",
+      "repositoryFingerprint": "42b32cea27d7a2625b658ad1042faad61695a4730dd8eda87c06edcafa2fed54",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0444dd52dfa79f9fd85fcb443cc19277563e5a9f",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-140",
+      "claimId": "CLM-17",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-140",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T03:21:05.177Z",
+      "finishedAt": "2026-07-27T03:21:20.346Z",
+      "repositoryFingerprint": "42b32cea27d7a2625b658ad1042faad61695a4730dd8eda87c06edcafa2fed54",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0444dd52dfa79f9fd85fcb443cc19277563e5a9f",
+      "outputTruncated": true
     }
   ],
   "operationDefinitions": [
@@ -4955,6 +5059,6 @@
   "currentIntakeId": "INT-9",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-27T03:07:08.348Z",
-  "revision": 423
+  "updatedAt": "2026-07-27T03:21:20.349Z",
+  "revision": 432
 }

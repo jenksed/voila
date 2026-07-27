@@ -392,3 +392,12 @@
 {"type":"next_action_set","revision":421,"ts":"2026-07-27T02:50:54.058Z"}
 {"type":"next_action_set","revision":422,"ts":"2026-07-27T03:04:34.693Z"}
 {"type":"next_action_set","revision":423,"ts":"2026-07-27T03:07:08.350Z"}
+{"type":"work_item_created","id":"NF-21","kind":"defect","revision":424,"ts":"2026-07-27T03:13:28.428Z"}
+{"type":"focus_set","id":"NF-21","revision":425,"ts":"2026-07-27T03:13:32.059Z"}
+{"type":"claim_created","id":"CLM-18","workItemId":"NF-21","revision":426,"ts":"2026-07-27T03:19:21.341Z"}
+{"type":"claim_required","id":"CLM-18","workItemId":"NF-21","revision":427,"ts":"2026-07-27T03:19:25.543Z"}
+{"type":"verification_recorded","id":"RCP-138","claimId":"CLM-18","result":"passed","revision":428,"ts":"2026-07-27T03:19:45.105Z"}
+{"type":"work_item_completed","id":"NF-21","revision":429,"ts":"2026-07-27T03:19:54.540Z"}
+{"type":"next_action_set","revision":430,"ts":"2026-07-27T03:20:18.115Z"}
+{"type":"verification_recorded","id":"RCP-139","claimId":"CLM-16","result":"passed","revision":431,"ts":"2026-07-27T03:21:02.351Z"}
+{"type":"verification_recorded","id":"RCP-140","claimId":"CLM-17","result":"passed","revision":432,"ts":"2026-07-27T03:21:20.351Z"}

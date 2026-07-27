@@ -437,6 +437,21 @@ export class FiniteOperationSupervisor {
     definition: OperationDefinition,
   ): Promise<ActiveMemory> {
     const redactionSecrets = collectRedactionValues(definition.redactionPolicy);
+    const stdout: StreamState = { text: "", truncated: false, droppedBytes: 0 };
+    const stderr: StreamState = { text: "", truncated: false, droppedBytes: 0 };
+    let redactionCount = 0;
+    let redactedSecrets = false;
+
+    const onChunk = (chunk: Buffer, target: StreamState): void => {
+      const text = chunk.toString("utf8");
+      const redacted = redactText(text, definition.redactionPolicy, redactionSecrets);
+      if (redacted.replaced > 0) {
+        redactedSecrets = true;
+        redactionCount += redacted.replaced;
+      }
+      pushTail(target, redacted.text, definition.outputPolicy.maxInMemoryTailBytes);
+    };
+
     const cwd = resolve(this.root);
     const child = spawn(definition.executable, [...definition.args], {
       cwd,
@@ -447,9 +462,11 @@ export class FiniteOperationSupervisor {
       env: process.env,
     });
 
-    // Attach guards before the first awaited canonical write. `spawn()` reports ENOENT and similar
-    // startup failures asynchronously, and an unhandled early `error` event would escape the
-    // supervisor before its settlement boundary exists.
+    // Attach output and lifecycle guards before the first awaited canonical write. A fast child may
+    // emit output or report ENOENT while that write is in flight; neither data nor settlement may be
+    // lost merely because persistence is slower than the process.
+    child.stdout?.on("data", (chunk: Buffer) => onChunk(chunk, stdout));
+    child.stderr?.on("data", (chunk: Buffer) => onChunk(chunk, stderr));
     let earlyError: Error | undefined;
     let earlyClose: { code: number | null; signal: NodeJS.Signals | null } | undefined;
     const captureEarlyError = (error: Error): void => {
@@ -478,24 +495,6 @@ export class FiniteOperationSupervisor {
           processIdentity,
         }).state,
     );
-
-    const stdout: StreamState = { text: "", truncated: false, droppedBytes: 0 };
-    const stderr: StreamState = { text: "", truncated: false, droppedBytes: 0 };
-    let redactionCount = 0;
-    let redactedSecrets = false;
-
-    const onChunk = (chunk: Buffer, target: StreamState): void => {
-      const text = chunk.toString("utf8");
-      const redacted = redactText(text, definition.redactionPolicy, redactionSecrets);
-      if (redacted.replaced > 0) {
-        redactedSecrets = true;
-        redactionCount += redacted.replaced;
-      }
-      pushTail(target, redacted.text, definition.outputPolicy.maxInMemoryTailBytes);
-    };
-
-    child.stdout?.on("data", (c: Buffer) => onChunk(c, stdout));
-    child.stderr?.on("data", (c: Buffer) => onChunk(c, stderr));
 
     const state: { reason: "running" | "cancelled" | "timed_out"; settled: boolean } = {
       reason: "running",

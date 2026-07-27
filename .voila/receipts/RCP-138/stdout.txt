@@ -1,0 +1,2048 @@
+
+> voila@0.0.1 verify
+> npm run typecheck && npm run format:check && npm test
+
+
+> voila@0.0.1 typecheck
+> tsc --noEmit
+
+
+> voila@0.0.1 format:check
+> prettier --check "src/**/*.ts" ".pi/**/*.ts" "test/**/*.ts" "*.json"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> voila@0.0.1 test
+> node --test "test/**/*.test.ts"
+
+TAP version 13
+# Subtest: active Steward instructions require paste-safe user commands
+ok 1 - active Steward instructions require paste-safe user commands
+  ---
+  duration_ms: 96.096958
+  type: 'test'
+  ...
+# Subtest: pull-request handoffs include an actionable host-aware command
+ok 2 - pull-request handoffs include an actionable host-aware command
+  ---
+  duration_ms: 26.608209
+  type: 'test'
+  ...
+# Subtest: runInit creates state; second init refuses
+ok 3 - runInit creates state; second init refuses
+  ---
+  duration_ms: 14.678708
+  type: 'test'
+  ...
+# Subtest: runStatus reads v2 state and shows operations summary
+ok 4 - runStatus reads v2 state and shows operations summary
+  ---
+  duration_ms: 21.194916
+  type: 'test'
+  ...
+# Subtest: runStatus warns uninitialized and on migration-required
+ok 5 - runStatus warns uninitialized and on migration-required
+  ---
+  duration_ms: 2.509542
+  type: 'test'
+  ...
+# Subtest: runBacklog: empty, summary, and detail by ID
+ok 6 - runBacklog: empty, summary, and detail by ID
+  ---
+  duration_ms: 68.799209
+  type: 'test'
+  ...
+# Subtest: list commands render decisions/assumptions/risks
+ok 7 - list commands render decisions/assumptions/risks
+  ---
+  duration_ms: 55.027541
+  type: 'test'
+  ...
+# Subtest: runMigrate inspects then applies
+ok 8 - runMigrate inspects then applies
+  ---
+  duration_ms: 11.944333
+  type: 'test'
+  ...
+# Subtest: runDoctor passes on a healthy seeded project
+ok 9 - runDoctor passes on a healthy seeded project
+  ---
+  duration_ms: 19.868125
+  type: 'test'
+  ...
+# Subtest: runDoctor warns migration-required for v1 and fails node below minimum
+ok 10 - runDoctor warns migration-required for v1 and fails node below minimum
+  ---
+  duration_ms: 32.023417
+  type: 'test'
+  ...
+# Subtest: runDoctor detects dangling references, cycles, and bad ID counters
+ok 11 - runDoctor detects dangling references, cycles, and bad ID counters
+  ---
+  duration_ms: 7.024
+  type: 'test'
+  ...
+# Subtest: /voila home is registered and offered in completions
+ok 12 - /voila home is registered and offered in completions
+  ---
+  duration_ms: 5.276709
+  type: 'test'
+  ...
+# Subtest: canonical state is transformed into the console view model
+ok 13 - canonical state is transformed into the console view model
+  ---
+  duration_ms: 110.103333
+  type: 'test'
+  ...
+# Subtest: missing state produces an initialization view rather than a crash
+ok 14 - missing state produces an initialization view rather than a crash
+  ---
+  duration_ms: 91.478292
+  type: 'test'
+  ...
+# Subtest: /voila home opens the custom component and closing returns control
+ok 15 - /voila home opens the custom component and closing returns control
+  ---
+  duration_ms: 125.693584
+  type: 'test'
+  ...
+# Subtest: non-TUI mode falls back to status output instead of failing
+ok 16 - non-TUI mode falls back to status output instead of failing
+  ---
+  duration_ms: 25.794292
+  type: 'test'
+  ...
+# Subtest: themeStyler maps tokens through the Pi theme and survives failures
+ok 17 - themeStyler maps tokens through the Pi theme and survives failures
+  ---
+  duration_ms: 0.175916
+  type: 'test'
+  ...
+# Subtest: tab and h/l cycle views in order Focus -> Work -> Proof -> Project Truth
+ok 18 - tab and h/l cycle views in order Focus -> Work -> Proof -> Project Truth
+  ---
+  duration_ms: 0.700083
+  type: 'test'
+  ...
+# Subtest: j/k move selection and clamp at the ends
+ok 19 - j/k move selection and clamp at the ends
+  ---
+  duration_ms: 0.247
+  type: 'test'
+  ...
+# Subtest: enter opens detail, escape closes detail then closes console
+ok 20 - enter opens detail, escape closes detail then closes console
+  ---
+  duration_ms: 0.070208
+  type: 'test'
+  ...
+# Subtest: j/k do not move selection while detail is open
+ok 21 - j/k do not move selection while detail is open
+  ---
+  duration_ms: 0.064583
+  type: 'test'
+  ...
+# Subtest: help toggles and any key dismisses it
+ok 22 - help toggles and any key dismisses it
+  ---
+  duration_ms: 0.131292
+  type: 'test'
+  ...
+# Subtest: q closes and r requests reload
+ok 23 - q closes and r requests reload
+  ---
+  duration_ms: 0.055166
+  type: 'test'
+  ...
+# Subtest: raw terminal input maps to logical keys
+ok 24 - raw terminal input maps to logical keys
+  ---
+  duration_ms: 0.06825
+  type: 'test'
+  ...
+# Subtest: component renders, navigates, reloads, and closes
+ok 25 - component renders, navigates, reloads, and closes
+  ---
+  duration_ms: 7.735416
+  type: 'test'
+  ...
+# Subtest: selectable refs match what each view can open
+ok 26 - selectable refs match what each view can open
+  ---
+  duration_ms: 0.536625
+  type: 'test'
+  ...
+# Subtest: layout classes are chosen by width
+ok 27 - layout classes are chosen by width
+  ---
+  duration_ms: 0.676542
+  type: 'test'
+  ...
+# Subtest: no line overflows the width at any representative width
+ok 28 - no line overflows the width at any representative width
+  ---
+  duration_ms: 56.578291
+  type: 'test'
+  ...
+# Subtest: focus view shows next action, rationale, and focus at all widths
+ok 29 - focus view shows next action, rationale, and focus at all widths
+  ---
+  duration_ms: 0.518334
+  type: 'test'
+  ...
+# Subtest: wide layout uses two columns; standard and compact stack
+ok 30 - wide layout uses two columns; standard and compact stack
+  ---
+  duration_ms: 0.522292
+  type: 'test'
+  ...
+# Subtest: wide panels are built at column width, not squeezed from full width
+ok 31 - wide panels are built at column width, not squeezed from full width
+  ---
+  duration_ms: 1.211167
+  type: 'test'
+  ...
+# Subtest: blocked focus and high-impact risk surface in attention
+ok 32 - blocked focus and high-impact risk surface in attention
+  ---
+  duration_ms: 1.151375
+  type: 'test'
+  ...
+# Subtest: work view groups items with focus first and ready sorted by priority
+ok 33 - work view groups items with focus first and ready sorted by priority
+  ---
+  duration_ms: 1.08775
+  type: 'test'
+  ...
+# Subtest: project truth view lists decisions, open assumptions, and risks
+ok 34 - project truth view lists decisions, open assumptions, and risks
+  ---
+  duration_ms: 0.165708
+  type: 'test'
+  ...
+# Subtest: selection marker moves with the selection index
+ok 35 - selection marker moves with the selection index
+  ---
+  duration_ms: 0.470042
+  type: 'test'
+  ...
+# Subtest: detail view shows fields, never raw JSON
+ok 36 - detail view shows fields, never raw JSON
+  ---
+  duration_ms: 0.500541
+  type: 'test'
+  ...
+# Subtest: work detail shows acceptance criteria and dependencies
+ok 37 - work detail shows acceptance criteria and dependencies
+  ---
+  duration_ms: 0.21625
+  type: 'test'
+  ...
+# Subtest: long text is truncated or wrapped without overflow
+ok 38 - long text is truncated or wrapped without overflow
+  ---
+  duration_ms: 0.561417
+  type: 'test'
+  ...
+# Subtest: empty project renders without crashing and invites creation
+ok 39 - empty project renders without crashing and invites creation
+  ---
+  duration_ms: 0.092542
+  type: 'test'
+  ...
+# Subtest: uninitialized, migration, and error states render actionable screens
+ok 40 - uninitialized, migration, and error states render actionable screens
+  ---
+  duration_ms: 0.082916
+  type: 'test'
+  ...
+# Subtest: help overlay lists the key bindings
+ok 41 - help overlay lists the key bindings
+  ---
+  duration_ms: 0.102
+  type: 'test'
+  ...
+# Subtest: runtime context renders in the header and is optional
+ok 42 - runtime context renders in the header and is optional
+  ---
+  duration_ms: 0.095208
+  type: 'test'
+  ...
+# Subtest: initialized project yields a compact deterministic capsule
+ok 43 - initialized project yields a compact deterministic capsule
+  ---
+  duration_ms: 3.749291
+  type: 'test'
+  ...
+# Subtest: uninitialized and migration states inject exactly one concise hint
+ok 44 - uninitialized and migration states inject exactly one concise hint
+  ---
+  duration_ms: 0.132625
+  type: 'test'
+  ...
+# Subtest: error status is reported without leaking internals
+ok 45 - error status is reported without leaking internals
+  ---
+  duration_ms: 0.066459
+  type: 'test'
+  ...
+# Subtest: pending intake and stale orientation appear with the right handling
+ok 46 - pending intake and stale orientation appear with the right handling
+  ---
+  duration_ms: 0.252584
+  type: 'test'
+  ...
+# Subtest: a current orientation is reported plainly and a clean worktree is observable
+ok 47 - a current orientation is reported plainly and a clean worktree is observable
+  ---
+  duration_ms: 0.129125
+  type: 'test'
+  ...
+# Subtest: a large project stays under the hard maximum by bounding what it includes
+ok 48 - a large project stays under the hard maximum by bounding what it includes
+  ---
+  duration_ms: 0.657667
+  type: 'test'
+  ...
+# Subtest: an enormous required field is abbreviated, not tail-truncated away
+ok 49 - an enormous required field is abbreviated, not tail-truncated away
+  ---
+  duration_ms: 0.596208
+  type: 'test'
+  ...
+# Subtest: no source content or event history is injected
+ok 50 - no source content or event history is injected
+  ---
+  duration_ms: 137.28625
+  type: 'test'
+  ...
+# Subtest: assembling context does not mutate canonical state
+ok 51 - assembling context does not mutate canonical state
+  ---
+  duration_ms: 59.73825
+  type: 'test'
+  ...
+# Subtest: assembleContext threads continuation intent through to the directive
+ok 52 - assembleContext threads continuation intent through to the directive
+  ---
+  duration_ms: 121.352167
+  type: 'test'
+  ...
+# Subtest: assembleContext reports uninitialized and migration-required projects
+ok 53 - assembleContext reports uninitialized and migration-required projects
+  ---
+  duration_ms: 5.520917
+  type: 'test'
+  ...
+# Subtest: explicit continuation intent is recognized without a natural-language engine
+ok 54 - explicit continuation intent is recognized without a natural-language engine
+  ---
+  duration_ms: 1.006917
+  type: 'test'
+  ...
+# Subtest: unrelated messages are never reinterpreted as continuation commands
+ok 55 - unrelated messages are never reinterpreted as continuation commands
+  ---
+  duration_ms: 4.13575
+  type: 'test'
+  ...
+# Subtest: current slices prefer trustworthy sentence boundaries over punctuation inside meaning
+ok 56 - current slices prefer trustworthy sentence boundaries over punctuation inside meaning
+  ---
+  duration_ms: 14.916041
+  type: 'test'
+  ...
+# Subtest: a continuation turn receives project, objective, focus, next action, and an instruction to act
+ok 57 - a continuation turn receives project, objective, focus, next action, and an instruction to act
+  ---
+  duration_ms: 0.404583
+  type: 'test'
+  ...
+# Subtest: the capsule never encourages a status report, a recap, or state maintenance
+ok 58 - the capsule never encourages a status report, a recap, or state maintenance
+  ---
+  duration_ms: 0.472958
+  type: 'test'
+  ...
+# Subtest: no R2–R7 capability is implied: no active-operation fields, no worker or terminal language
+ok 59 - no R2–R7 capability is implied: no active-operation fields, no worker or terminal language
+  ---
+  duration_ms: 0.762958
+  type: 'test'
+  ...
+# Subtest: held human-required work is visible and is never presented as the next action
+ok 60 - held human-required work is visible and is never presented as the next action
+  ---
+  duration_ms: 0.312042
+  type: 'test'
+  ...
+# Subtest: canonical fact and repository observation are separated, and inference is never asserted
+ok 61 - canonical fact and repository observation are separated, and inference is never asserted
+  ---
+  duration_ms: 0.134167
+  type: 'test'
+  ...
+# Subtest: required content survives an oversized project; optional content is dropped first
+ok 62 - required content survives an oversized project; optional content is dropped first
+  ---
+  duration_ms: 0.579625
+  type: 'test'
+  ...
+# Subtest: a lean project stays inside the default target and is deterministic
+ok 63 - a lean project stays inside the default target and is deterministic
+  ---
+  duration_ms: 4.520958
+  type: 'test'
+  ...
+# Subtest: only decisions explicitly connected to the active work are injected
+ok 64 - only decisions explicitly connected to the active work are injected
+  ---
+  duration_ms: 0.299709
+  type: 'test'
+  ...
+# Subtest: a non-continuation turn still gets the capsule, with a directive that does not fake a command
+ok 65 - a non-continuation turn still gets the capsule, with a directive that does not fake a command
+  ---
+  duration_ms: 0.098292
+  type: 'test'
+  ...
+# Subtest: degraded states inject one honest line and no invented project detail
+ok 66 - degraded states inject one honest line and no invented project detail
+  ---
+  duration_ms: 0.151791
+  type: 'test'
+  ...
+# Subtest: a clean, well-formed change set raises nothing
+ok 67 - a clean, well-formed change set raises nothing
+  ---
+  duration_ms: 29.778791
+  type: 'test'
+  ...
+# Subtest: credential-shaped filenames, stores, keys, and env files are all flagged
+ok 68 - credential-shaped filenames, stores, keys, and env files are all flagged
+  ---
+  duration_ms: 0.510959
+  type: 'test'
+  ...
+# Subtest: a checked-in environment template is not treated as a real environment file
+ok 69 - a checked-in environment template is not treated as a real environment file
+  ---
+  duration_ms: 0.162375
+  type: 'test'
+  ...
+# Subtest: a credential-shaped name in a fixture path is downgraded, not dropped
+ok 70 - a credential-shaped name in a fixture path is downgraded, not dropped
+  ---
+  duration_ms: 0.257708
+  type: 'test'
+  ...
+# Subtest: attention language never claims a confirmed secret or a confirmed defect
+ok 71 - attention language never claims a confirmed secret or a confirmed defect
+  ---
+  duration_ms: 0.836417
+  type: 'test'
+  ...
+# Subtest: a content match reports rule names only and states that it is not a confirmed secret
+ok 72 - a content match reports rule names only and states that it is not a confirmed secret
+  ---
+  duration_ms: 0.171792
+  type: 'test'
+  ...
+# Subtest: large files and binary changes are surfaced with their thresholds explained
+ok 73 - large files and binary changes are surfaced with their thresholds explained
+  ---
+  duration_ms: 0.421167
+  type: 'test'
+  ...
+# Subtest: generated artifacts mixed with source are called out
+ok 74 - generated artifacts mixed with source are called out
+  ---
+  duration_ms: 0.160084
+  type: 'test'
+  ...
+# Subtest: a lock change without its manifest is flagged, and the converse too
+ok 75 - a lock change without its manifest is flagged, and the converse too
+  ---
+  duration_ms: 0.339208
+  type: 'test'
+  ...
+# Subtest: source without any test change raises a question, not an accusation
+ok 76 - source without any test change raises a question, not an accusation
+  ---
+  duration_ms: 0.727209
+  type: 'test'
+  ...
+# Subtest: missing documentation only fires when the repository maintains a docs tree
+ok 77 - missing documentation only fires when the repository maintains a docs tree
+  ---
+  duration_ms: 0.290541
+  type: 'test'
+  ...
+# Subtest: a migration without a related test is the strongest severity available
+ok 78 - a migration without a related test is the strongest severity available
+  ---
+  duration_ms: 0.18
+  type: 'test'
+  ...
+# Subtest: changes spread across three or more structural areas are noted
+ok 79 - changes spread across three or more structural areas are noted
+  ---
+  duration_ms: 0.085375
+  type: 'test'
+  ...
+# Subtest: deleted verification evidence is flagged as weakening a completion claim
+ok 80 - deleted verification evidence is flagged as weakening a completion claim
+  ---
+  duration_ms: 0.065042
+  type: 'test'
+  ...
+# Subtest: a generated Voila view changing without canonical state is flagged
+ok 81 - a generated Voila view changing without canonical state is flagged
+  ---
+  duration_ms: 0.066958
+  type: 'test'
+  ...
+# Subtest: dirty files outside the staged areas are reported as probably unrelated
+ok 82 - dirty files outside the staged areas are reported as probably unrelated
+  ---
+  duration_ms: 0.1045
+  type: 'test'
+  ...
+# Subtest: attention items are sorted by severity, then kind, then path
+ok 83 - attention items are sorted by severity, then kind, then path
+  ---
+  duration_ms: 6.101083
+  type: 'test'
+  ...
+# Subtest: paths inside an attention item are sorted and de-duplicated
+ok 84 - paths inside an attention item are sorted and de-duplicated
+  ---
+  duration_ms: 0.810667
+  type: 'test'
+  ...
+# Subtest: a generated view changing without canonical state is flagged in a legacy repository too
+ok 85 - a generated view changing without canonical state is flagged in a legacy repository too
+  ---
+  duration_ms: 0.109042
+  type: 'test'
+  ...
+# Subtest: moduleKey keeps a module at two path segments
+ok 86 - moduleKey keeps a module at two path segments
+  ---
+  duration_ms: 9.786541
+  type: 'test'
+  ...
+# Subtest: source groups with its directly related test
+ok 87 - source groups with its directly related test
+  ---
+  duration_ms: 3.319167
+  type: 'test'
+  ...
+# Subtest: a test that matches no changed source forms its own group
+ok 88 - a test that matches no changed source forms its own group
+  ---
+  duration_ms: 8.270125
+  type: 'test'
+  ...
+# Subtest: documentation-only changes become a single documentation boundary
+ok 89 - documentation-only changes become a single documentation boundary
+  ---
+  duration_ms: 0.291625
+  type: 'test'
+  ...
+# Subtest: migrations travel with their tests and their documentation
+ok 90 - migrations travel with their tests and their documentation
+  ---
+  duration_ms: 0.218083
+  type: 'test'
+  ...
+# Subtest: unrelated top-level areas are suggested as separate boundaries
+ok 91 - unrelated top-level areas are suggested as separate boundaries
+  ---
+  duration_ms: 0.1995
+  type: 'test'
+  ...
+# Subtest: suggested boundaries never overlap
+ok 92 - suggested boundaries never overlap
+  ---
+  duration_ms: 0.5945
+  type: 'test'
+  ...
+# Subtest: unassigned paths stay visible instead of being forced into a group
+ok 93 - unassigned paths stay visible instead of being forced into a group
+  ---
+  duration_ms: 0.132916
+  type: 'test'
+  ...
+# Subtest: one coherent commit is recommended for a small change set
+ok 94 - one coherent commit is recommended for a small change set
+  ---
+  duration_ms: 0.316875
+  type: 'test'
+  ...
+# Subtest: many one-file groups collapse rather than becoming many tiny commits
+ok 95 - many one-file groups collapse rather than becoming many tiny commits
+  ---
+  duration_ms: 0.382875
+  type: 'test'
+  ...
+# Subtest: when boundaries are split, the advisory nature is stated explicitly
+ok 96 - when boundaries are split, the advisory nature is stated explicitly
+  ---
+  duration_ms: 0.171667
+  type: 'test'
+  ...
+# Subtest: an empty change set produces no boundaries and no unassigned paths
+ok 97 - an empty change set produces no boundaries and no unassigned paths
+  ---
+  duration_ms: 0.057416
+  type: 'test'
+  ...
+# Subtest: boundary suggestion is deterministic
+ok 98 - boundary suggestion is deterministic
+  ---
+  duration_ms: 0.123209
+  type: 'test'
+  ...
+# Subtest: assertDisjoint throws when an overlap is constructed directly
+ok 99 - assertDisjoint throws when an overlap is constructed directly
+  ---
+  duration_ms: 0.25425
+  type: 'test'
+  ...
+# Subtest: every category is reachable and each classification names its evidence
+ok 100 - every category is reachable and each classification names its evidence
+  ---
+  duration_ms: 1.612417
+  type: 'test'
+  ...
+# Subtest: classification is deterministic and total
+ok 101 - classification is deterministic and total
+  ---
+  duration_ms: 0.617333
+  type: 'test'
+  ...
+# Subtest: rule order resolves the paths that could match more than one rule
+ok 102 - rule order resolves the paths that could match more than one rule
+  ---
+  duration_ms: 0.0955
+  type: 'test'
+  ...
+# Subtest: low confidence is reserved for genuine guesses
+ok 103 - low confidence is reserved for genuine guesses
+  ---
+  duration_ms: 0.078083
+  type: 'test'
+  ...
+# Subtest: topLevelArea reports the first segment, or '.' at the repository root
+ok 104 - topLevelArea reports the first segment, or '.' at the repository root
+  ---
+  duration_ms: 0.0675
+  type: 'test'
+  ...
+# Subtest: dependency manifests and locks are paired by ecosystem
+ok 105 - dependency manifests and locks are paired by ecosystem
+  ---
+  duration_ms: 0.099834
+  type: 'test'
+  ...
+# Subtest: credential-shaped names are recognized from the filename alone
+ok 106 - credential-shaped names are recognized from the filename alone
+  ---
+  duration_ms: 2.390583
+  type: 'test'
+  ...
+# Subtest: environment templates are excluded but real environment files are not
+ok 107 - environment templates are excluded but real environment files are not
+  ---
+  duration_ms: 0.119541
+  type: 'test'
+  ...
+# Subtest: pathStem strips extensions and test suffixes so tests can be matched to sources
+ok 108 - pathStem strips extensions and test suffixes so tests can be matched to sources
+  ---
+  duration_ms: 0.491167
+  type: 'test'
+  ...
+# Subtest: the legacy .newfang/ state directory classifies like .voila/
+ok 109 - the legacy .newfang/ state directory classifies like .voila/
+  ---
+  duration_ms: 0.4265
+  type: 'test'
+  ...
+# Subtest: paths that merely resemble a state directory are not classified as state
+ok 110 - paths that merely resemble a state directory are not classified as state
+  ---
+  duration_ms: 0.154417
+  type: 'test'
+  ...
+# Subtest: package.json scripts are discovered as manifest declarations
+ok 111 - package.json scripts are discovered as manifest declarations
+  ---
+  duration_ms: 9.547375
+  type: 'test'
+  ...
+# Subtest: no discovered command is ever marked executed
+ok 112 - no discovered command is ever marked executed
+  ---
+  duration_ms: 0.669125
+  type: 'test'
+  ...
+# Subtest: Makefile targets and mise tasks are discovered
+ok 113 - Makefile targets and mise tasks are discovered
+  ---
+  duration_ms: 23.874792
+  type: 'test'
+  ...
+# Subtest: ecosystem conventions are recorded as candidates, never as declarations
+ok 114 - ecosystem conventions are recorded as candidates, never as declarations
+  ---
+  duration_ms: 3.61175
+  type: 'test'
+  ...
+# Subtest: a language manifest without a pytest mention yields no pytest candidate
+ok 115 - a language manifest without a pytest mention yields no pytest candidate
+  ---
+  duration_ms: 0.125791
+  type: 'test'
+  ...
+# Subtest: documented commands are discovered with the declaring document as provenance
+ok 116 - documented commands are discovered with the declaring document as provenance
+  ---
+  duration_ms: 10.238625
+  type: 'test'
+  ...
+# Subtest: prose that is not a runner command is not discovered
+ok 117 - prose that is not a runner command is not discovered
+  ---
+  duration_ms: 12.073917
+  type: 'test'
+  ...
+# Subtest: a manifest declaration outranks the same command found in documentation
+ok 118 - a manifest declaration outranks the same command found in documentation
+  ---
+  duration_ms: 0.333458
+  type: 'test'
+  ...
+# Subtest: a documented command embedding a credential is withheld, not returned
+ok 119 - a documented command embedding a credential is withheld, not returned
+  ---
+  duration_ms: 1.67675
+  type: 'test'
+  ...
+# Subtest: commands are sorted by basis, then command, for deterministic output
+ok 120 - commands are sorted by basis, then command, for deterministic output
+  ---
+  duration_ms: 0.869458
+  type: 'test'
+  ...
+# Subtest: a malformed package.json is reported as a limitation, not a throw
+ok 121 - a malformed package.json is reported as a limitation, not a throw
+  ---
+  duration_ms: 0.256667
+  type: 'test'
+  ...
+# Subtest: the discovery cap is reported honestly when it bites
+ok 122 - the discovery cap is reported honestly when it bites
+  ---
+  duration_ms: 0.205125
+  type: 'test'
+  ...
+# Subtest: an empty repository yields no commands and no invented candidates
+ok 123 - an empty repository yields no commands and no invented candidates
+  ---
+  duration_ms: 0.084375
+  type: 'test'
+  ...
+# Subtest: the read-only allowlist contains no mutating subcommand
+ok 124 - the read-only allowlist contains no mutating subcommand
+  ---
+  duration_ms: 0.72975
+  type: 'test'
+  ...
+# Subtest: the git runner refuses every mutating subcommand
+ok 125 - the git runner refuses every mutating subcommand
+  ---
+  duration_ms: 219.874541
+  type: 'test'
+  ...
+# Subtest: the git runner refuses arguments that could redirect git elsewhere
+ok 126 - the git runner refuses arguments that could redirect git elsewhere
+  ---
+  duration_ms: 147.354084
+  type: 'test'
+  ...
+# Subtest: the git runner runs allowed read-only inspections
+ok 127 - the git runner runs allowed read-only inspections
+  ---
+  duration_ms: 179.656167
+  type: 'test'
+  ...
+# Subtest: porcelain v2 parses branch facts, ordinary entries, renames, and untracked files
+ok 128 - porcelain v2 parses branch facts, ordinary entries, renames, and untracked files
+  ---
+  duration_ms: 1.051833
+  type: 'test'
+  ...
+# Subtest: porcelain v2 handles an initial commit and a detached HEAD
+ok 129 - porcelain v2 handles an initial commit and a detached HEAD
+  ---
+  duration_ms: 0.115542
+  type: 'test'
+  ...
+# Subtest: porcelain v2 parses paths containing spaces, because -z output is never quoted
+ok 130 - porcelain v2 parses paths containing spaces, because -z output is never quoted
+  ---
+  duration_ms: 0.163375
+  type: 'test'
+  ...
+# Subtest: numstat parses counts, renames, and binary markers
+ok 131 - numstat parses counts, renames, and binary markers
+  ---
+  duration_ms: 0.164958
+  type: 'test'
+  ...
+# Subtest: collectGitState reports a non-repository as an actionable limitation, not a crash
+ok 132 - collectGitState reports a non-repository as an actionable limitation, not a crash
+  ---
+  duration_ms: 1.141208
+  type: 'test'
+  ...
+# Subtest: collectGitState sums staged and unstaged line counts for the same path
+ok 133 - collectGitState sums staged and unstaged line counts for the same path
+  ---
+  duration_ms: 0.705625
+  type: 'test'
+  ...
+# Subtest: a failed numstat degrades to a limitation while the change set survives
+ok 134 - a failed numstat degrades to a limitation while the change set survives
+  ---
+  duration_ms: 0.311083
+  type: 'test'
+  ...
+# Subtest: a failed git status yields no invented changes
+ok 135 - a failed git status yields no invented changes
+  ---
+  duration_ms: 0.128083
+  type: 'test'
+  ...
+# Subtest: primaryStatus picks the most significant of the staged and worktree codes
+ok 136 - primaryStatus picks the most significant of the staged and worktree codes
+  ---
+  duration_ms: 0.067042
+  type: 'test'
+  ...
+# Subtest: a temporary directory that is not a repository is handled by the real runner too
+ok 137 - a temporary directory that is not a repository is handled by the real runner too
+  ---
+  duration_ms: 46.982875
+  type: 'test'
+  ...
+# Subtest: a clean repository reports no changes and an empty scope
+ok 138 - a clean repository reports no changes and an empty scope
+  ---
+  duration_ms: 2.317417
+  type: 'test'
+  ...
+# Subtest: staged, unstaged, and untracked changes are distinguished
+ok 139 - staged, unstaged, and untracked changes are distinguished
+  ---
+  duration_ms: 31.944875
+  type: 'test'
+  ...
+# Subtest: a rename reports both paths and is counted as a rename
+ok 140 - a rename reports both paths and is counted as a rename
+  ---
+  duration_ms: 1.541667
+  type: 'test'
+  ...
+# Subtest: a deletion is reported without a size and without reading bytes
+ok 141 - a deletion is reported without a size and without reading bytes
+  ---
+  duration_ms: 0.835208
+  type: 'test'
+  ...
+# Subtest: a binary file is detected from numstat and from bytes
+ok 142 - a binary file is detected from numstat and from bytes
+  ---
+  duration_ms: 0.688708
+  type: 'test'
+  ...
+# Subtest: outside a git repository the result is actionable rather than a crash
+ok 143 - outside a git repository the result is actionable rather than a crash
+  ---
+  duration_ms: 0.820167
+  type: 'test'
+  ...
+# Subtest: a missing upstream is reported as a limitation, not an invented count
+ok 144 - a missing upstream is reported as a limitation, not an invented count
+  ---
+  duration_ms: 0.197041
+  type: 'test'
+  ...
+# Subtest: ahead and behind counts are reported when git resolves them
+ok 145 - ahead and behind counts are reported when git resolves them
+  ---
+  duration_ms: 0.565042
+  type: 'test'
+  ...
+# Subtest: a detached HEAD is reported without inventing a branch
+ok 146 - a detached HEAD is reported without inventing a branch
+  ---
+  duration_ms: 0.453125
+  type: 'test'
+  ...
+# Subtest: a repository with no commits reports no HEAD and says why
+ok 147 - a repository with no commits reports no HEAD and says why
+  ---
+  duration_ms: 0.772083
+  type: 'test'
+  ...
+# Subtest: every changed file carries a category, a confidence, and a stated reason
+ok 148 - every changed file carries a category, a confidence, and a stated reason
+  ---
+  duration_ms: 0.690625
+  type: 'test'
+  ...
+# Subtest: a suspicious filename is surfaced without asserting the file's content
+ok 149 - a suspicious filename is surfaced without asserting the file's content
+  ---
+  duration_ms: 0.863917
+  type: 'test'
+  ...
+# Subtest: NO SUSPECTED SECRET VALUE EVER APPEARS IN THE RETURNED STRUCTURE
+ok 150 - NO SUSPECTED SECRET VALUE EVER APPEARS IN THE RETURNED STRUCTURE
+  ---
+  duration_ms: 0.452125
+  type: 'test'
+  ...
+# Subtest: a dependency manifest and lock mismatch is surfaced both ways
+ok 151 - a dependency manifest and lock mismatch is surfaced both ways
+  ---
+  duration_ms: 0.329625
+  type: 'test'
+  ...
+# Subtest: source without tests and migrations without tests are both surfaced
+ok 152 - source without tests and migrations without tests are both surfaced
+  ---
+  duration_ms: 0.198708
+  type: 'test'
+  ...
+# Subtest: suggested boundaries never overlap and unassigned paths stay visible
+ok 153 - suggested boundaries never overlap and unassigned paths stay visible
+  ---
+  duration_ms: 0.402375
+  type: 'test'
+  ...
+# Subtest: discovered commands are never presented as verified, and the caveat is recorded
+ok 154 - discovered commands are never presented as verified, and the caveat is recorded
+  ---
+  duration_ms: 0.476666
+  type: 'test'
+  ...
+# Subtest: the same input produces a byte-identical result
+ok 155 - the same input produces a byte-identical result
+  ---
+  duration_ms: 5.555
+  type: 'test'
+  ...
+# Subtest: limitations are sorted and de-duplicated
+ok 156 - limitations are sorted and de-duplicated
+  ---
+  duration_ms: 0.345417
+  type: 'test'
+  ...
+# Subtest: the file cap bounds the inspection and says so
+ok 157 - the file cap bounds the inspection and says so
+  ---
+  duration_ms: 0.352125
+  type: 'test'
+  ...
+# Subtest: the content-scan cap is reported and marks the files it skipped
+ok 158 - the content-scan cap is reported and marks the files it skipped
+  ---
+  duration_ms: 0.245375
+  type: 'test'
+  ...
+# Subtest: a partial git failure yields a partial result with the failure recorded
+ok 159 - a partial git failure yields a partial result with the failure recorded
+  ---
+  duration_ms: 0.2105
+  type: 'test'
+  ...
+# Subtest: the inspector only ever asks git for read-only inspections
+ok 160 - the inspector only ever asks git for read-only inspections
+  ---
+  duration_ms: 0.210333
+  type: 'test'
+  ...
+# Subtest: an unusable root is rejected with a typed error
+ok 161 - an unusable root is rejected with a typed error
+  ---
+  duration_ms: 6.164958
+  type: 'test'
+  ...
+# Subtest: a clean real repository reports clean with a branch and a HEAD
+ok 162 - a clean real repository reports clean with a branch and a HEAD
+  ---
+  duration_ms: 338.321916
+  type: 'test'
+  ...
+# Subtest: staged, unstaged, untracked, renamed, and deleted changes are all observed
+ok 163 - staged, unstaged, untracked, renamed, and deleted changes are all observed
+  ---
+  duration_ms: 490.269833
+  type: 'test'
+  ...
+# Subtest: a real binary change is detected
+ok 164 - a real binary change is detected
+  ---
+  duration_ms: 249.5175
+  type: 'test'
+  ...
+# Subtest: a fresh repository has no upstream and says so
+ok 165 - a fresh repository has no upstream and says so
+  ---
+  duration_ms: 265.608
+  type: 'test'
+  ...
+# Subtest: ahead and behind are reported for a real diverged clone
+ok 166 - ahead and behind are reported for a real diverged clone
+  ---
+  duration_ms: 739.757708
+  type: 'test'
+  ...
+# Subtest: a detached HEAD is reported from a real repository
+ok 167 - a detached HEAD is reported from a real repository
+  ---
+  duration_ms: 218.337958
+  type: 'test'
+  ...
+# Subtest: a repository with no commits is handled
+ok 168 - a repository with no commits is handled
+  ---
+  duration_ms: 118.9325
+  type: 'test'
+  ...
+# Subtest: a directory that is not a repository yields an actionable result
+ok 169 - a directory that is not a repository yields an actionable result
+  ---
+  duration_ms: 37.260166
+  type: 'test'
+  ...
+# Subtest: INSPECTION MUTATES NOTHING: porcelain status is byte-identical before and after
+ok 170 - INSPECTION MUTATES NOTHING: porcelain status is byte-identical before and after
+  ---
+  duration_ms: 525.273666
+  type: 'test'
+  ...
+# Subtest: inspecting a real repository twice yields an identical result
+ok 171 - inspecting a real repository twice yields an identical result
+  ---
+  duration_ms: 302.690083
+  type: 'test'
+  ...
+# Subtest: real command discovery finds manifest scripts and never marks them verified
+ok 172 - real command discovery finds manifest scripts and never marks them verified
+  ---
+  duration_ms: 157.841167
+  type: 'test'
+  ...
+# Subtest: a real untracked environment file is flagged without echoing its contents
+ok 173 - a real untracked environment file is flagged without echoing its contents
+  ---
+  duration_ms: 153.783667
+  type: 'test'
+  ...
+# Subtest: a real repository with unrelated areas gets multiple advisory boundaries
+ok 174 - a real repository with unrelated areas gets multiple advisory boundaries
+  ---
+  duration_ms: 171.681333
+  type: 'test'
+  ...
+# Subtest: every proposed commit is disjoint from every other
+ok 175 - every proposed commit is disjoint from every other
+  ---
+  duration_ms: 34.08075
+  type: 'test'
+  ...
+# Subtest: subjects stay within the soft limit and never claim intent
+ok 176 - subjects stay within the soft limit and never claim intent
+  ---
+  duration_ms: 2.08025
+  type: 'test'
+  ...
+# Subtest: an added-only boundary says add, a deleted-only boundary says remove
+ok 177 - an added-only boundary says add, a deleted-only boundary says remove
+  ---
+  duration_ms: 5.439291
+  type: 'test'
+  ...
+# Subtest: readiness is ready only when nothing flags the boundary
+ok 178 - readiness is ready only when nothing flags the boundary
+  ---
+  duration_ms: 2.169833
+  type: 'test'
+  ...
+# Subtest: an inspect-before-delivery item blocks the boundary it touches
+ok 179 - an inspect-before-delivery item blocks the boundary it touches
+  ---
+  duration_ms: 7.121541
+  type: 'test'
+  ...
+# Subtest: a rendered commit message is a subject, a blank line, then body
+ok 180 - a rendered commit message is a subject, a blank line, then body
+  ---
+  duration_ms: 0.198958
+  type: 'test'
+  ...
+# Subtest: running the delivery engine against a real repository mutates nothing
+ok 181 - running the delivery engine against a real repository mutates nothing
+  ---
+  duration_ms: 1074.0945
+  type: 'test'
+  ...
+# Subtest: the delivery summary reports a real change set and names the delivery boundary
+ok 182 - the delivery summary reports a real change set and names the delivery boundary
+  ---
+  duration_ms: 597.716834
+  type: 'test'
+  ...
+# Subtest: commit suggestion on a clean tree says there is nothing to suggest
+ok 183 - commit suggestion on a clean tree says there is nothing to suggest
+  ---
+  duration_ms: 462.468583
+  type: 'test'
+  ...
+# Subtest: commit suggestion states plainly that Voila does not commit
+ok 184 - commit suggestion states plainly that Voila does not commit
+  ---
+  duration_ms: 358.089459
+  type: 'test'
+  ...
+# Subtest: delivery on an uninitialized project reports the missing state, not a crash
+ok 185 - delivery on an uninitialized project reports the missing state, not a crash
+  ---
+  duration_ms: 100.0625
+  type: 'test'
+  ...
+# Subtest: a clean tree reports clean and proposes nothing
+ok 186 - a clean tree reports clean and proposes nothing
+  ---
+  duration_ms: 59.093
+  type: 'test'
+  ...
+# Subtest: the summary carries project identity and the canonical next action verbatim
+ok 187 - the summary carries project identity and the canonical next action verbatim
+  ---
+  duration_ms: 14.031208
+  type: 'test'
+  ...
+# Subtest: a claim with no receipt is reported unsupported, never as evidence
+ok 188 - a claim with no receipt is reported unsupported, never as evidence
+  ---
+  duration_ms: 15.120416
+  type: 'test'
+  ...
+# Subtest: an unsupported claim still appears in the rendered summary with its reason
+ok 189 - an unsupported claim still appears in the rendered summary with its reason
+  ---
+  duration_ms: 7.487458
+  type: 'test'
+  ...
+# Subtest: a missing fingerprint is reported as a limitation rather than silently ignored
+ok 190 - a missing fingerprint is reported as a limitation rather than silently ignored
+  ---
+  duration_ms: 28.261792
+  type: 'test'
+  ...
+# Subtest: a project with no claims says the delivery carries no evidence
+ok 191 - a project with no claims says the delivery carries no evidence
+  ---
+  duration_ms: 6.774583
+  type: 'test'
+  ...
+# Subtest: the summary always states that the engine proposes and never acts
+ok 192 - the summary always states that the engine proposes and never acts
+  ---
+  duration_ms: 7.34275
+  type: 'test'
+  ...
+# Subtest: open risks from canonical state appear in the summary
+ok 193 - open risks from canonical state appear in the summary
+  ---
+  duration_ms: 10.954
+  type: 'test'
+  ...
+# Subtest: ungrouped paths are surfaced as a risk, not quietly dropped
+ok 194 - ungrouped paths are surfaced as a risk, not quietly dropped
+  ---
+  duration_ms: 7.242792
+  type: 'test'
+  ...
+# Subtest: the summary is deterministic for the same inputs
+ok 195 - the summary is deterministic for the same inputs
+  ---
+  duration_ms: 74.359291
+  type: 'test'
+  ...
+# Subtest: discovered verification commands are listed but marked never executed
+ok 196 - discovered verification commands are listed but marked never executed
+  ---
+  duration_ms: 33.766709
+  type: 'test'
+  ...
+# Subtest: repository loads its own dogfooded canonical state
+ok 197 - repository loads its own dogfooded canonical state
+  ---
+  duration_ms: 12.618166
+  type: 'test'
+  ...
+# Subtest: the realignment is recorded in canonical state and the R-sequence is sequenced
+ok 198 - the realignment is recorded in canonical state and the R-sequence is sequenced
+  ---
+  duration_ms: 3.476666
+  type: 'test'
+  ...
+# Subtest: dogfooded state recognizes protected completions while NF-2..NF-4 remain held
+ok 199 - dogfooded state recognizes protected completions while NF-2..NF-4 remain held
+  ---
+  duration_ms: 4.5905
+  type: 'test'
+  ...
+# Subtest: dogfooded proof state is real: a claim exists with a linked receipt artifact
+ok 200 - dogfooded proof state is real: a claim exists with a linked receipt artifact
+  ---
+  duration_ms: 2.976708
+  type: 'test'
+  ...
+# Subtest: dogfooded receipt artifacts leak no credentials, env values, or absolute paths
+ok 201 - dogfooded receipt artifacts leak no credentials, env values, or absolute paths
+  ---
+  duration_ms: 380.053459
+  type: 'test'
+  ...
+# Subtest: no receipt staging directory was left behind in the repository
+ok 202 - no receipt staging directory was left behind in the repository
+  ---
+  duration_ms: 0.464459
+  type: 'test'
+  ...
+# Subtest: Pi loads the Project Steward skill from this repository with no diagnostics
+ok 203 - Pi loads the Project Steward skill from this repository with no diagnostics
+  ---
+  duration_ms: 53.325542
+  type: 'test'
+  ...
+# Subtest: doctor reports no failures on the dogfooded repository state
+ok 204 - doctor reports no failures on the dogfooded repository state
+  ---
+  duration_ms: 635.017041
+  type: 'test'
+  ...
+# Subtest: deriveDisplayName uses the directory basename
+ok 205 - deriveDisplayName uses the directory basename
+  ---
+  duration_ms: 0.591959
+  type: 'test'
+  ...
+# Subtest: createInitialState is deterministic and empty
+ok 206 - createInitialState is deterministic and empty
+  ---
+  duration_ms: 0.443
+  type: 'test'
+  ...
+# Subtest: statusReportLines includes operations, focus, and rationale
+ok 207 - statusReportLines includes operations, focus, and rationale
+  ---
+  duration_ms: 0.443458
+  type: 'test'
+  ...
+# Subtest: renderStatusView includes the Operations section
+ok 208 - renderStatusView includes the Operations section
+  ---
+  duration_ms: 0.150375
+  type: 'test'
+  ...
+# Subtest: homeViewLines stays restrained: focus, phase/health, and non-empty counts
+ok 209 - homeViewLines stays restrained: focus, phase/health, and non-empty counts
+  ---
+  duration_ms: 0.340792
+  type: 'test'
+  ...
+# Subtest: homeViewLines degrades safely at narrow widths
+ok 210 - homeViewLines degrades safely at narrow widths
+  ---
+  duration_ms: 0.114041
+  type: 'test'
+  ...
+# Subtest: workItemLabel is compact
+ok 211 - workItemLabel is compact
+  ---
+  duration_ms: 0.182375
+  type: 'test'
+  ...
+# Subtest: abbreviate truncates long text with an ellipsis
+ok 212 - abbreviate truncates long text with an ellipsis
+  ---
+  duration_ms: 0.055167
+  type: 'test'
+  ...
+# Subtest: pinned Pi package loads at runtime and reports 0.82.0
+ok 213 - pinned Pi package loads at runtime and reports 0.82.0
+  ---
+  duration_ms: 6.887
+  type: 'test'
+  ...
+# Subtest: extension registers the voila command, tools, and session_start
+ok 214 - extension registers the voila command, tools, and session_start
+  ---
+  duration_ms: 8.286208
+  type: 'test'
+  ...
+# Subtest: session_start shows init hint when uninitialized
+ok 215 - session_start shows init hint when uninitialized
+  ---
+  duration_ms: 26.667667
+  type: 'test'
+  ...
+# Subtest: a delivered settlement is injected and acknowledged exactly once
+ok 216 - a delivered settlement is injected and acknowledged exactly once
+  ---
+  duration_ms: 298.550375
+  type: 'test'
+  ...
+# Subtest: operation lifecycle requests bounded widget refreshes without polling
+ok 217 - operation lifecycle requests bounded widget refreshes without polling
+  ---
+  duration_ms: 2454.456083
+  type: 'test'
+  ...
+# Subtest: init command then create-work-item tool run end to end through Pi wiring
+ok 218 - init command then create-work-item tool run end to end through Pi wiring
+  ---
+  duration_ms: 8.969333
+  type: 'test'
+  ...
+# Subtest: the generated shim is marked and carries the deferral guard
+ok 219 - the generated shim is marked and carries the deferral guard
+  ---
+  duration_ms: 0.569708
+  type: 'test'
+  ...
+# Subtest: the shim defers to a project-local adapter instead of double-registering
+ok 220 - the shim defers to a project-local adapter instead of double-registering
+  ---
+  duration_ms: 260.617917
+  type: 'test'
+  ...
+# Subtest: the shim registers the full surface in a project without its own adapter
+ok 221 - the shim registers the full surface in a project without its own adapter
+  ---
+  duration_ms: 7.670708
+  type: 'test'
+  ...
+# Subtest: a project with an unrelated .pi/extensions directory still gets Voila
+ok 222 - a project with an unrelated .pi/extensions directory still gets Voila
+  ---
+  duration_ms: 6.002625
+  type: 'test'
+  ...
+# Subtest: apply is refused before review and without confirmation
+ok 223 - apply is refused before review and without confirmation
+  ---
+  duration_ms: 38.192917
+  type: 'test'
+  ...
+# Subtest: apply requires the exact reviewed draft revision
+ok 224 - apply requires the exact reviewed draft revision
+  ---
+  duration_ms: 63.441834
+  type: 'test'
+  ...
+# Subtest: apply creates decisions, assumptions, risks, and only explicit proposed work
+ok 225 - apply creates decisions, assumptions, risks, and only explicit proposed work
+  ---
+  duration_ms: 42.450083
+  type: 'test'
+  ...
+# Subtest: blocking conflicts prevent apply and change nothing
+ok 226 - blocking conflicts prevent apply and change nothing
+  ---
+  duration_ms: 85.175458
+  type: 'test'
+  ...
+# Subtest: repeated apply of the same accepted revision is idempotent
+ok 227 - repeated apply of the same accepted revision is idempotent
+  ---
+  duration_ms: 31.03075
+  type: 'test'
+  ...
+# Subtest: exact duplicates of existing truth are skipped, not recreated
+ok 228 - exact duplicates of existing truth are skipped, not recreated
+  ---
+  duration_ms: 49.7425
+  type: 'test'
+  ...
+# Subtest: apply generates the project brief and records one apply event
+ok 229 - apply generates the project brief and records one apply event
+  ---
+  duration_ms: 100.388791
+  type: 'test'
+  ...
+# Subtest: a failed apply leaves no partial state
+ok 230 - a failed apply leaves no partial state
+  ---
+  duration_ms: 35.309333
+  type: 'test'
+  ...
+# Subtest: rejecting an intake changes no project truth and blocks later apply
+ok 231 - rejecting an intake changes no project truth and blocks later apply
+  ---
+  duration_ms: 58.8
+  type: 'test'
+  ...
+# Subtest: intake state and artifacts survive a reload (restart parity)
+ok 232 - intake state and artifacts survive a reload (restart parity)
+  ---
+  duration_ms: 70.493541
+  type: 'test'
+  ...
+# Subtest: all classification categories are accepted
+ok 233 - all classification categories are accepted
+  ---
+  duration_ms: 2.794459
+  type: 'test'
+  ...
+# Subtest: duplicate finding IDs are rejected
+ok 234 - duplicate finding IDs are rejected
+  ---
+  duration_ms: 0.392708
+  type: 'test'
+  ...
+# Subtest: source-derived findings require provenance; inferences must be explicit
+ok 235 - source-derived findings require provenance; inferences must be explicit
+  ---
+  duration_ms: 0.144375
+  type: 'test'
+  ...
+# Subtest: file line references are validated against the source length
+ok 236 - file line references are validated against the source length
+  ---
+  duration_ms: 53.676375
+  type: 'test'
+  ...
+# Subtest: a source ref needs a line range, marker, or excerpt
+ok 237 - a source ref needs a line range, marker, or excerpt
+  ---
+  duration_ms: 0.229459
+  type: 'test'
+  ...
+# Subtest: proposed work must cite findings and may only relate to existing work items
+ok 238 - proposed work must cite findings and may only relate to existing work items
+  ---
+  duration_ms: 0.407125
+  type: 'test'
+  ...
+# Subtest: conflicts must reference known findings; blocking conflicts are detected
+ok 239 - conflicts must reference known findings; blocking conflicts are detected
+  ---
+  duration_ms: 0.331375
+  type: 'test'
+  ...
+# Subtest: staging increments draftRevision, writes artifacts, and changes no project truth
+ok 240 - staging increments draftRevision, writes artifacts, and changes no project truth
+  ---
+  duration_ms: 33.585917
+  type: 'test'
+  ...
+# Subtest: the preserved source is immutable across draft revisions
+ok 241 - the preserved source is immutable across draft revisions
+  ---
+  duration_ms: 112.498708
+  type: 'test'
+  ...
+# Subtest: two staged revisions produce two numbered artifacts
+ok 242 - two staged revisions produce two numbered artifacts
+  ---
+  duration_ms: 56.711959
+  type: 'test'
+  ...
+# Subtest: a prior draft revision is preserved verbatim
+ok 243 - a prior draft revision is preserved verbatim
+  ---
+  duration_ms: 93.860708
+  type: 'test'
+  ...
+# Subtest: a prior Understanding Check is preserved
+ok 244 - a prior Understanding Check is preserved
+  ---
+  duration_ms: 146.311
+  type: 'test'
+  ...
+# Subtest: a revision-request review event is recorded
+ok 245 - a revision-request review event is recorded
+  ---
+  duration_ms: 40.494833
+  type: 'test'
+  ...
+# Subtest: accepting appends an accepted review record and records the exact revision
+ok 246 - accepting appends an accepted review record and records the exact revision
+  ---
+  duration_ms: 26.994667
+  type: 'test'
+  ...
+# Subtest: rejecting appends a rejection record with feedback
+ok 247 - rejecting appends a rejection record with feedback
+  ---
+  duration_ms: 17.083625
+  type: 'test'
+  ...
+# Subtest: re-applying the accepted revision stays idempotent
+ok 248 - re-applying the accepted revision stays idempotent
+  ---
+  duration_ms: 23.32425
+  type: 'test'
+  ...
+# Subtest: doctor detects an accepted-revision mismatch
+ok 249 - doctor detects an accepted-revision mismatch
+  ---
+  duration_ms: 74.792792
+  type: 'test'
+  ...
+# Subtest: doctor detects a missing revision artifact and non-monotonic revisions
+ok 250 - doctor detects a missing revision artifact and non-monotonic revisions
+  ---
+  duration_ms: 50.959959
+  type: 'test'
+  ...
+# Subtest: doctor detects an accepted intake with no accepted review record
+ok 251 - doctor detects an accepted intake with no accepted review record
+  ---
+  duration_ms: 37.812416
+  type: 'test'
+  ...
+# Subtest: the review log is append-only across the lifecycle
+ok 252 - the review log is append-only across the lifecycle
+  ---
+  duration_ms: 25.662375
+  type: 'test'
+  ...
+# Subtest: revision history and review log survive a restart
+ok 253 - revision history and review log survive a restart
+  ---
+  duration_ms: 55.24025
+  type: 'test'
+  ...
+# Subtest: staging never overwrites an existing revision artifact
+ok 254 - staging never overwrites an existing revision artifact
+  ---
+  duration_ms: 24.716208
+  type: 'test'
+  ...
+# Subtest: a revision request is recorded before the revised draft, and only then may it be staged
+ok 255 - a revision request is recorded before the revised draft, and only then may it be staged
+  ---
+  duration_ms: 96.768333
+  type: 'test'
+  ...
+# Subtest: the request must name the exact revision under review
+ok 256 - the request must name the exact revision under review
+  ---
+  duration_ms: 31.756375
+  type: 'test'
+  ...
+# Subtest: empty or whitespace feedback is rejected
+ok 257 - empty or whitespace feedback is rejected
+  ---
+  duration_ms: 80.161958
+  type: 'test'
+  ...
+# Subtest: feedback is stored trimmed and verbatim
+ok 258 - feedback is stored trimmed and verbatim
+  ---
+  duration_ms: 22.262291
+  type: 'test'
+  ...
+# Subtest: an intake with no staged draft cannot receive a revision request
+ok 259 - an intake with no staged draft cannot receive a revision request
+  ---
+  duration_ms: 11.928917
+  type: 'test'
+  ...
+# Subtest: an accepted or rejected intake cannot receive a revision request
+ok 260 - an accepted or rejected intake cannot receive a revision request
+  ---
+  duration_ms: 43.574333
+  type: 'test'
+  ...
+# Subtest: a duplicate request for the same revision needs explicit justification
+ok 261 - a duplicate request for the same revision needs explicit justification
+  ---
+  duration_ms: 21.859834
+  type: 'test'
+  ...
+# Subtest: staging revision 3 requires a request against revision 2
+ok 262 - staging revision 3 requires a request against revision 2
+  ---
+  duration_ms: 35.093917
+  type: 'test'
+  ...
+# Subtest: a revision request never modifies prior drafts, views, or records
+ok 263 - a revision request never modifies prior drafts, views, or records
+  ---
+  duration_ms: 36.312959
+  type: 'test'
+  ...
+# Subtest: the review log survives a restart in order
+ok 264 - the review log survives a restart in order
+  ---
+  duration_ms: 38.21975
+  type: 'test'
+  ...
+# Subtest: the review log stores no reasoning or transcript
+ok 265 - the review log stores no reasoning or transcript
+  ---
+  duration_ms: 28.251875
+  type: 'test'
+  ...
+# Subtest: the command path records a request and refuses empty feedback
+ok 266 - the command path records a request and refuses empty feedback
+  ---
+  duration_ms: 25.156125
+  type: 'test'
+  ...
+# Subtest: the tool path records a request and cannot bypass the revision check
+ok 267 - the tool path records a request and cannot bypass the revision check
+  ---
+  duration_ms: 46.040166
+  type: 'test'
+  ...
+# Subtest: the Understanding Check exposes a revision action distinct from accept and reject
+ok 268 - the Understanding Check exposes a revision action distinct from accept and reject
+  ---
+  duration_ms: 0.234959
+  type: 'test'
+  ...
+# Subtest: D2 regression: an intake ID routes to that intake instead of becoming the reason
+ok 269 - D2 regression: an intake ID routes to that intake instead of becoming the reason
+  ---
+  duration_ms: 187.804125
+  type: 'test'
+  ...
+# Subtest: file intake preserves exact bytes and a correct sha-256
+ok 270 - file intake preserves exact bytes and a correct sha-256
+  ---
+  duration_ms: 45.389625
+  type: 'test'
+  ...
+# Subtest: manifest is stable and agrees with canonical metadata
+ok 271 - manifest is stable and agrees with canonical metadata
+  ---
+  duration_ms: 20.584209
+  type: 'test'
+  ...
+# Subtest: absolute paths are rejected
+ok 272 - absolute paths are rejected
+  ---
+  duration_ms: 8.13125
+  type: 'test'
+  ...
+# Subtest: path traversal is rejected
+ok 273 - path traversal is rejected
+  ---
+  duration_ms: 5.618958
+  type: 'test'
+  ...
+# Subtest: symlink escape is rejected
+ok 274 - symlink escape is rejected
+  ---
+  duration_ms: 10.291333
+  type: 'test'
+  ...
+# Subtest: missing file is reported distinctly
+ok 275 - missing file is reported distinctly
+  ---
+  duration_ms: 9.518667
+  type: 'test'
+  ...
+# Subtest: text intake preserves the exact string and is typed honestly
+ok 276 - text intake preserves the exact string and is typed honestly
+  ---
+  duration_ms: 22.143958
+  type: 'test'
+  ...
+# Subtest: exactly one source must be provided
+ok 277 - exactly one source must be provided
+  ---
+  duration_ms: 11.434375
+  type: 'test'
+  ...
+# Subtest: the preserved source is never overwritten by a second intake
+ok 278 - the preserved source is never overwritten by a second intake
+  ---
+  duration_ms: 35.158375
+  type: 'test'
+  ...
+# Subtest: intake IDs are monotonic and canonical metadata tracks them
+ok 279 - intake IDs are monotonic and canonical metadata tracks them
+  ---
+  duration_ms: 21.110292
+  type: 'test'
+  ...
+# Subtest: source artifact lives under .voila/intakes/<id>/
+ok 280 - source artifact lives under .voila/intakes/<id>/
+  ---
+  duration_ms: 13.9935
+  type: 'test'
+  ...
+# Subtest: /voila intake <path> preserves and reports without claiming analysis
+ok 281 - /voila intake <path> preserves and reports without claiming analysis
+  ---
+  duration_ms: 18.163417
+  type: 'test'
+  ...
+# Subtest: /voila intake rejects unsafe paths with an actionable message
+ok 282 - /voila intake rejects unsafe paths with an actionable message
+  ---
+  duration_ms: 4.847625
+  type: 'test'
+  ...
+# Subtest: /voila intake status lists intakes and points at review
+ok 283 - /voila intake status lists intakes and points at review
+  ---
+  duration_ms: 18.2315
+  type: 'test'
+  ...
+# Subtest: /voila intake review shows the understanding check with provenance and inferences
+ok 284 - /voila intake review shows the understanding check with provenance and inferences
+  ---
+  duration_ms: 90.364708
+  type: 'test'
+  ...
+# Subtest: /voila intake apply previews first and only applies with confirm
+ok 285 - /voila intake apply previews first and only applies with confirm
+  ---
+  duration_ms: 43.384917
+  type: 'test'
+  ...
+# Subtest: /voila intake apply refuses when conflicts require resolution
+ok 286 - /voila intake apply refuses when conflicts require resolution
+  ---
+  duration_ms: 24.9595
+  type: 'test'
+  ...
+# Subtest: /voila intake reject records rejection and keeps artifacts
+ok 287 - /voila intake reject records rejection and keeps artifacts
+  ---
+  duration_ms: 21.707791
+  type: 'test'
+  ...
+# Subtest: /voila orient reports absence, then current status
+ok 288 - /voila orient reports absence, then current status
+  ---
+  duration_ms: 31.633458
+  type: 'test'
+  ...
+# Subtest: /voila brief generates and displays the brief
+ok 289 - /voila brief generates and displays the brief
+  ---
+  duration_ms: 27.898709
+  type: 'test'
+  ...
+# Subtest: a pending intake appears in console Attention and the Focus intake line
+ok 290 - a pending intake appears in console Attention and the Focus intake line
+  ---
+  duration_ms: 80.089167
+  type: 'test'
+  ...
+# Subtest: blocked intakes are emphasized as needing resolution
+ok 291 - blocked intakes are emphasized as needing resolution
+  ---
+  duration_ms: 88.650666
+  type: 'test'
+  ...
+# Subtest: the Understanding Check renders sections, hash, and revision at all widths
+ok 292 - the Understanding Check renders sections, hash, and revision at all widths
+  ---
+  duration_ms: 204.372458
+  type: 'test'
+  ...
+# Subtest: the Understanding Check scrolls and reports its position
+ok 293 - the Understanding Check scrolls and reports its position
+  ---
+  duration_ms: 148.832792
+  type: 'test'
+  ...
+# Subtest: navigation opens, scrolls, and closes the Understanding Check
+ok 294 - navigation opens, scrolls, and closes the Understanding Check
+  ---
+  duration_ms: 0.210708
+  type: 'test'
+  ...
+# Subtest: intake keys are mapped from raw input
+ok 295 - intake keys are mapped from raw input
+  ---
+  duration_ms: 0.05075
+  type: 'test'
+  ...
+# Subtest: the console shows no intake section when none is pending
+ok 296 - the console shows no intake section when none is pending
+  ---
+  duration_ms: 91.63225
+  type: 'test'
+  ...
+# Subtest: neither state directory present is a normal uninitialized project
+ok 297 - neither state directory present is a normal uninitialized project
+  ---
+  duration_ms: 11.49375
+  type: 'test'
+  ...
+# Subtest: only .voila/ present is normal operation
+ok 298 - only .voila/ present is normal operation
+  ---
+  duration_ms: 4.61975
+  type: 'test'
+  ...
+# Subtest: only .newfang/ present raises an explicit legacy migration requirement
+ok 299 - only .newfang/ present raises an explicit legacy migration requirement
+  ---
+  duration_ms: 8.931416
+  type: 'test'
+  ...
+# Subtest: both directories present is a hard failure that names both paths
+ok 300 - both directories present is a hard failure that names both paths
+  ---
+  duration_ms: 7.160833
+  type: 'test'
+  ...
+# Subtest: migration inspection is read-only and writes nothing
+ok 301 - migration inspection is read-only and writes nothing
+  ---
+  duration_ms: 35.803208
+  type: 'test'
+  ...
+# Subtest: inspection is safe to repeat
+ok 302 - inspection is safe to repeat
+  ---
+  duration_ms: 23.500875
+  type: 'test'
+  ...
+# Subtest: the command surface reports inspection without applying
+ok 303 - the command surface reports inspection without applying
+  ---
+  duration_ms: 13.295833
+  type: 'test'
+  ...
+# Subtest: applying the migration preserves every immutable artifact byte-for-byte
+ok 304 - applying the migration preserves every immutable artifact byte-for-byte
+  ---
+  duration_ms: 49.839333
+  type: 'test'
+  ...
+# Subtest: review logs and receipt outputs survive the migration unchanged
+ok 305 - review logs and receipt outputs survive the migration unchanged
+  ---
+  duration_ms: 25.385042
+  type: 'test'
+  ...
+# Subtest: migration appends one honest event and preserves prior history
+ok 306 - migration appends one honest event and preserves prior history
+  ---
+  duration_ms: 31.703875
+  type: 'test'
+  ...
+# Subtest: migration rebrands current metadata but not records
+ok 307 - migration rebrands current metadata but not records
+  ---
+  duration_ms: 31.604208
+  type: 'test'
+  ...
+# Subtest: migration regenerates the current view through supported code
+ok 308 - migration regenerates the current view through supported code
+  ---
+  duration_ms: 22.329375
+  type: 'test'
+  ...
+# Subtest: migration leaves no temporary directory behind
+ok 309 - migration leaves no temporary directory behind
+  ---
+  duration_ms: 45.662916
+  type: 'test'
+  ...
+# Subtest: migration is safe to rerun after success
+ok 310 - migration is safe to rerun after success
+  ---
+  duration_ms: 151.867916
+  type: 'test'
+  ...
+# Subtest: migration never overwrites an existing .voila/ tree
+ok 311 - migration never overwrites an existing .voila/ tree
+  ---
+  duration_ms: 41.475834
+  type: 'test'
+  ...
+# Subtest: a legacy directory without project.json is refused, not migrated
+ok 312 - a legacy directory without project.json is refused, not migrated
+  ---
+  duration_ms: 3.455042
+  type: 'test'
+  ...
+# Subtest: malformed legacy canonical state is refused before any move
+ok 313 - malformed legacy canonical state is refused before any move
+  ---
+  duration_ms: 5.6585
+  type: 'test'
+  ...
+# Subtest: post-move verification rejects a tree whose bytes changed during the move
+ok 314 - post-move verification rejects a tree whose bytes changed during the move
+  ---
+  duration_ms: 131.763625
+  type: 'test'
+  ...
+# Subtest: post-move verification rejects canonical state that no longer reads
+ok 315 - post-move verification rejects canonical state that no longer reads
+  ---
+  duration_ms: 20.889292
+  type: 'test'
+  ...
+# Subtest: rollback restores the legacy directory and leaves no destination behind
+ok 316 - rollback restores the legacy directory and leaves no destination behind
+  ---
+  duration_ms: 23.50025
+  type: 'test'
+  ...
+# Subtest: a failed rollback is reported loudly and names both paths
+ok 317 - a failed rollback is reported loudly and names both paths
+  ---
+  duration_ms: 8.565666
+  type: 'test'
+  ...
+# Subtest: a legacy tree on an older schema migrates its directory, then its schema
+ok 318 - a legacy tree on an older schema migrates its directory, then its schema
+  ---
+  duration_ms: 4.257583
+  type: 'test'
+  ...
+# Subtest: init refuses to initialize next to legacy state
+ok 319 - init refuses to initialize next to legacy state
+  ---
+  duration_ms: 8.950125
+  type: 'test'
+  ...
+# Subtest: doctor fails on a legacy-only tree and passes after migration
+ok 320 - doctor fails on a legacy-only tree and passes after migration
+  ---
+  duration_ms: 63.533375
+  type: 'test'
+  ...
+# Subtest: doctor fails when both state directories exist
+ok 321 - doctor fails when both state directories exist
+  ---
+  duration_ms: 7.774333
+  type: 'test'
+  ...
+# Subtest: hashStateTree records a symlink distinctly from the file it points at
+ok 322 - hashStateTree records a symlink distinctly from the file it points at
+  ---
+  duration_ms: 2.38975
+  type: 'test'
+  ...
+# Subtest: migration regenerates an existing project brief under the new name
+ok 323 - migration regenerates an existing project brief under the new name
+  ---
+  duration_ms: 39.288417
+  type: 'test'
+  ...
+# Subtest: valid v2 inspection reports the chained 2 -> 3 -> 4 -> 5 -> 6 migration without writing
+ok 324 - valid v2 inspection reports the chained 2 -> 3 -> 4 -> 5 -> 6 migration without writing
+  ---
+  duration_ms: 8.202917
+  type: 'test'
+  ...
+# Subtest: loading v2 reports migration required (never silent)
+ok 325 - loading v2 reports migration required (never silent)
+  ---
+  duration_ms: 5.884
+  type: 'test'
+  ...
+# Subtest: v2 migrates to the current version preserving identity and existing operations
+ok 326 - v2 migrates to the current version preserving identity and existing operations
+  ---
+  duration_ms: 10.128625
+  type: 'test'
+  ...
+# Subtest: migration writes a timestamped backup of the original bytes
+ok 327 - migration writes a timestamped backup of the original bytes
+  ---
+  duration_ms: 6.163625
+  type: 'test'
+  ...
+# Subtest: migration appends one event and refreshes the generated view
+ok 328 - migration appends one event and refreshes the generated view
+  ---
+  duration_ms: 11.031417
+  type: 'test'
+  ...
+# Subtest: rerunning migration on the current version is a safe no-op
+ok 329 - rerunning migration on the current version is a safe no-op
+  ---
+  duration_ms: 5.69175
+  type: 'test'
+  ...
+# Subtest: v1 migrates through the full chain to the current version
+ok 330 - v1 migrates through the full chain to the current version
+  ---
+  duration_ms: 10.035083
+  type: 'test'
+  ...
+# Subtest: unknown source version is rejected
+ok 331 - unknown source version is rejected
+  ---
+  duration_ms: 1.564208
+  type: 'test'
+  ...
+# Subtest: malformed v2 is refused and leaves canonical bytes intact
+ok 332 - malformed v2 is refused and leaves canonical bytes intact
+  ---
+  duration_ms: 2.723
+  type: 'test'
+  ...
+# Subtest: malformed v2 entity content is caught by candidate validation
+ok 333 - malformed v2 entity content is caught by candidate validation
+  ---
+  duration_ms: 2.248416
+  type: 'test'
+  ...
+# Subtest: the current schema version is 6
+ok 334 - the current schema version is 6
+  ---
+  duration_ms: 0.68275
+  type: 'test'
+  ...
+# Subtest: v3 inspection reports the chained 3 -> 4 -> 5 -> 6 migration without writing
+ok 335 - v3 inspection reports the chained 3 -> 4 -> 5 -> 6 migration without writing
+  ---
+  duration_ms: 8.687375
+  type: 'test'
+  ...
+# Subtest: loading v3 reports migration required (never silent)
+ok 336 - loading v3 reports migration required (never silent)
+  ---
+  duration_ms: 1.885
+  type: 'test'
+  ...
+# Subtest: migrationPlan chains every supported source version to v6
+ok 337 - migrationPlan chains every supported source version to v6
+  ---
+  duration_ms: 0.297083
+  type: 'test'
+  ...
+# Subtest: v3 -> v6 preserves everything and defaults requiredClaimIds to empty
+ok 338 - v3 -> v6 preserves everything and defaults requiredClaimIds to empty
+  ---
+  duration_ms: 9.594042
+  type: 'test'
+  ...
+# Subtest: a migrated work item

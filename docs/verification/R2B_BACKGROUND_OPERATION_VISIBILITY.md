@@ -191,3 +191,27 @@ Not implemented or claimed by R2B:
 
 The accepted capability is one supervised fixed operation at a time. The non-goals in section 6
 remain non-goals after completion.
+
+---
+
+## 8. CI portability and captured-output follow-up — 2026-07-27
+
+GitHub Actions job `89878091765` on `0444dd52` exposed four failures that local R2B verification had
+not reproduced:
+
+- two controlled presentation fixtures invoked the accepted `mise` executable even though the CI
+  workflow intentionally installs only Node dependencies before `npm run verify`; those tests now
+  substitute `process.execPath` after separately materializing the real registry, while domain tests
+  continue to bind the accepted executable and argv exactly;
+- a fast child could emit stdout while the supervisor awaited its first canonical running-state
+  write because data listeners were attached afterward; output listeners now attach immediately
+  after spawn, alongside the existing early error/close guards;
+- the rename guard structurally excluded immutable receipt stdout/stderr but not equivalently captured
+  operation stdout/stderr, so the newly committed RUN-6–RUN-9 full-gate output triggered the legacy
+  brand guard. The narrow exclusion now covers only direct `stdout.txt` and `stderr.txt` children of
+  receipt or operation artifact directories; manifests, nested files, canonical state, source, and
+  every other active surface remain scanned.
+
+The fixes do not change accepted operation authority, executable/argv ownership, capacity, retry,
+presentation, or settlement semantics. NF-21 carries the final current `mise exec -- npm run verify`
+receipt for this follow-up.

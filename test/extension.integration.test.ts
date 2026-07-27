@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,6 +12,7 @@ import * as pi from "@earendil-works/pi-coding-agent";
 // Loads the thin adapter (which type-imports Pi and imports src/).
 import voilaExtension from "../.pi/extensions/voila.ts";
 import { loadState, updateState } from "../src/state/store.ts";
+import { ensureR2ARegistry } from "../src/state/operations-registry.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -167,10 +168,6 @@ test("a delivered settlement is injected and acknowledged exactly once", async (
 test("operation lifecycle requests bounded widget refreshes without polling", async () => {
   const root = await mkdtemp(join(tmpdir(), "voila-int-"));
   await execFileAsync("git", ["init", "-q", root]);
-  await writeFile(
-    join(root, "package.json"),
-    `${JSON.stringify({ scripts: { verify: 'node -e "setTimeout(()=>{},1200)"' } })}\n`,
-  );
   const h = makeHarness(root);
   (voilaExtension as unknown as (pi: unknown) => void)(h.host);
   await h.commands.get("voila")!.handler("init", h.ctx);
@@ -212,6 +209,25 @@ test("operation lifecycle requests bounded widget refreshes without polling", as
   );
 
   await h.events.get("session_start")!(undefined, h.ctx);
+  await ensureR2ARegistry(root);
+  // The registry contract is tested separately. Use a controlled Node fixture here so lifecycle UI
+  // coverage does not depend on the project-local `mise` binary being installed in bare CI.
+  await updateState(
+    root,
+    (cur) => ({
+      ...cur,
+      operationDefinitions: cur.operationDefinitions.map((definition) =>
+        definition.id === "r2b.repository-checks"
+          ? {
+              ...definition,
+              executable: process.execPath,
+              args: ["-e", "setTimeout(()=>{}, 1200)"],
+            }
+          : definition,
+      ),
+    }),
+    { type: "r2b_ui_refresh_fixture_definition" },
+  );
   const before = h.widgets.length;
   const startedAt = Date.now();
   await h.tools
