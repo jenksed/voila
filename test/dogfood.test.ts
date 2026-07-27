@@ -67,17 +67,31 @@ test("the realignment is recorded in canonical state and the R-sequence is seque
   }
 });
 
-test("dogfooded state includes only protected completions; NF-2..NF-4 remain held", async () => {
+test("dogfooded state recognizes protected completions while NF-2..NF-4 remain held", async () => {
   const state = await loadState(process.cwd());
-  const completed = state.workItems
-    .filter((w) => w.status === "completed")
-    .map((w) => w.id)
-    .sort();
-  assert.deepEqual(
-    completed,
-    ["NF-1", "NF-16", "NF-17", "NF-18", "NF-9"],
-    "only NF-1, NF-9, bounded R2A NF-16, counter-repair NF-17, and paste-safety NF-18 completed through the gate",
-  );
+  const events = (await readFile(join(process.cwd(), ".voila", "events.jsonl"), "utf8"))
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as { type?: string; id?: string });
+  const completed = state.workItems.filter((item) => item.status === "completed");
+
+  // Known accepted milestones cannot silently regress. Additional completions are allowed only when
+  // their canonical shape and event history show they traversed the protected path; this avoids an
+  // exact-list fixture that breaks every time a new item completes legitimately.
+  for (const id of ["NF-1", "NF-9", "NF-16", "NF-17", "NF-18", "NF-19"]) {
+    assert.ok(
+      completed.some((item) => item.id === id),
+      `${id} remains completed`,
+    );
+  }
+  for (const item of completed) {
+    assert.ok(item.acceptanceCriteria.length > 0, `${item.id} completed with acceptance criteria`);
+    assert.ok(item.requiredClaimIds.length > 0, `${item.id} completed with required claims`);
+    assert.ok(
+      events.some((event) => event.type === "work_item_completed" && event.id === item.id),
+      `${item.id} has a protected completion event`,
+    );
+  }
 
   const nf1 = state.workItems.find((w) => w.id === "NF-1");
   assert.ok(nf1);

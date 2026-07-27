@@ -136,6 +136,7 @@ Repository completion claims cover only what is in the repository and verified t
 - For multi-step instructions, use one complete command per line in execution order.
 - If truly multi-line input is unavoidable, use a complete self-contained paste-safe script block and
   state outside it exactly what the script changes.
+- When opening a pull request is the next owner action, inspect the remote host and relevant CLI availability, then include the host-specific paste-safe command rather than stopping at prose. For GitHub with `gh` available, use one physical-line command with actual values: `gh pr create --base '<base>' --head '<branch>' --title '<intent-based title>' --body '<concise summary and evidence>'`. Never run it or assume authentication; if prerequisites are missing, state them and provide the exact compare/new-PR URL fallback.
 
 ## Toolchain (pinned)
 

@@ -1,0 +1,31 @@
+{
+  "receiptId": "RCP-130",
+  "claimId": "CLM-13",
+  "result": "passed",
+  "executable": "mise",
+  "args": [
+    "exec",
+    "--",
+    "node",
+    "--input-type=module",
+    "-e",
+    "import assert from 'node:assert/strict'; import { readFile } from 'node:fs/promises'; import { loadState } from './src/state/store.ts'; const state = await loadState('.'); const run = state.operationRuns.find((item) => item.id === 'RUN-5'); assert.ok(run); assert.equal(run.lifecycleState, 'passed'); assert.equal(run.settlementReason, 'passed'); assert.equal(run.deliveryState, 'acknowledged'); assert.equal(run.admission.result, 'allow'); assert.equal(run.admission.ruleId, 'ADMIT.OPERATIONS.ALLOW_NEW'); const events = (await readFile('.voila/events.jsonl', 'utf8')).trim().split('\\n').map(JSON.parse); assert.equal(events.filter((event) => event.type === 'operation_run_reserved' && event.runId === 'RUN-5').length, 1); assert.equal(events.filter((event) => event.type === 'operation_run_acknowledged' && event.runId === 'RUN-5').length, 1); console.log('RUN-5 remains passed and acknowledged exactly once.');"
+  ],
+  "cwdRef": ".",
+  "exitCode": 0,
+  "signal": null,
+  "startedAt": "2026-07-27T00:12:03.457Z",
+  "finishedAt": "2026-07-27T00:12:03.625Z",
+  "durationMs": 168,
+  "timeoutMs": 30000,
+  "repositoryFingerprint": "43f8af87c48814c53304a82ab1d67bbb6f993be3d58d30ab8fed1578909548e8",
+  "fingerprintAlgorithm": "v2",
+  "gitHead": "90f57e9bdb2a4bd80c95713dee3750adbd83c345",
+  "stdoutSha256": "371611fab63de54a168cc95964f74b54053a51a04a2b7dbdb6ed65b07cfad4fa",
+  "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdoutTruncated": false,
+  "stderrTruncated": false,
+  "outputTruncated": false,
+  "capturedEnvironment": "none",
+  "pathsNormalized": "repository root -> <repo>, home directory -> ~"
+}

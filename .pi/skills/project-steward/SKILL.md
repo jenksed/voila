@@ -314,6 +314,20 @@ Whenever you recommend a command for the developer to run:
   line boundaries must preserve the intended argv. Do not make the developer repair presentation
   damage caused by chat or TUI wrapping.
 
+### Actionable pull-request handoff
+
+When opening a pull request is the next owner action, never stop at prose such as “open a PR.” Include
+an accompanying paste-safe command in the same response:
+
+1. Inspect the configured remote host, current branch, intended base, and relevant host CLI
+   availability with read-only commands. Do not assume GitHub, a CLI installation, or authentication.
+2. For a GitHub remote when `gh` is available, provide one physical-line command using the actual values: `gh pr create --base '<base>' --head '<branch>' --title '<intent-based title>' --body '<concise summary and evidence>'`. Keep it in a fenced `bash` block and do not split it with `\`.
+3. If a required CLI is unavailable, state the missing prerequisite and provide an actionable
+   host-specific compare/new-PR URL instead of inventing a command that cannot work. Do not install
+   software or initiate authentication as a side effect.
+4. Never execute the PR command, open the PR, or claim authentication. The developer owns this
+   external approval boundary; the Steward owns making the handoff runnable.
+
 ## Next action and focus
 
 The next justified action is yours to choose and to justify. Keep it current with
