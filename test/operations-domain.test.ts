@@ -10,6 +10,7 @@ import type {
 import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import {
   R2A_STATE_STORE_OPERATION,
+  R2B_REPOSITORY_CHECKS_OPERATION,
   activeRun,
   allowedNextStates,
   allLifecycleStates,
@@ -93,7 +94,7 @@ function allowAdmission(
   };
 }
 
-test("R2A_STATE_STORE_OPERATION is the only accepted operation; it has the expected argv", () => {
+test("the accepted R2A and R2B definitions bind their exact execution and authority contracts", () => {
   assert.equal(R2A_STATE_STORE_OPERATION.id, "r2a.state-store-tests");
   assert.equal(R2A_STATE_STORE_OPERATION.version, 1);
   assert.equal(R2A_STATE_STORE_OPERATION.kind, "finite");
@@ -121,6 +122,16 @@ test("R2A_STATE_STORE_OPERATION is the only accepted operation; it has the expec
   assert.equal(R2A_STATE_STORE_OPERATION.timeoutContract.startupMs, 10_000);
   assert.equal(R2A_STATE_STORE_OPERATION.timeoutContract.gracefulMs, 5_000);
   assert.equal(R2A_STATE_STORE_OPERATION.timeoutContract.forcedMs, 5_000);
+
+  assert.equal(R2B_REPOSITORY_CHECKS_OPERATION.id, "r2b.repository-checks");
+  assert.equal(R2B_REPOSITORY_CHECKS_OPERATION.displayLabel, "Repository checks");
+  assert.deepEqual(R2B_REPOSITORY_CHECKS_OPERATION.args, ["exec", "--", "npm", "run", "verify"]);
+  assert.deepEqual(R2B_REPOSITORY_CHECKS_OPERATION.authoritySourceRef, {
+    kind: "decision",
+    id: "DEC-23",
+  });
+  assert.equal(R2B_REPOSITORY_CHECKS_OPERATION.timeoutContract.totalMs, 300_000);
+  assert.equal(R2B_REPOSITORY_CHECKS_OPERATION.ownershipPolicy, "focused_work_item_required");
 });
 
 test("definition fingerprint is stable across re-registration and ignores timestamps", () => {
@@ -144,11 +155,15 @@ test("definition fingerprint binds ordered argv, effects, authority, and executa
   const withDifferentAuthority = r2aDefinition({
     authoritySourceRef: { kind: "decision", id: "DEC-999" },
   });
+  const withDifferentOwnership = r2aDefinition({ ownershipPolicy: "focused_work_item_required" });
+  const withDifferentLabel = r2aDefinition({ displayLabel: "Display only" });
   assert.notEqual(definitionFingerprint(base), definitionFingerprint(withExtraArg));
   assert.notEqual(definitionFingerprint(base), definitionFingerprint(withReorderedArgv));
   assert.notEqual(definitionFingerprint(base), definitionFingerprint(withDifferentExec));
   assert.notEqual(definitionFingerprint(base), definitionFingerprint(withDifferentEffects));
   assert.notEqual(definitionFingerprint(base), definitionFingerprint(withDifferentAuthority));
+  assert.notEqual(definitionFingerprint(base), definitionFingerprint(withDifferentOwnership));
+  assert.equal(definitionFingerprint(base), definitionFingerprint(withDifferentLabel));
 });
 
 test("validateDefinition rejects shell metacharacters in the executable", () => {

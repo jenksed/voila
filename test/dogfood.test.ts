@@ -18,8 +18,9 @@ test("repository loads its own dogfooded canonical state", async () => {
   assert.equal(state.schemaVersion, SCHEMA_VERSION);
   assert.equal(state.phase, "build");
   assert.ok(state.workItems.length >= 7);
-  // R1 (NF-9) and bounded R2A (NF-16) completed through protected transitions. A later accepted
-  // item may now hold focus; completion must not leave focus pointing at completed/cancelled work.
+  // R1 (NF-9), bounded R2A (NF-16), and bounded R2 (NF-20/NF-10) completed through protected
+  // transitions. A later accepted item may now hold focus; completion must not leave focus pointing
+  // at completed/cancelled work.
   // NF-2 is still held and still owed its authenticated intake — asserted below.
   if (state.focusWorkItemId !== null) {
     const focused = state.workItems.find((item) => item.id === state.focusWorkItemId);
@@ -40,27 +41,27 @@ test("the realignment is recorded in canonical state and the R-sequence is seque
   assert.ok(dec18, "DEC-18 records the operational realignment");
   assert.equal(dec18.status, "accepted");
 
-  // R1..R7 exist as work items and form a dependency chain. R1 (NF-9) is completed; R2..R7 remain
-  // uncompleted. The broader R2 item additionally waits for its bounded R2A slice (NF-16), rather
-  // than making NF-16 depend on completion of all broader R2 work.
+  // R1..R7 exist as work items and form a dependency chain. R1 (NF-9) and bounded R2 (NF-10) are
+  // completed; R3..R7 remain uncompleted. The broader R2 item additionally waited for its bounded
+  // R2A slice (NF-16), rather than making NF-16 depend on completion of all broader R2 work.
   const chain = ["NF-9", "NF-10", "NF-11", "NF-12", "NF-13", "NF-14", "NF-15"];
   for (const [i, id] of chain.entries()) {
     const item = state.workItems.find((w) => w.id === id);
     assert.ok(item, `${id} exists for R${i + 1}`);
-    if (i === 0) {
-      assert.equal(item.status, "completed", "R1 is completed on this branch");
-      assert.deepEqual(item.dependsOn, [], "R1 has no predecessor in the R-sequence");
+    const expectedDependencies =
+      id === "NF-9" ? [] : id === "NF-10" ? ["NF-9", "NF-16"] : [chain[i - 1]];
+    assert.deepEqual(
+      item.dependsOn,
+      expectedDependencies,
+      `${id} carries the accepted R-sequence dependencies`,
+    );
+    if (i <= 1) {
+      assert.equal(item.status, "completed", `R${i + 1} is completed on this branch`);
     } else {
       assert.notEqual(
         item.status,
         "completed",
         `${id} is unbuilt; nothing here may claim otherwise`,
-      );
-      const expectedDependencies = id === "NF-10" ? ["NF-9", "NF-16"] : [chain[i - 1]];
-      assert.deepEqual(
-        item.dependsOn,
-        expectedDependencies,
-        `${id} carries the accepted R-sequence dependencies`,
       );
     }
     assert.ok(item.acceptanceCriteria.length > 0, `${id} states how it will be judged`);
@@ -78,7 +79,7 @@ test("dogfooded state recognizes protected completions while NF-2..NF-4 remain h
   // Known accepted milestones cannot silently regress. Additional completions are allowed only when
   // their canonical shape and event history show they traversed the protected path; this avoids an
   // exact-list fixture that breaks every time a new item completes legitimately.
-  for (const id of ["NF-1", "NF-9", "NF-16", "NF-17", "NF-18", "NF-19"]) {
+  for (const id of ["NF-1", "NF-9", "NF-10", "NF-16", "NF-17", "NF-18", "NF-19", "NF-20"]) {
     assert.ok(
       completed.some((item) => item.id === id),
       `${id} remains completed`,

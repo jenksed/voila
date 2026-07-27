@@ -27,6 +27,8 @@ export const ADMISSION_RULES = {
   DENY_CAPACITY: "ADMIT.OPERATIONS.DENY_CAPACITY",
   DENY_RETRY_BUDGET: "ADMIT.OPERATIONS.DENY_RETRY_BUDGET",
   DENY_MISSING_AUTHORITY: "ADMIT.OPERATIONS.DENY_MISSING_AUTHORITY",
+  DENY_FOCUSED_WORK_ITEM_REQUIRED: "ADMIT.OPERATIONS.DENY_INVALID_STATE.FOCUSED_WORK_ITEM_REQUIRED",
+  DENY_RECONCILIATION_REQUIRED: "ADMIT.OPERATIONS.DENY_CAPACITY.RECONCILIATION_REQUIRED",
   DENY_STRUCTURAL_INTEGRITY: "ADMIT.OPERATIONS.DENY_STRUCTURAL_INTEGRITY",
 } as const;
 
@@ -123,7 +125,9 @@ export interface OperationAdmissionContext {
   canonicalWorktreeIdentity: string;
   requestWorktreeIdentity: string;
   activeWorkItemId: string | null;
+  activeWorkItemValid: boolean;
   activeRun?: OperationRun;
+  activeRunRuntimeOwned: boolean;
   retry: OperationRetryState;
   structuralHealth: OperationStructuralHealth;
   authorityReferences: readonly AuthorityReference[];
@@ -150,6 +154,7 @@ export interface AuthorizedOperationStart {
   timeoutContract: OperationDefinition["timeoutContract"];
   effectProfile: OperationDefinition["effectProfile"];
   outputPolicy: OperationDefinition["outputPolicy"];
+  resolvedWorkItemId?: string;
   admission: OperationAdmission;
 }
 
@@ -284,6 +289,15 @@ export function evaluateOperationAdmission(
     });
   }
 
+  if (
+    definition.ownershipPolicy === "focused_work_item_required" &&
+    (!context.activeWorkItemId || !context.activeWorkItemValid)
+  ) {
+    return deny(context, "deny_invalid_state", ADMISSION_RULES.DENY_FOCUSED_WORK_ITEM_REQUIRED, {
+      requirement: "focused_work_item_required",
+    });
+  }
+
   if (context.retry.intent === "automatic_retry" && context.retry.remainingAutomaticRetries <= 0) {
     return deny(context, "deny_retry_budget", ADMISSION_RULES.DENY_RETRY_BUDGET, {
       remainingAutomaticRetries: context.retry.remainingAutomaticRetries,
@@ -291,6 +305,11 @@ export function evaluateOperationAdmission(
   }
 
   if (context.activeRun && !isFinalState(context.activeRun.lifecycleState)) {
+    if (!context.activeRunRuntimeOwned) {
+      return deny(context, "deny_capacity", ADMISSION_RULES.DENY_RECONCILIATION_REQUIRED, {
+        activeRunId: context.activeRun.id,
+      });
+    }
     if (equivalentActiveRun(context.activeRun, definition, context)) {
       return {
         decision: {
@@ -334,6 +353,9 @@ export function evaluateOperationAdmission(
       timeoutContract: definition.timeoutContract,
       effectProfile: definition.effectProfile,
       outputPolicy: definition.outputPolicy,
+      ...(definition.ownershipPolicy === "focused_work_item_required" && context.activeWorkItemId
+        ? { resolvedWorkItemId: context.activeWorkItemId }
+        : {}),
       admission: decision,
     },
   };
@@ -360,6 +382,10 @@ export function explainAdmission(decision: OperationAdmission): string {
       return "The automatic retry budget is exhausted.";
     case ADMISSION_RULES.DENY_MISSING_AUTHORITY:
       return "Canonical project state does not grant the required operation authority.";
+    case ADMISSION_RULES.DENY_FOCUSED_WORK_ITEM_REQUIRED:
+      return "The accepted operation requires a valid focused work item.";
+    case ADMISSION_RULES.DENY_RECONCILIATION_REQUIRED:
+      return "Canonical operation state requires reconciliation before another start.";
     case ADMISSION_RULES.DENY_STRUCTURAL_INTEGRITY:
       return "Canonical or policy input integrity is not sufficient to start an operation.";
     default:

@@ -141,6 +141,8 @@ test("every R2A operation tool has one static enforcement descriptor", () => {
 
   const start = tools.find((tool) => tool.name === "voila_start_operation")!;
   const schema = start.parameters as { properties?: Record<string, unknown> };
-  assert.ok(schema.properties?.operationId);
+  assert.deepEqual(Object.keys(schema.properties ?? {}), ["operationId"]);
   assert.equal(schema.properties?.definitionId, undefined);
+  assert.equal(schema.properties?.owner, undefined);
+  assert.equal(schema.properties?.workItemId, undefined);
 });

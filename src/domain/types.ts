@@ -400,9 +400,13 @@ export interface AuthorityReference {
  * Accepted operation definition. One definition describes what MAY be executed; an instance of it
  * is a run. Definitions are explicitly accepted; the supervisor never invents operations.
  */
+export type OperationOwnershipPolicy = "optional_metadata" | "focused_work_item_required";
+
 export interface OperationDefinition {
   id: string; // e.g. "r2a.state-store-tests"
   version: number;
+  /** Display-only label; excluded from the authority fingerprint. */
+  displayLabel?: string;
   purpose: string;
   kind: OperationKind;
   executable: string;
@@ -421,6 +425,8 @@ export interface OperationDefinition {
   cancellationContract: OperationCancellationContract;
   outputPolicy: OperationOutputPolicy;
   redactionPolicy: OperationRedactionPolicy;
+  /** How immutable work-item ownership is resolved at reservation. */
+  ownershipPolicy?: OperationOwnershipPolicy;
   createdAt: string;
   updatedAt: string;
 }
@@ -474,6 +480,7 @@ export const OPERATION_ADMISSION_RESULTS = [
   "deny_capacity",
   "deny_retry_budget",
   "deny_missing_authority",
+  "deny_invalid_state",
   "deny_structural_integrity",
 ] as const;
 export type OperationAdmissionResult = (typeof OPERATION_ADMISSION_RESULTS)[number];

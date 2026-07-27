@@ -54,17 +54,16 @@ had become responsible for operating Voila. The active roadmap is
 toward **Project Steward Operational Loop v1**. Delegation and background execution moved from
 "deferred, optional" to product-critical. Approval-bundle self-hosting is **paused**.
 
-**Not built yet:** multi-operation concurrency, watcher, dev server, and the `list`/`wait` tools
-(R2B onward), Pi child workers (R3), automatic settlement and integration (R4), fresh-session
-continuity (R5), quiet boundary reconciliation (R6). None of it exists today. See the doctrine's
-built/not-built table. R1 (friction containment and ambient continuity) is implemented on
-`feat/r1-ambient-continuity`: its automated and interactive tiers pass and NF-9 was completed
-through the protected transition with five required claims covered by current receipts. R2A (one
-finite supervised operation, `r2a.state-store-tests`) is in progress on
-`feat/r2a-finite-operation`: the DEC-22 implementation is present, but canonical counter repair,
-current receipt evidence, and fresh-session acceptance remain. Its exact status is recorded in
-[docs/verification/R2A_FINITE_OPERATION.md](docs/verification/R2A_FINITE_OPERATION.md). Approval
-bundles remain paused.
+**Not built yet:** multi-operation concurrency, watchers, dev servers, `list`/`wait` tools, Pi child
+workers (R3), cross-process coordination or adoption, and broader automatic integration. See the
+doctrine's built/not-built table. R1 (friction containment and ambient continuity) and bounded R2A
+(one finite supervised operation, `r2a.state-store-tests`) are accepted and protected-complete. On
+`feat/r2b-operation-visibility`, R2B adds exactly one fixed `r2b.repository-checks` operation to the
+same one-run supervisor plus runtime-backed widget, Console, and capsule visibility. Its automated
+gate and all four real acceptance tiers pass; NF-20 and NF-10 are protected-complete. Exact evidence
+is recorded in
+[docs/verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md](docs/verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md).
+Approval bundles remain paused.
 
 **What is built — Phase 0 + Packets 1–4 + Phase 6.** Voila is a runnable Pi extension:
 a thin adapter (`.pi/extensions/voila.ts`), canonical `.voila/` state with **explicit schema
@@ -81,7 +80,8 @@ report ([docs/design/FOCUS_CAPSULE.md](docs/design/FOCUS_CAPSULE.md)). Evidence 
 **content-addressed** ([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so
 committing receipts no longer invalidates them; orientation freshness follows the content it inspected,
 not git HEAD. Doctor separates structural health from expected development drift. Pinned to
-`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise), tested (**626 tests**). The repo
+`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise); the current R2B branch passes
+**710 tests** (707 passed, 3 skipped). The repo
 **dogfoods its own** `.voila/` state.
 
 **The boundary is explicit**: the model interprets (fallibly), Voila enforces (preservation,
@@ -97,8 +97,9 @@ longer revalidates). Verification runs a real command with a bounded timeout and
 **not a sandbox**. See [docs/design/PROOF_ENGINE.md](docs/design/PROOF_ENGINE.md).
 
 This is **not** the full product. There is no delegation or general background-terminal runtime;
-R2A's one explicit finite operation passed bounded acceptance on 2026-07-26. There is no automatic integration,
-approval bundles, sandboxing, remote execution, broad model routing, cost tracking, or release
+R2A's first explicit finite operation passed bounded acceptance on 2026-07-26, and R2B's second fixed
+operation remains acceptance-pending. There is no automatic integration, approval bundles,
+sandboxing, remote execution, broad model routing, cost tracking, or release
 automation. NF-2 remains open honestly: the authenticated Project-Steward
 acceptance run is still **pending**, so daily-use readiness is not yet claimed. See
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and

@@ -363,8 +363,9 @@ R2-0 establishes the authority boundary and response sequence; DEC-22 corrects i
 categories into separate effect, authority, admission, outcome, and recovery concepts. R2A is the
 first finite demonstration packet. Its DEC-22 pivot, full verification, and real parent-Steward
 acceptance passed on 2026-07-26 as recorded in
-[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). No further R2
-runtime behavior is built. R2B and later packets remain unimplemented.
+[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). R2B is now
+implemented on its isolated branch; automated verification and all four real acceptance tiers pass,
+and NF-20 plus NF-10 are protected-complete. Later packets remain unimplemented.
 
 ### Objective
 
@@ -383,14 +384,25 @@ summary. The supported NF-17 repair restored structural health, the protected fu
 RUN-5 was delivered automatically to the parent on the next turn and acknowledged exactly once.
 This accepts R2A only; it does not complete the broader NF-10 scope.
 
-The remaining R2 plan items (full process list, the `wait` tool, watcher-style commands,
-long-running development servers, persistent services) remain R2B onward and are not built.
+### R2B status (bounded implementation authorized)
 
-### Initial supported uses (R2A only)
+DEC-23 and the owner-accepted
+[docs/plans/R2B_BACKGROUND_OPERATION_VISIBILITY.md](R2B_BACKGROUND_OPERATION_VISIBILITY.md) authorize
+NF-20's smallest post-R2A slice. It corrects capability language from “terminal” to “operation,” adds
+exactly `r2b.repository-checks`, focus-derived ownership, runtime-backed active-state projection,
+bounded widget/Console visibility, and four mandatory acceptance tiers. The bounded implementation
+and automated gate pass. Deterministic UI, real TTY, fresh-Steward, and controlled stale-runtime
+acceptance also pass; NF-20 and NF-10 completed through Voila's canonical protected paths.
 
-- one focused test suite, run via the supervisor;
-- bounded verification commands through the same registry;
-- controlled fixtures used to prove lifecycle, cancellation, timeout, and redaction.
+A process list, `wait` tool, watcher-style commands, long-running development servers, persistent
+services, and cross-process coordination are outside accepted R2B and are not built.
+
+### Accepted bounded uses
+
+- the R2A focused state-store test suite, run via the supervisor;
+- the R2B fixed full repository checks operation through the same supervisor and shared capacity;
+- controlled fixtures used to prove lifecycle, cancellation, timeout, redaction, and stale-runtime
+  truth.
 
 ### Required operations
 

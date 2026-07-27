@@ -1,15 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
 // Loads the pinned Pi package at runtime (proves it resolves/executes).
 import * as pi from "@earendil-works/pi-coding-agent";
 // Loads the thin adapter (which type-imports Pi and imports src/).
 import voilaExtension from "../.pi/extensions/voila.ts";
 import { loadState, updateState } from "../src/state/store.ts";
+
+const execFileAsync = promisify(execFile);
 
 interface CapturedCommand {
   description?: string;
@@ -158,6 +162,80 @@ test("a delivered settlement is injected and acknowledged exactly once", async (
   assert.doesNotMatch(second.message.content, /Settled operation:/);
   const events = await readFile(join(root, ".voila/events.jsonl"), "utf8");
   assert.equal(events.match(/operation_run_acknowledged/g)?.length, 1);
+});
+
+test("operation lifecycle requests bounded widget refreshes without polling", async () => {
+  const root = await mkdtemp(join(tmpdir(), "voila-int-"));
+  await execFileAsync("git", ["init", "-q", root]);
+  await writeFile(
+    join(root, "package.json"),
+    `${JSON.stringify({ scripts: { verify: 'node -e "setTimeout(()=>{},1200)"' } })}\n`,
+  );
+  const h = makeHarness(root);
+  (voilaExtension as unknown as (pi: unknown) => void)(h.host);
+  await h.commands.get("voila")!.handler("init", h.ctx);
+  await updateState(
+    root,
+    (cur) => ({
+      ...cur,
+      phase: "build",
+      health: "green",
+      focusWorkItemId: "NF-20",
+      sequences: { ...cur.sequences, workItem: 21, decision: 24 },
+      workItems: [
+        {
+          id: "NF-20",
+          kind: "outcome",
+          title: "R2B fixture",
+          status: "in_progress",
+          priority: "high",
+          acceptanceCriteria: ["visible"],
+          requiredClaimIds: [],
+          dependsOn: [],
+          createdAt: "2026-07-27T00:00:00.000Z",
+          updatedAt: "2026-07-27T00:00:00.000Z",
+        },
+      ],
+      decisions: [
+        {
+          id: "DEC-23",
+          title: "R2 operational direction",
+          decision: "One supervised background operation, not a terminal emulator.",
+          rationale: "R2B acceptance fixture.",
+          status: "accepted",
+          createdAt: "2026-07-27T00:00:00.000Z",
+          updatedAt: "2026-07-27T00:00:00.000Z",
+        },
+      ],
+    }),
+    { type: "r2b_ui_refresh_fixture" },
+  );
+
+  await h.events.get("session_start")!(undefined, h.ctx);
+  const before = h.widgets.length;
+  const startedAt = Date.now();
+  await h.tools
+    .get("voila_start_operation")!
+    .execute("r2b-start", { operationId: "r2b.repository-checks" }, undefined, undefined, {
+      cwd: root,
+    });
+  const startElapsed = Date.now() - startedAt;
+  assert.ok(startElapsed < 1_200, `start blocked for ${startElapsed}ms`);
+  assert.ok(
+    ["starting", "running"].includes((await loadState(root)).operationRuns[0]!.lifecycleState),
+  );
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.ok(
+    h.widgets.length - before >= 2,
+    "reservation and running boundaries refresh the widget",
+  );
+
+  await new Promise((resolve) => setTimeout(resolve, 2_000));
+  const afterSettlement = h.widgets.length;
+  assert.equal((await loadState(root)).operationRuns[0]!.lifecycleState, "passed");
+  assert.ok(afterSettlement - before <= 3, "one refresh per natural lifecycle boundary");
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.equal(h.widgets.length, afterSettlement, "no timer-driven refresh storm");
 });
 
 test("init command then create-work-item tool run end to end through Pi wiring", async () => {

@@ -10,6 +10,7 @@ export interface ConsoleComponent {
   render(width: number): string[];
   handleInput(data: string): void;
   invalidate(): void;
+  refresh(): void;
   getUiState(): ConsoleUiState;
   getModel(): ConsoleModel;
 }
@@ -125,6 +126,9 @@ export function createConsoleComponent(deps: ConsoleComponentDeps): ConsoleCompo
       deps.requestRender();
     },
     invalidate(): void {},
+    refresh(): void {
+      runAsync(deps.reload);
+    },
     getUiState(): ConsoleUiState {
       return ui;
     },

@@ -46,26 +46,16 @@ export function operationTools(): VoilaTool[] {
       parameters: Type.Object(
         {
           operationId: Type.String({
-            description: "Accepted operation id, e.g. r2a.state-store-tests",
+            description: "Accepted operation id, e.g. r2b.repository-checks",
           }),
-          owner: Type.Optional(Type.String({ description: "Component or steward owning the run" })),
-          workItemId: Type.Optional(Type.String({ description: "Work item this run informs" })),
         },
         { additionalProperties: false },
       ),
       async execute(_id, params, _signal, _onUpdate, ctx) {
-        const { operationId, owner, workItemId } = params as {
-          operationId: string;
-          owner?: string;
-          workItemId?: string;
-        };
+        const { operationId } = params as { operationId: string };
         await ensureR2ARegistry(ctx.cwd);
         const supervisor = operationSupervisor(ctx.cwd);
-        const outcome = await supervisor.start(operationId, {
-          requester: "steward",
-          owner: owner ?? "project-steward",
-          ...(workItemId ? { workItemId } : {}),
-        });
+        const outcome = await supervisor.start(operationId);
         return text(formatStart(outcome), { start: outcome });
       },
     },

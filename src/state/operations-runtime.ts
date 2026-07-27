@@ -98,6 +98,20 @@ interface ActiveMemory {
   settled: Promise<OperationRun>;
   /** Cancellation hook: signals graceful + escalation. */
   cancel: () => Promise<OperationRun>;
+  isSettled: () => boolean;
+}
+
+export type OperationLifecycleRefresh =
+  | "operation_reserved"
+  | "operation_running"
+  | "operation_settled"
+  | "operation_acknowledged"
+  | "operation_reconciliation_required";
+
+export interface OperationRuntimeFacts {
+  ownedReservationRunIds: readonly string[];
+  ownedProcessRunIds: readonly string[];
+  liveProcessRunIds: readonly string[];
 }
 
 interface RedactionSet {
@@ -118,10 +132,34 @@ export function operationSupervisor(root: string): FiniteOperationSupervisor {
 
 export class FiniteOperationSupervisor {
   private readonly active = new Map<string, ActiveMemory>();
+  private readonly reservations = new Set<string>();
+  private readonly listeners = new Set<(event: OperationLifecycleRefresh, runId: string) => void>();
   private readonly root: string;
 
   constructor(root: string) {
     this.root = root;
+  }
+
+  onLifecycle(listener: (event: OperationLifecycleRefresh, runId: string) => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private emit(event: OperationLifecycleRefresh, runId: string): void {
+    for (const listener of this.listeners) listener(event, runId);
+  }
+
+  runtimeFacts(): OperationRuntimeFacts {
+    const ownedProcessRunIds = [...this.active.keys()];
+    return {
+      ownedReservationRunIds: [...this.reservations],
+      ownedProcessRunIds,
+      liveProcessRunIds: ownedProcessRunIds.filter((id) => !this.active.get(id)?.isSettled()),
+    };
+  }
+
+  private ownsActiveRun(runId: string): boolean {
+    return this.reservations.has(runId) || this.active.has(runId);
   }
 
   async inspect(runId: string): Promise<OperationRun | undefined> {
@@ -227,6 +265,7 @@ export class FiniteOperationSupervisor {
       },
       { type: "operation_run_acknowledged", runId },
     );
+    this.emit("operation_acknowledged", runId);
   }
 
   /** True when the run is still active (queued/starting/running) or settled-but-unacknowledged. */
@@ -236,7 +275,7 @@ export class FiniteOperationSupervisor {
 
   async start(
     definitionId: string,
-    ownership: { requester: string; owner: string; workItemId?: string },
+    _legacyIgnoredOwnership?: { requester: string; owner: string; workItemId?: string },
   ): Promise<StartOutcome> {
     if (!POSIX_PLATFORMS.has(process.platform)) {
       return {
@@ -272,7 +311,16 @@ export class FiniteOperationSupervisor {
             canonicalWorktreeIdentity: worktreeIdentity,
             requestWorktreeIdentity: worktreeIdentity,
             activeWorkItemId: cur.focusWorkItemId,
+            activeWorkItemValid:
+              cur.focusWorkItemId !== null &&
+              cur.workItems.some(
+                (item) =>
+                  item.id === cur.focusWorkItemId &&
+                  item.status !== "completed" &&
+                  item.status !== "cancelled",
+              ),
             activeRun: activeRun(cur),
+            activeRunRuntimeOwned: activeRun(cur) ? this.ownsActiveRun(activeRun(cur)!.id) : false,
             retry: { intent: "initial", remainingAutomaticRetries: 0 },
             structuralHealth: operationStructuralHealth(cur),
             authorityReferences: acceptedOperationAuthorityReferences(cur),
@@ -287,7 +335,13 @@ export class FiniteOperationSupervisor {
           cur,
           {
             definition: evaluation.authorizedStart.definition,
-            ownership: { ...ownership },
+            ownership: {
+              requester: "project-steward",
+              owner: "current-runtime",
+              ...(evaluation.authorizedStart.resolvedWorkItemId
+                ? { workItemId: evaluation.authorizedStart.resolvedWorkItemId }
+                : {}),
+            },
             projectId: evaluation.authorizedStart.projectId,
             repositoryRoot: evaluation.authorizedStart.repositoryRoot,
             worktreeIdentity: evaluation.authorizedStart.worktreeIdentity,
@@ -356,6 +410,8 @@ export class FiniteOperationSupervisor {
     if (!initial) {
       throw new OperationRejectedError(`Reserved operation run not found: ${reservedRunId}.`);
     }
+    this.reservations.add(reservedRunId);
+    this.emit("operation_reserved", reservedRunId);
     return await this.spawnAuthorized(initial, evaluation.authorizedStart);
   }
 
@@ -365,6 +421,8 @@ export class FiniteOperationSupervisor {
   ): Promise<StartOk> {
     const mem = await this.executeAndObserve(initial.id, initial, authorized.definition);
     this.active.set(initial.id, mem);
+    this.reservations.delete(initial.id);
+    this.emit("operation_running", initial.id);
     return {
       kind: "ok",
       run: mem.run,
@@ -523,6 +581,7 @@ export class FiniteOperationSupervisor {
         // Mark the in-memory buffer as acknowledged so future reads return null until the parent
         // explicitly acknowledges through acknowledge().
         const final = (await loadState(this.root)).operationRuns.find((r) => r.id === runId)!;
+        this.emit("operation_settled", runId);
         resolve(final);
       };
 
@@ -573,6 +632,7 @@ export class FiniteOperationSupervisor {
       redactedSecrets,
       settled,
       cancel: cancelFn,
+      isSettled: () => state.settled,
     };
   }
 

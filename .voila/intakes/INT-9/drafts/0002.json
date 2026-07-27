@@ -1,0 +1,477 @@
+{
+  "intakeId": "INT-9",
+  "draftRevision": 2,
+  "objective": "Implement and accept the bounded R2B background-operation visibility loop on top of R2A, with focus-derived ownership, runtime-backed presentation truth, real Pi UI/Steward acceptance, and protected completion of NF-10 only after all evidence and risk gates pass.",
+  "findings": [
+    {
+      "id": "F1",
+      "category": "objective",
+      "statement": "Complete the smallest remaining R2 loop: one accepted finite operation is visibly active in Pi and the Steward Console, parent work continues, and exactly one settlement arrives without developer monitoring.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 1. Mission",
+          "excerpt": "One accepted finite project operation remains active long enough to be visible, the ordinary Pi surface reports that an operation is active, the Steward Console provides bounded authoritative detail, the parent Project Steward continues useful work, and exactly one settlement arrives without developer monitoring."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F2",
+      "category": "locked_decision",
+      "statement": "DEC-23 is owner-accepted: R2 v1 is one supervised background operation, not a terminal emulator; it reuses R2A and introduces no PTY, interactive stdin, service, watcher, arbitrary command surface, worker, queue, scheduler, polling loop, or cross-process coordination.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 2. Product decision",
+          "excerpt": "This prompt constitutes explicit owner acceptance of the corrected DEC-23 direction and authorizes the bounded R2B implementation described here."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F3",
+      "category": "requirement",
+      "statement": "R2B is accepted only through the real ordinary-Pi and Steward-Console experience, useful parent continuation, and automatic result delivery; definitions, fixtures, formatter tests, duration, or a green full suite alone are insufficient.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 3. Decisive product outcome",
+          "excerpt": "R2B is not accepted merely because: a second operation definition exists; a widget formatter passes unit tests; the Console displays fixture data; a process can run for thirty seconds; the full test suite passes."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F4",
+      "category": "constraint",
+      "statement": "Preflight must inspect the named doctrine, plan, verification, skill, runtime, UI, event, canonical proof, process, checkout, schema, and Pi-runtime surfaces; implementation must not proceed from stale Pi code or another checkout.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 4. Current truth and source inspection",
+          "excerpt": "Do not proceed from a stale Pi build or a Pi process using another checkout."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F5",
+      "category": "constraint",
+      "statement": "R2B implementation must be isolated on feat/r2b-operation-visibility from merged main (or the exact accepted R2A tip if unmerged), with no push, PR, or merge.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 5. Branch isolation",
+          "excerpt": "git switch -c feat/r2b-operation-visibility"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F6",
+      "category": "requirement",
+      "statement": "After DEC-23, NF-10 is renamed to “R2: one supervised background operation” and its UI criterion becomes the exact authoritative active-operation/Console ownership wording in the source; other criteria remain unchanged absent a documented contradiction.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 6. Canonical NF-10 correction",
+          "excerpt": "The ordinary Pi surface shows an authoritative active-operation indicator while an owned operation runs, and the Steward Console shows the operation, its elapsed time, and the work item recorded as its owner"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F7",
+      "category": "requirement",
+      "statement": "RSK-6 is accepted only as the bounded one-supervisor/same-process R2 v1 limitation; RSK-7 stays open until shared-finalizer and real-R2B settlement evidence passes; RSK-8 stays open until bounded output/presentation/admission isolation is proven.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 7. Risk disposition",
+          "excerpt": "Do not mark RSK-7 mitigated merely because R2A passed."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F8",
+      "category": "requirement",
+      "statement": "Register exactly r2b.repository-checks v1 (“Repository checks”) as the second and only additional definition: mise exec -- npm run verify, repository root, local_read plus bounded_temporary_write, DEC-23 authority, zero retry, 300-second total timeout, shared one-run capacity, existing bounded/redacted output, and focused_work_item_required ownership.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 8. Accepted R2B operation",
+          "excerpt": "id:                    r2b.repository-checks"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F9",
+      "category": "requirement",
+      "statement": "The definition fingerprint binds every authoritative operation field including ownership policy; changes to authoritative fields change the fingerprint, while display-only wording follows existing fingerprint doctrine.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "## Definition fingerprint",
+          "excerpt": "Changing any authoritative field must change the fingerprint."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F10",
+      "category": "requirement",
+      "statement": "The model supplies only operationId; focus-derived work-item ownership and runtime ownership are resolved internally and captured immutably during atomic reservation. Missing valid focus denies before run/process creation through an honest existing denial when possible.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 9. Model input boundary",
+          "excerpt": "The model supplies only: operationId"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F11",
+      "category": "constraint",
+      "statement": "A passing repository-checks operation is operational data only and never automatically becomes a receipt, claim support, completion evidence, current-proof guarantee, or permission to complete work.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 10. Proof boundary",
+          "excerpt": "voila_run_verification remains the only protected path that creates verification receipts."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F12",
+      "category": "requirement",
+      "statement": "Active presentation requires canonical active lifecycle plus current-runtime reservation/process ownership and liveness. Canonical starting/running without runtime ownership is requires_reconciliation, is not active, blocks another start, and is neither adopted, cleared, reused, nor silently settled.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 11. Authoritative runtime truth",
+          "excerpt": "presentation state = requires_reconciliation"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F13",
+      "category": "requirement",
+      "statement": "Create one pure project-operation presentation projection with closed states none, active_starting, active_running, settled_pending_delivery, and requires_reconciliation; inject currentTime and expose only curated fields to all surfaces.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 12. One presentation projection",
+          "excerpt": "Every user-facing and model-facing summary must consume this projection."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F14",
+      "category": "requirement",
+      "statement": "Presentation refresh must use verified natural Pi/tool/lifecycle event boundaries with no polling, watcher, or continuous elapsed timer; immediate versus next-boundary clearing must be documented honestly.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 13. Presentation refresh contract",
+          "excerpt": "R2B must not introduce polling, a watcher, or a continuous timer solely to update UI."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F15",
+      "category": "requirement",
+      "statement": "The ambient widget shows a bounded “operation active” indicator with narrow fallback and no seconds/output/runtime internals; reconciliation shows a truthful warning instead of active.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 14. Ambient widget",
+          "excerpt": "Voila · operation active · Repository checks"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F16",
+      "category": "requirement",
+      "statement": "The existing Steward Console Focus view, not a new tab, shows bounded active/reconciliation detail including label, lifecycle, elapsed snapshot, and owning work item without raw output or repair controls.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 15. Steward Console Focus view",
+          "excerpt": "Do not create a new top-level operations tab in R2B."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F17",
+      "category": "requirement",
+      "statement": "Reuse R2A next-turn settlement and exact-run acknowledgement; active and settlement capsule content is bounded and excludes output/seconds while active, with no active-stream injection, duplicate acknowledgement, or automatic retry.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 16. Focus capsule and settlement presentation",
+          "excerpt": "Reuse R2A’s next-turn settlement mechanism."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F18",
+      "category": "constraint",
+      "statement": "Retain exactly the four R2A model tools and do not add list, wait, poll, follow, tail, arbitrary query, pagination, or filters unless real acceptance reaches the specified discoverability stop condition.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 17. Tool surface",
+          "excerpt": "Do not add: voila_list_operations"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F19",
+      "category": "requirement",
+      "statement": "Both definitions share the existing pure admission kernel, one atomic capacity, one supervisor/finalizer/output/acknowledgement path, focus-derived ownership, exact denial behavior, one settlement/release/delivery/acknowledgement, and zero retries.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 18. Admission and capacity invariants",
+          "excerpt": "R2B extends the existing R2A registry and admission kernel. It does not create another policy evaluator."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F20",
+      "category": "requirement",
+      "statement": "Output stays on the existing bounded/redacted deliberate-read path, remains untrusted data, never enters active summaries, and cannot alter admission, authority, ownership, capacity, retry, run creation, or canonical state; no sandbox is claimed.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 20. Output and prompt-injection boundary",
+          "excerpt": "it remains data."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F21",
+      "category": "acceptance_criterion",
+      "statement": "Automated acceptance traces registry/admission, runtime truth/projection, widget, Console, settlement/proof, shared-finalizer, R2A regression, full-gate, and Pi refresh behavior without optimizing for an arbitrary test count.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 21. Automated acceptance",
+          "excerpt": "Create a traceability table mapping acceptance requirements to focused tests."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F22",
+      "category": "acceptance_criterion",
+      "statement": "Acceptance requires all four tiers: deterministic surface tests, genuine TTY/pseudo-terminal presentation, fresh Project Steward behavior with the real repository-checks operation, and controlled stale-runtime truth without damaging real canonical state.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 22. Real acceptance tiers",
+          "excerpt": "Automated tests are not sufficient for R2B. Complete all four tiers."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F23",
+      "category": "acceptance_criterion",
+      "statement": "The No Managing the Manager gate passes only when ordinary visibility, bounded Console inspection, useful parent work, automatic settlement, and retained thread require no developer monitoring, owner metadata, refresh, polling/list/wait, PID/schema handling, or repeated approval.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 23. No Managing the Manager gate",
+          "excerpt": "R2B passes when: the ordinary surface reports active work; the Console provides bounded inspection; the Steward remains useful; settlement arrives through the established parent-turn path."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F24",
+      "category": "constraint",
+      "statement": "Current-facing docs and the Project Steward skill are updated only after behavior passes, and must distinguish the exact implemented bounded operation features from the explicit not-implemented PTY/service/watcher/list/wait/cross-process/worker/later-R features.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 24. Documentation",
+          "excerpt": "Update current-facing truth only after behavior exists."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F25",
+      "category": "constraint",
+      "statement": "Implementation follows the 28-step order, ends before push/PR/merge/R3/broader runtime, and stops with the specified evidence report if any explicit architectural or Pi refresh stop condition is reached.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 26. Implementation order",
+          "excerpt": "Stop before push, PR, merge, R3, or any broader runtime."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F26",
+      "category": "acceptance_criterion",
+      "statement": "NF-10 completes only through the protected transition after corrected terminology, runtime-backed active truth, real UI/parent settlement observations, exact coverage/current receipts, risk gates, and No Managing the Manager all pass.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 28. Completion boundary",
+          "excerpt": "Do not complete NF-10 because the implementation “basically satisfies” older terminal wording."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F27",
+      "category": "non_goal",
+      "statement": "No PTY, terminal emulation, stdin, services, readiness probes, watchers, queues, multiple active operations, arbitrary commands/discovery, list/wait tools, cross-process coordination/adoption/repair, sandbox, workers/subagents/R3, receipt fan-out, approval bundles, remote execution, push, PR, or merge.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "## Not implemented",
+          "excerpt": "PTY terminal emulation interactive stdin service lifecycle readiness probes watchers queues multiple active operations arbitrary commands"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F28",
+      "category": "evidence",
+      "statement": "The final report must preserve the requested 81-field trace plus explicit PASS/FAIL/NO verdict block and must not report R2B/NF-10 complete without runtime-backed active UI and exactly-one unmonitored settlement.",
+      "origin": "source",
+      "sourceRefs": [
+        {
+          "intakeId": "INT-9",
+          "marker": "# 31. Final report",
+          "excerpt": "Do not report R2B or NF-10 complete unless the active indicator is backed by current runtime ownership, the real Pi surface has been observed, and the parent Project Steward receives exactly one settlement without developer monitoring."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "F29",
+      "category": "constraint",
+      "statement": "The accepted source supersedes the repository's earlier proposed R2B draft where they differ, including operation ID repository-checks (not repository-verify), model input operationId only, no list tool, no widget seconds, runtime-backed stale-state reconciliation, and four acceptance tiers.",
+      "origin": "model_inference",
+      "sourceRefs": [],
+      "relatedFindingIds": [
+        "F8",
+        "F10",
+        "F12",
+        "F14",
+        "F15",
+        "F18",
+        "F22"
+      ],
+      "confidence": "high",
+      "note": "Direct comparison with docs/plans/R2B_BACKGROUND_OPERATION_PACKET.md drafted before this accepted correction."
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "C1",
+      "findingIds": [
+        "F8",
+        "F18",
+        "F29"
+      ],
+      "explanation": "The current unaccepted repository draft proposes r2b.repository-verify and voila_list_operations, while the owner-accepted source requires r2b.repository-checks and explicitly forbids the list tool. The accepted source controls; the draft must be replaced or superseded before implementation.",
+      "severity": "warning",
+      "requiresUserResolution": false
+    },
+    {
+      "id": "C2",
+      "findingIds": [
+        "F10",
+        "F29"
+      ],
+      "explanation": "The accepted source removes model-supplied workItemId and owner metadata that R2A tools currently permit. R2B must derive ownership internally for repository-checks without weakening the existing accepted R2A path; implementation must inspect whether the shared tool schema can remain backward compatible while preventing those inputs for R2B.",
+      "severity": "warning",
+      "requiresUserResolution": false
+    }
+  ],
+  "proposedWorkItems": [],
+  "createdAt": "2026-07-27T01:05:41.456Z",
+  "possibleDuplicates": [
+    {
+      "kind": "work_item",
+      "draftRef": "F1",
+      "existingId": "NF-20",
+      "reason": "NF-20 already represents the bounded R2B planning/implementation item; do not create a duplicate."
+    },
+    {
+      "kind": "work_item",
+      "draftRef": "F26",
+      "existingId": "NF-10",
+      "reason": "NF-10 is the existing R2 completion item whose exact title/criterion and proof must be reconciled."
+    },
+    {
+      "kind": "risk",
+      "draftRef": "F7",
+      "existingId": "RSK-6",
+      "reason": "The source gives the accepted bounded disposition for the existing cross-process risk."
+    },
+    {
+      "kind": "risk",
+      "draftRef": "F7",
+      "existingId": "RSK-7",
+      "reason": "The source gives evidence conditions for mitigating the existing settlement-race risk."
+    },
+    {
+      "kind": "risk",
+      "draftRef": "F7",
+      "existingId": "RSK-8",
+      "reason": "The source gives evidence conditions for mitigating the existing prompt-injection risk."
+    }
+  ],
+  "proposedNextAction": "Apply the reviewed source, correct NF-10 and RSK-6 through supported operations, replace the superseded R2B draft, isolate feat/r2b-operation-visibility from merged main, and complete the required repository/Pi/schema preflight before implementation.",
+  "proposedNextActionRationale": "The user explicitly accepted DEC-23 and authorized implementation. The corrected draft now creates DEC-23 only; all remaining locked behavior is represented as requirements or constraints. Preflight and branch isolation are the next safety gates before runtime changes.",
+  "reviewNotes": "Revision 2 addresses the user's correction exactly: DEC-23 is the sole locked decision. NF-10 wording, risk disposition, operation definition, and tool-surface rules are requirements/constraints rather than extra decisions."
+}

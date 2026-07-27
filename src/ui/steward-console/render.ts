@@ -359,6 +359,42 @@ function proofView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
   return out;
 }
 
+function operationLines(model: ConsoleModel, width: number, st: Styler): string[] {
+  const operation = model.operation;
+  if (!operation || operation.state === "none") return [];
+  const out = [
+    heading(
+      operation.state === "requires_reconciliation" ? "Operation state" : "Active operation",
+      width,
+      st,
+    ),
+  ];
+  const label = operation.displayLabel ?? operation.definitionId ?? "Operation";
+  if (operation.state === "requires_reconciliation") {
+    out.push(st.fg("warning", truncate(`${label} · reconciliation required`, width)));
+    out.push(
+      st.fg(
+        "muted",
+        truncate("Canonical state is active, but this runtime does not own a live process.", width),
+      ),
+    );
+  } else if (operation.state === "settled_pending_delivery") {
+    out.push(
+      st.fg(
+        "muted",
+        truncate(`${label} · ${operation.settlementReason ?? "settled"} · pending delivery`, width),
+      ),
+    );
+  } else {
+    const elapsed =
+      operation.elapsedMs === undefined ? "" : ` · ${Math.floor(operation.elapsedMs / 1000)}s`;
+    out.push(truncate(`${label} · ${operation.lifecycleState ?? "active"}${elapsed}`, width));
+    if (operation.workItemId)
+      out.push(st.fg("muted", truncate(`Owned by ${operation.workItemId}`, width)));
+  }
+  return out;
+}
+
 function focusView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: Styler): string[] {
   const selected = selectableRefs(model, "focus")[ui.selection];
   const wide = layoutClass(width) === "wide";
@@ -393,6 +429,8 @@ function focusView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
 
   const proofLines = proofReadinessLines(model, width, st);
   if (proofLines.length > 0) proofLines.push("");
+  const activeOperationLines = operationLines(model, width, st);
+  if (activeOperationLines.length > 0) activeOperationLines.push("");
 
   const truth: string[] = [heading("Project truth", width, st)];
   const topDecisions = model.truth.decisions.filter((d) => d.status === "accepted").slice(0, 2);
@@ -401,7 +439,7 @@ function focusView(model: ConsoleModel, ui: ConsoleUiState, width: number, st: S
   for (const r of topRisks) truth.push(st.fg("muted", truncate(`${r.id}  ${r.statement}`, width)));
   if (topDecisions.length + topRisks.length === 0) truth.push(st.fg("muted", "  (none)"));
 
-  return [...body, "", ...intakeLines, ...proofLines, ...truth];
+  return [...body, "", ...activeOperationLines, ...intakeLines, ...proofLines, ...truth];
 }
 
 /** Understanding Check: the generated review artifact, scrollable, with review actions. */

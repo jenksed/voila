@@ -112,10 +112,10 @@ gate is still a gate.
 
 ## Honest capability status
 
-As of 2026-07-26, most of the operational loop this document describes is **doctrine, not
-implementation**. R1 is implemented and its acceptance behavior was observed. R2A's DEC-22 pivot is
-implemented in the working tree and bounded to one explicit finite operation, but it is not yet
-accepted: canonical counter repair, current receipt evidence, and fresh-session acceptance remain.
+As of 2026-07-27, most of the operational loop this document describes is **doctrine, not
+implementation**. R1 and bounded R2A are implemented, accepted, and protected-complete. R2B's
+second fixed operation and runtime-backed visibility are implemented under DEC-23; automated
+verification and all four real acceptance tiers pass; NF-20 and NF-10 are protected-complete.
 
 | Capability                              | Status                                                       |
 | --------------------------------------- | ------------------------------------------------------------ |
@@ -130,8 +130,9 @@ accepted: canonical counter repair, current receipt evidence, and fresh-session 
 | Quiet development staleness             | Built (R1) — Doctor separates structure from readiness drift  |
 | Honest held readiness                   | Built (R1) — presentation only; no new gate                  |
 | Verification grouping                   | Seam only (R1) — identity and grouping; execution is R6       |
-| One finite supervised operation         | Built and accepted (bounded R2A only)                        |
-| Background terminals                    | Not built (R2B onward)                                       |
+| One finite supervised operation         | Built and accepted (bounded R2A)                             |
+| Repository-check operation + visibility | Built, accepted, and protected-complete (bounded R2B)      |
+| General background terminals            | Not built                                                     |
 | Pi child workers                        | Not built (R3)                                               |
 | Automatic settlement and integration    | Not built (R4)                                               |
 | Fresh-session continuity                | Not built (R5)                                               |
@@ -146,24 +147,26 @@ fixed, and the five NF-9 required claims are supported by current receipts. Hone
 visible on each claim.
 
 R2A's evidence and capability boundary are recorded in
-[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). Its working-tree
-implementation contains a single explicit finite operation (`r2a.state-store-tests`), deterministic
-admission, a finite-operation supervisor, the canonical operation-run lifecycle, four model-callable
-operation tools, structured-file protection for canonical state, and a bounded focus-capsule
-summary. It does **not** introduce services, watchers, PTYs, child workers, multiple concurrent
-operations, operation discovery, cross-process coordination, or persistent execution across Pi or
-OS restart.
+[docs/verification/R2A_FINITE_OPERATION.md](../verification/R2A_FINITE_OPERATION.md). It accepted
+`r2a.state-store-tests`, deterministic admission, the finite-operation supervisor, canonical
+operation-run lifecycle, four model-callable operation tools, structured-file protection for
+canonical state, bounded capsule settlement, and exactly-once next-turn delivery.
 
-The capability claim remains conditional until acceptance: **once the pending gates pass, the
-Steward can supervise one local, non-interactive finite operation and receive one canonical
-settlement without developer monitoring**. R2A does not make arbitrary commands runnable;
-operations are explicit and registered.
+R2B reuses that same supervisor and shared one-run capacity for exactly
+`r2b.repository-checks`. Model input is only the operation ID; a valid focused work item is captured
+immutably during atomic reservation. One shared projection calls a starting or running operation
+active only when the current runtime owns the reservation or live process. The widget, Console, and
+capsule consume bounded variants of that projection; stale canonical active state requires
+reconciliation and blocks a second start without clear or adoption. Current evidence and the four
+passing acceptance tiers are recorded in
+[docs/verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md](../verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md).
 
-No document, skill, README, or canonical record may describe R2B–R7 capabilities as present. The
-Steward skill currently instructs the model **not** to spawn subagents, because R3 child-worker
-delegation does not exist yet. That instruction is a statement of current fact and gets revised
-when R3 lands — not before. R2A does not change that instruction; the operation supervisor is
-child-process supervision, not subagent delegation.
+Neither R2 slice introduces services, watchers, PTYs, child workers, concurrent operations,
+operation discovery, list/wait/poll tools, cross-process coordination, or persistent execution
+across Pi or OS restart. R2 does not make arbitrary commands runnable; operations are explicit and
+registered. The Steward skill still instructs the model **not** to spawn subagents because R3
+child-worker delegation does not exist. The operation supervisor is child-process supervision, not
+subagent delegation.
 
 ## What to build next
 
@@ -171,7 +174,7 @@ Build the operational AI-teammate loop, in the R-sequence order:
 
 ```text
 R1  Friction containment and ambient continuity
-R2  One background terminal
+R2  One supervised background operation
 R3  One bounded Pi child worker
 R4  Operational integration and automatic settlement
 R5  Fresh-session continuity

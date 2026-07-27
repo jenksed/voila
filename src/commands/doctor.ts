@@ -32,6 +32,8 @@ import { migrationPlan } from "../domain/migrate.ts";
 import { ID_PREFIXES } from "../domain/ids.ts";
 import { SCHEMA_VERSION } from "../domain/types.ts";
 import type { ProjectState, Sequences } from "../domain/types.ts";
+import { projectOperationPresentation } from "../domain/operation-presentation.ts";
+import { operationSupervisor } from "../state/operations-runtime.ts";
 
 /**
  * Check severities.
@@ -335,6 +337,24 @@ export async function runDoctor(input: DoctorInput): Promise<DoctorCheck[]> {
   }
 
   checks.push(...stateIntegrityChecks(state));
+  const operation = projectOperationPresentation({
+    canonicalState: state,
+    runtimeOwnership: operationSupervisor(input.root).runtimeFacts(),
+    currentTime: Date.now(),
+  });
+  checks.push(
+    operation.state === "requires_reconciliation"
+      ? {
+          name: "operation runtime ownership",
+          level: "warn",
+          detail: `${operation.runId ?? "active run"} requires reconciliation; canonical state is active but this runtime does not own a live process`,
+        }
+      : {
+          name: "operation runtime ownership",
+          level: "pass",
+          detail: operation.state === "none" ? "no active operation" : operation.state,
+        },
+  );
   checks.push(...(await intakeChecks(input.root, state)));
   checks.push(...(await orientationChecks(input.root, state)));
   checks.push(...(await proofChecks(input.root, state)));

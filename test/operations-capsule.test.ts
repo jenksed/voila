@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { initState, updateState } from "../src/state/store.ts";
 import { ensureR2ARegistry } from "../src/state/operations-registry.ts";
 import { assembleContext } from "../src/context/assemble.ts";
-import { FiniteOperationSupervisor } from "../src/state/operations-runtime.ts";
+import { operationSupervisor } from "../src/state/operations-runtime.ts";
 
 async function initedRoot(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "voila-capsule-"));
@@ -51,7 +51,7 @@ test("capsule includes one bounded active operation line while a run is in fligh
   const root = await initedRoot();
   await ensureR2ARegistry(root);
   await grantR2AAuthority(root);
-  const supervisor = new FiniteOperationSupervisor(root);
+  const supervisor = operationSupervisor(root);
   // Use a long-running definition so the run is still active when we read the capsule.
   // The accepted operation's executable is `mise`, so we keep the `exec --` separator to ensure
   // mise forwards the rest of the argv to node rather than parsing it as its own options.
@@ -111,7 +111,7 @@ test(
     const root = await initedRoot();
     await ensureR2ARegistry(root);
     await grantR2AAuthority(root);
-    const supervisor = new FiniteOperationSupervisor(root);
+    const supervisor = operationSupervisor(root);
     const outcome = await supervisor.start("r2a.state-store-tests", {
       requester: "capsule-test",
       owner: "project-steward",

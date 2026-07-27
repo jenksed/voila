@@ -8,7 +8,8 @@ import { tryRepositoryFingerprint } from "../state/fingerprint.ts";
 import { proofSummary } from "../domain/proof.ts";
 import { buildFocusCapsule, type CapsuleInput } from "./inject.ts";
 import { observeRepository } from "./observe.ts";
-import { activeRun, latestSettlement, summarizeRun } from "../domain/operations-runtime.ts";
+import { projectOperationPresentation } from "../domain/operation-presentation.ts";
+import { operationSupervisor } from "../state/operations-runtime.ts";
 
 export interface AssembleOptions {
   /** True when the developer's prompt was an explicit request to continue the accepted work. */
@@ -32,8 +33,13 @@ export async function assembleContextEnvelope(
     const state = await loadState(root);
     const pending = state.intakes.find((i) => i.status === "review_required");
     const orientation = await currentOrientationStatus(root, state);
-    const operation = summarizeOperation(state);
-    deliveredSettlementRunId = operation.deliveredSettlementRunId;
+    const operation = projectOperationPresentation({
+      canonicalState: state,
+      runtimeOwnership: operationSupervisor(root).runtimeFacts(),
+      currentTime: Date.now(),
+    });
+    deliveredSettlementRunId =
+      operation.state === "settled_pending_delivery" ? operation.runId : undefined;
     input = {
       status: "ok",
       continuation: options.continuation === true,
@@ -54,7 +60,7 @@ export async function assembleContextEnvelope(
           ? proofSummary(state, await tryRepositoryFingerprint(root))
           : proofSummary(state, null),
       repository: await observeRepository(root),
-      operation: operation.summary,
+      operation,
     };
   } catch (error) {
     if (error instanceof StateNotFoundError) input = { status: "uninitialized" };
@@ -73,19 +79,4 @@ export async function assembleContext(
   options: AssembleOptions = {},
 ): Promise<string> {
   return (await assembleContextEnvelope(root, options)).content;
-}
-
-/** Build the bounded operation summary that the capsule may emit. */
-function summarizeOperation(state: import("../domain/types.ts").ProjectState): {
-  summary: ReturnType<typeof summarizeRun> | null;
-  deliveredSettlementRunId?: string;
-} {
-  const active = activeRun(state);
-  if (active) return { summary: summarizeRun(active, Date.now()) };
-  const settled = latestSettlement(state);
-  if (!settled || settled.deliveryState === "acknowledged") return { summary: null };
-  return {
-    summary: summarizeRun(settled, Date.now()),
-    deliveredSettlementRunId: settled.id,
-  };
 }
