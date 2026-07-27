@@ -47,6 +47,7 @@ import { intakeTools } from "./intake-tools.ts";
 import { proofTools } from "./proof-tools.ts";
 import { deliveryTools } from "./delivery-tools.ts";
 import { operationTools } from "./operation-tools.ts";
+import { publicationTools } from "./publication-tools.ts";
 
 export interface VoilaToolResult {
   content: Array<{ type: "text"; text: string }>;
@@ -451,5 +452,6 @@ export function voilaTools(): VoilaTool[] {
     ...proofTools(),
     ...deliveryTools(),
     ...operationTools(),
+    ...publicationTools(),
   ];
 }

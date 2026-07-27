@@ -18,6 +18,9 @@ export interface StatePaths {
   orientationsDir: string;
   briefsDir: string;
   projectBrief: string;
+  publicationsDir: string;
+  publicationPlansDir: string;
+  publicationTransactionsDir: string;
 }
 
 /** Artifact directory for one intake, e.g. `.voila/intakes/INT-1/`. */
@@ -90,5 +93,24 @@ export function statePaths(root: string): StatePaths {
     orientationsDir: join(dir, "orientations"),
     briefsDir: join(dir, "briefs"),
     projectBrief: join(dir, "briefs", "PROJECT_BRIEF.md"),
+    publicationsDir: join(dir, "publications"),
+    publicationPlansDir: join(dir, "publications", "plans"),
+    publicationTransactionsDir: join(dir, "publications", "transactions"),
+  };
+}
+
+/** Artifact path for one immutable publication plan. */
+export function publicationPlanPath(root: string, planId: string): string {
+  return join(root, VOILA_DIR, "publications", "plans", `${planId}.json`);
+}
+
+/** Artifact directory for one publication transaction run. */
+export function publicationTransactionPaths(root: string, transactionId: string) {
+  const dir = join(root, VOILA_DIR, "publications", "transactions", transactionId);
+  return {
+    dir,
+    manifest: join(dir, "manifest.json"),
+    stdout: join(dir, "stdout.txt"),
+    stderr: join(dir, "stderr.txt"),
   };
 }

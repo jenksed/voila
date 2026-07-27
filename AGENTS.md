@@ -16,28 +16,39 @@ The authoritative operational product statement is
 [docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) is the preserved v0.1 authored
 source; where the two disagree, the doctrine wins.
 
-**Current position.** Phase 0 and Packets 1–4 plus Phase 6 are complete: a runnable Pi extension
-(`.pi/extensions/voila.ts` + modular `src/`), canonical `.voila/` state with explicit schema
+**Current position.** Phase 0 and Packets 1–4 plus Phase 6 are complete: a modular Pi extension
+(`pi-package/extensions/voila.ts` + `src/`), canonical `.voila/` state with explicit schema
 migration, a project-operations layer, a Steward Console, planning intake with preserved provenance,
 repository orientation, the proof engine (claims, receipts, freshness, protected completion), and a
 delivery engine. Phase 7's self-hosting gate returned GO on capability, HOLD on backlog closure.
 
-**Current phase: R0, R1, and bounded R2 are accepted and protected-complete under DEC-23.** As of
-2026-07-26, [ADR-0009](docs/decisions/0009-project-steward-operational-realignment.md) superseded
-Phases 5–8 of the old plan. The active roadmap is
-[docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md): R1 friction
-containment, R2 one supervised background operation, R3 one bounded Pi child worker, R4 automatic settlement,
-R5 fresh-session continuity, R6 quiet boundary reconciliation, R7 uncoached dogfood acceptance. The
-milestone is **Project Steward Operational Loop v1**.
+**Current phase: R0, R1, bounded R2, and L0.1 are protected-complete; bounded G0 / NF-23
+implementation is active under DEC-24 through DEC-29 and DEC-34.** [ADR-0010](docs/decisions/0010-local-distribution-and-safe-publication-sequence.md)
+and [Voila Operational Roadmap v2](docs/plans/VOILA_OPERATIONAL_ROADMAP_V2.md) insert L0 local
+availability, G0 guarded local commits, and G1 guarded GitHub publication before the refined R3–R7
+program. They supersede only DEC-13's package sequencing and DEC-18 / ADR-0009's affected sequencing
+and pre-R7 publication restrictions; the Project Steward doctrine, completed R1/R2 history, and
+Operational Loop v1 milestone stand.
 
-Build only what the accepted R-packet calls for. Do **not** begin approval bundles, broad model
-routing, arbitrary workflow scripting, remote execution, or release automation before R7 passes.
-General background terminals and delegation do not exist yet. R2A accepted one explicit finite
-operation on 2026-07-26, with evidence in
-[docs/verification/R2A_FINITE_OPERATION.md](docs/verification/R2A_FINITE_OPERATION.md). The R2B
-working tree implements one additional fixed repository-check operation under DEC-23, shared
-one-operation capacity, and bounded runtime-backed presentation; automated verification and all four
-real acceptance tiers pass, and NF-20 plus NF-10 completed through the protected gate on 2026-07-27.
+NF-22 / L0.1 is governed by the owner-accepted DEC-33 packet,
+[docs/plans/L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md](docs/plans/L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md). Its
+repository, isolated-package, real global-install, and dogfood tiers pass; the separately authorized
+external effect was executed on 2026-07-27, and NF-22 completed through the protected transition.
+The bounded G0 implementation packet is
+[docs/plans/G0_GUARDED_LOCAL_COMMIT.md](docs/plans/G0_GUARDED_LOCAL_COMMIT.md). DEC-34 removes the
+per-commit owner prompt: protected completion and a current guarded plan are the proposed authority.
+Implementation and disposable-repository Git acceptance effects may proceed; DEC-30 and every
+Voila-development-repository Git effect remain unavailable until final G0 acceptance. G1, L0.2,
+general background terminals, and delegation do not exist. DEC-30 through DEC-32 are proposed future
+authority, not
+permission for the current Steward to stage, commit, push, mutate pull requests, merge, or create or
+push tags. Do **not** begin approval, merge, broad model routing, arbitrary workflow scripting,
+remote execution, general release/tag automation, or package-registry publication. R2A accepted one
+explicit finite operation on 2026-07-26, with evidence in
+[docs/verification/R2A_FINITE_OPERATION.md](docs/verification/R2A_FINITE_OPERATION.md). Merged R2B
+implements one additional fixed repository-check operation under DEC-23, shared one-operation
+capacity, and bounded runtime-backed presentation; automated verification and all four real
+acceptance tiers pass, and NF-20 plus NF-10 completed through the protected gate on 2026-07-27.
 Neither slice may be described as a
 service, watcher, PTY, worker, arbitrary command facility, or cross-process runtime. The accepted R2B
 boundary is
@@ -107,8 +118,10 @@ These five principles govern how work is done, both on Voila and by Voila once i
 - **Do not install global software** as a side effect of ordinary work. Prefer project-scoped
   tooling. (Installing the Pi CLI is a deliberate, plan-gated step, not incidental setup.)
 - Do not access production services. Do not request, create, expose, or move secrets.
-- Do not create remote repositories, push, or publish packages without explicit approval.
-- Local Git initialization and local commits are fine. Pushing is a separate, approval-gated action.
+- Do not create remote repositories, push, create or mutate pull requests, create or push tags, or
+  publish packages without the exact accepted authority for that effect.
+- Humans may create local commits. The current Steward still does not stage or commit; G0 may change
+  that only after its deterministic executor and acceptance gate are implemented and accepted.
 - Make reversible assumptions when reasonable and record them. Ask only when genuinely blocked.
 - Destructive or hard-to-reverse actions (deletes, overwrites, external effects) require
   confirmation unless durably authorized.
@@ -138,6 +151,10 @@ Repository completion claims cover only what is in the repository and verified t
 
 ## User-run command presentation
 
+- Whenever the developer must accept, confirm, revise, reject, authorize, or otherwise cross a
+  review boundary, include the exact paste-safe command they should run when such a command exists.
+  If the boundary is conversational rather than executable, say so explicitly and provide the exact
+  reply text that will express the choice.
 - Put commands intended for the developer to copy and run in fenced `bash` blocks; keep explanations,
   prompts, and output outside those blocks.
 - Write every executable command on one physical source line. Never use backslash-newline
@@ -145,7 +162,7 @@ Repository completion claims cover only what is in the repository and verified t
 - For multi-step instructions, use one complete command per line in execution order.
 - If truly multi-line input is unavoidable, use a complete self-contained paste-safe script block and
   state outside it exactly what the script changes.
-- When opening a pull request is the next owner action, inspect the remote host and relevant CLI availability, then include the host-specific paste-safe command rather than stopping at prose. For GitHub with `gh` available, use one physical-line command with actual values: `gh pr create --base '<base>' --head '<branch>' --title '<intent-based title>' --body '<concise summary and evidence>'`. Never run it or assume authentication; if prerequisites are missing, state them and provide the exact compare/new-PR URL fallback.
+- Under the current pre-G1 capability, when opening a pull request is the next owner action, inspect the remote host and relevant CLI availability, then include the host-specific paste-safe command rather than stopping at prose. For GitHub with `gh` available, use one physical-line command with actual values: `gh pr create --base '<base>' --head '<branch>' --title '<intent-based title>' --body '<concise summary and evidence>'`. Never run it or assume authentication; if prerequisites are missing, state them and provide the exact compare/new-PR URL fallback.
 
 ## Toolchain (pinned)
 

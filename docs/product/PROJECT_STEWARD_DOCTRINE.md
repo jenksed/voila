@@ -1,13 +1,15 @@
 # Project Steward Doctrine
 
-- **Status:** authoritative as of 2026-07-26
+- **Status:** authoritative as of 2026-07-27
 - **Established by:** [ADR-0009](../decisions/0009-project-steward-operational-realignment.md) / DEC-18
-- **Source plan:** [PROJECT_REALIGNMENT_PLAN.md](../plans/PROJECT_REALIGNMENT_PLAN.md)
+- **Active sequencing:** [ADR-0010](../decisions/0010-local-distribution-and-safe-publication-sequence.md) / DEC-24 through DEC-29
+- **Source plans:** [PROJECT_REALIGNMENT_PLAN.md](../plans/PROJECT_REALIGNMENT_PLAN.md) and [VOILA_OPERATIONAL_ROADMAP_V2.md](../plans/VOILA_OPERATIONAL_ROADMAP_V2.md)
 
 This document states what Voila is for and how its Project Steward is supposed to behave. It is the
 operational product statement. Where it conflicts with the v0.1
-[PRODUCT_DIRECTION.md](PRODUCT_DIRECTION.md), this document wins; where it conflicts with the source
-realignment plan, the plan wins.
+[PRODUCT_DIRECTION.md](PRODUCT_DIRECTION.md), this document wins. The original realignment plan
+remains the source for the doctrine and R3–R7 program; Operational Roadmap v2 wins only for the L0/G0/G1
+insertions and the affected sequencing/publication restrictions.
 
 ## Product statement
 
@@ -100,9 +102,12 @@ four consequences that most change day-to-day behavior:
 
 - Evidence still gates canonical completion. The protected transition still rejects.
 - Historical evidence is still immutable. Decisions are superseded, never rewritten.
-- Voila still never commits, stages, pushes, or opens a pull request.
+- The current Voila runtime still never commits, stages, pushes, mutates pull requests, merges, or
+  creates/pushes tags. G0, G1, and L0.2 may supersede only their named clauses after their
+  deterministic executors and acceptance gates pass; roadmap acceptance alone grants no effect
+  authority.
 - Canonical state remains per-project and human-readable.
-- Pi remains the host harness; the project-local extension stays thin.
+- Pi remains the host harness; the package adapter stays thin.
 - The parent Steward remains the integrator.
 - Models interpret, fallibly. Deterministic systems establish what actually executed.
 - The developer retains consequential authority.
@@ -113,9 +118,10 @@ gate is still a gate.
 ## Honest capability status
 
 As of 2026-07-27, most of the operational loop this document describes is **doctrine, not
-implementation**. R1 and bounded R2A are implemented, accepted, and protected-complete. R2B's
-second fixed operation and runtime-backed visibility are implemented under DEC-23; automated
-verification and all four real acceptance tiers pass; NF-20 and NF-10 are protected-complete.
+implementation**. R1 and bounded R2A/R2B are implemented, accepted, protected-complete, and merged.
+L0.1 implementation and all four acceptance tiers pass under DEC-33; NF-22 is protected-complete.
+Bounded G0 / NF-23 implementation is active under DEC-34; DEC-30 and every development-repository
+commit effect remain proposed until acceptance.
 
 | Capability                              | Status                                                       |
 | --------------------------------------- | ------------------------------------------------------------ |
@@ -132,6 +138,10 @@ verification and all four real acceptance tiers pass; NF-20 and NF-10 are protec
 | Verification grouping                   | Seam only (R1) — identity and grouping; execution is R6       |
 | One finite supervised operation         | Built and accepted (bounded R2A)                             |
 | Repository-check operation + visibility | Built, accepted, and protected-complete (bounded R2B)      |
+| Global local-path Pi package             | Built, accepted, and protected-complete (L0.1 / NF-22) |
+| Guarded local commit executor            | Bounded implementation active (G0 / NF-23); DEC-30 proposed |
+| Guarded GitHub publication executor      | Not built (G1); DEC-31 is proposed only                      |
+| Guarded initial-alpha tag executor       | Not built (L0.2); DEC-32 is proposed only                    |
 | General background terminals            | Not built                                                     |
 | Pi child workers                        | Not built (R3)                                               |
 | Automatic settlement and integration    | Not built (R4)                                               |
@@ -170,23 +180,27 @@ subagent delegation.
 
 ## What to build next
 
-Build the operational AI-teammate loop, in the R-sequence order:
+Build in the accepted Operational Roadmap v2 sequence:
 
 ```text
-R1  Friction containment and ambient continuity
-R2  One supervised background operation
-R3  One bounded Pi child worker
-R4  Operational integration and automatic settlement
-R5  Fresh-session continuity
-R6  Quiet boundary reconciliation
-R7  Uncoached dogfood acceptance
+L0.1  Global local-path Pi package and multi-project dogfood
+G0    Guarded local commits from current publication plans
+G1    Guarded GitHub publication and bounded publisher proposals
+L0.2  One separately owner-authorized v0.1.0-alpha.1 Git installation tag
+R3-0  Delegation suitability and assignment compiler
+R3A–R3C  Read-only worker, steering/recovery, isolated-write worker
+R4A–R4C  Projection, evaluation/integration, drift/failure recovery
+R5    Fresh-session continuity
+R6    Quiet boundary reconciliation
+R7    Uncoached dogfood acceptance
 ```
 
-The milestone is **Project Steward Operational Loop v1**.
+The milestone remains **Project Steward Operational Loop v1**.
 
-Do **not** expand proof ceremony, approval infrastructure, model-routing breadth, arbitrary workflow
-scripting, remote execution, or release automation before R7 passes. The approval-bundles
-self-hosting project is paused, not cancelled.
+Do **not** expand proof ceremony, approval or merge authority, broad model routing, arbitrary workflow
+scripting, remote execution, general tag/release automation, or package-registry publication. The
+only pre-R7 tag exception is L0.2's separately owner-authorized `v0.1.0-alpha.1` Git installation
+tag. The approval-bundles self-hosting project is paused, not cancelled.
 
 ## Anti-goals for this realignment
 
