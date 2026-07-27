@@ -4,8 +4,8 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Owner completes delivery in two local boundaries: first amend 87d79fc with the already staged R2A canonical files using one paste-safe single-line command; then review, stage, and commit completed NF-18 as a separate `fix: make recommended commands paste-safe` change. Do not push.",
-  "nextActionRationale": "The failed copy exposed a real Steward presentation defect. NF-18 now completes through all gates with RCP-120. The index already contains only the four pre-NF-18 R2A canonical updates, while the working tree carries the later NF-18 instructions, regression tests, current canonical state, and receipts. Preserving that split fixes the R2A message without folding the new defect fix into the earlier feature commit.",
+  "nextAction": "Owner commits the final dogfood/evidence reconciliation, then pushes `feat/r2a-finite-operation` to origin and opens the owner-reviewed R2A pull request; do not begin R2B.",
+  "nextActionRationale": "main is an ancestor of this 12-commit branch, the substantive work is complete, and current receipts RCP-122 through RCP-125 support NF-16, NF-17, and NF-18 at one fingerprint. The only remaining local changes are the NF-18 dogfood completion expectation plus canonical events/views and immutable boundary receipts. Push is now justified after that final local commit; it is an external effect performed by the owner, never Voila.",
   "focusWorkItemId": null,
   "sequences": {
     "workItem": 19,
@@ -15,7 +15,7 @@
     "intake": 9,
     "orientation": 6,
     "claim": 15,
-    "receipt": 121,
+    "receipt": 126,
     "operationDefinition": 1,
     "operationRun": 6
   },
@@ -1163,10 +1163,12 @@
         "RCP-112",
         "RCP-113",
         "RCP-115",
-        "RCP-116"
+        "RCP-116",
+        "RCP-121",
+        "RCP-122"
       ],
       "createdAt": "2026-07-26T23:11:09.110Z",
-      "updatedAt": "2026-07-26T23:22:57.860Z"
+      "updatedAt": "2026-07-27T00:03:56.371Z"
     },
     {
       "id": "CLM-12",
@@ -1181,10 +1183,11 @@
       "knownLimitations": [],
       "receiptIds": [
         "RCP-110",
-        "RCP-118"
+        "RCP-118",
+        "RCP-123"
       ],
       "createdAt": "2026-07-26T23:11:45.031Z",
-      "updatedAt": "2026-07-26T23:23:54.434Z"
+      "updatedAt": "2026-07-27T00:04:14.697Z"
     },
     {
       "id": "CLM-13",
@@ -1199,10 +1202,11 @@
       "receiptIds": [
         "RCP-111",
         "RCP-114",
-        "RCP-117"
+        "RCP-117",
+        "RCP-124"
       ],
       "createdAt": "2026-07-26T23:17:46.428Z",
-      "updatedAt": "2026-07-26T23:23:06.046Z"
+      "updatedAt": "2026-07-27T00:04:25.429Z"
     },
     {
       "id": "CLM-14",
@@ -1218,10 +1222,11 @@
       "knownLimitations": [],
       "receiptIds": [
         "RCP-119",
-        "RCP-120"
+        "RCP-120",
+        "RCP-125"
       ],
       "createdAt": "2026-07-26T23:53:17.367Z",
-      "updatedAt": "2026-07-26T23:54:24.552Z"
+      "updatedAt": "2026-07-27T00:04:46.616Z"
     }
   ],
   "receipts": [
@@ -3825,6 +3830,117 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "87d79fc17c1c6afe2827bb1847532fca9919b57f",
       "outputTruncated": true
+    },
+    {
+      "id": "RCP-121",
+      "claimId": "CLM-11",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-121",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-27T00:02:44.870Z",
+      "finishedAt": "2026-07-27T00:03:00.594Z",
+      "repositoryFingerprint": "0ee6112f1ce786fb8dcbf44b84d04deb900adfd86540a79f77856e14608803d8",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-122",
+      "claimId": "CLM-11",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-122",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:03:41.235Z",
+      "finishedAt": "2026-07-27T00:03:56.368Z",
+      "repositoryFingerprint": "c6808912a268a9e2f67950b12869172b09d872117faba5ef013822c78928e95e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-123",
+      "claimId": "CLM-12",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-123",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:03:59.389Z",
+      "finishedAt": "2026-07-27T00:04:14.693Z",
+      "repositoryFingerprint": "c6808912a268a9e2f67950b12869172b09d872117faba5ef013822c78928e95e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-124",
+      "claimId": "CLM-13",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-124",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "node",
+        "--input-type=module",
+        "-e",
+        "import assert from 'node:assert/strict'; import { readFile } from 'node:fs/promises'; import { loadState } from './src/state/store.ts'; const state = await loadState('.'); const run = state.operationRuns.find((item) => item.id === 'RUN-5'); assert.ok(run); assert.equal(run.lifecycleState, 'passed'); assert.equal(run.settlementReason, 'passed'); assert.equal(run.deliveryState, 'acknowledged'); assert.equal(run.admission.result, 'allow'); assert.equal(run.admission.ruleId, 'ADMIT.OPERATIONS.ALLOW_NEW'); const events = (await readFile('.voila/events.jsonl', 'utf8')).trim().split('\\n').map(JSON.parse); assert.equal(events.filter((event) => event.type === 'operation_run_reserved' && event.runId === 'RUN-5').length, 1); assert.equal(events.filter((event) => event.type === 'operation_run_acknowledged' && event.runId === 'RUN-5').length, 1); console.log('RUN-5 remains passed and acknowledged exactly once.');"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:04:25.250Z",
+      "finishedAt": "2026-07-27T00:04:25.426Z",
+      "repositoryFingerprint": "c6808912a268a9e2f67950b12869172b09d872117faba5ef013822c78928e95e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": false
+    },
+    {
+      "id": "RCP-125",
+      "claimId": "CLM-14",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-125",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T00:04:31.440Z",
+      "finishedAt": "2026-07-27T00:04:46.613Z",
+      "repositoryFingerprint": "c6808912a268a9e2f67950b12869172b09d872117faba5ef013822c78928e95e",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "6aa58d0c0038f46589bba4d4bf4d66daa422f07b",
+      "outputTruncated": true
     }
   ],
   "operationDefinitions": [
@@ -4147,6 +4263,6 @@
   "currentIntakeId": "INT-8",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-26T23:54:55.657Z",
-  "revision": 342
+  "updatedAt": "2026-07-27T00:05:03.161Z",
+  "revision": 348
 }

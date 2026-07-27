@@ -75,8 +75,8 @@ test("dogfooded state includes only protected completions; NF-2..NF-4 remain hel
     .sort();
   assert.deepEqual(
     completed,
-    ["NF-1", "NF-16", "NF-17", "NF-9"],
-    "only NF-1, NF-9, bounded R2A NF-16, and counter-repair NF-17 completed through the gate",
+    ["NF-1", "NF-16", "NF-17", "NF-18", "NF-9"],
+    "only NF-1, NF-9, bounded R2A NF-16, counter-repair NF-17, and paste-safety NF-18 completed through the gate",
   );
 
   const nf1 = state.workItems.find((w) => w.id === "NF-1");

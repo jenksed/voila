@@ -327,3 +327,9 @@
 {"type":"claim_updated","id":"CLM-14","revision":340,"ts":"2026-07-26T23:54:24.554Z"}
 {"type":"work_item_completed","id":"NF-18","revision":341,"ts":"2026-07-26T23:54:32.057Z"}
 {"type":"next_action_set","revision":342,"ts":"2026-07-26T23:54:55.659Z"}
+{"type":"verification_recorded","id":"RCP-121","claimId":"CLM-11","result":"failed","revision":343,"ts":"2026-07-27T00:03:00.600Z"}
+{"type":"verification_recorded","id":"RCP-122","claimId":"CLM-11","result":"passed","revision":344,"ts":"2026-07-27T00:03:56.374Z"}
+{"type":"verification_recorded","id":"RCP-123","claimId":"CLM-12","result":"passed","revision":345,"ts":"2026-07-27T00:04:14.698Z"}
+{"type":"verification_recorded","id":"RCP-124","claimId":"CLM-13","result":"passed","revision":346,"ts":"2026-07-27T00:04:25.430Z"}
+{"type":"verification_recorded","id":"RCP-125","claimId":"CLM-14","result":"passed","revision":347,"ts":"2026-07-27T00:04:46.618Z"}
+{"type":"next_action_set","revision":348,"ts":"2026-07-27T00:05:03.167Z"}
