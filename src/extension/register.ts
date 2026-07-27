@@ -35,6 +35,9 @@ import { openStewardConsole, type ConsoleUiSurface } from "../ui/steward-console
 import { operationSupervisor } from "../state/operations-runtime.ts";
 import { protectedMutationTarget } from "../state/path-boundary.ts";
 import { projectOperationPresentation } from "../domain/operation-presentation.ts";
+import { runVersion, versionResult } from "../commands/version.ts";
+import { resolveProjectRoot, ProjectRootResolutionError } from "./project-root.ts";
+import { assessRuntimeCompatibility, type RuntimeCompatibility } from "./package-metadata.ts";
 
 export interface VoilaUi {
   notify(message: string, level?: "info" | "warning" | "error"): void;
@@ -73,11 +76,15 @@ export interface RegisterOptions {
   expectedPiVersion: string;
   nodeVersion: string;
   minNode: string;
+  packageVersion?: string;
+  sourceKind?: string;
+  onShutdown?: () => void;
 }
 
 export const HOME_WIDGET_KEY = "voila-home";
 export const SUBCOMMANDS = [
   "home",
+  "version",
   "init",
   "status",
   "focus",
@@ -100,7 +107,7 @@ export const SUBCOMMANDS = [
 
 export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
   let unsubscribeOperationRefresh: (() => void) | undefined;
-  for (const tool of voilaTools()) host.registerTool(tool);
+  for (const tool of voilaTools()) host.registerTool(rootBoundTool(tool));
 
   host.registerCommand("voila", {
     description: `Voila project steward: ${SUBCOMMANDS.join(" | ")}`,
@@ -111,12 +118,21 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
       }));
       return items.length > 0 ? items : null;
     },
-    handler: async (args, ctx) => {
+    handler: async (args, incomingCtx) => {
+      let ctx: VoilaCtx;
+      try {
+        ctx = await rootBoundContext(incomingCtx);
+      } catch (error) {
+        incomingCtx.ui.notify(rootResolutionMessage(error), "error");
+        return;
+      }
       const tokens = (args ?? "").trim().split(/\s+/).filter(Boolean);
       const sub = tokens[0] ?? "status";
       switch (sub) {
         case "home":
           return openConsole(ctx, options.piVersion);
+        case "version":
+          return renderResult(ctx, runVersion(options));
         case "status":
           return renderResult(ctx, await runStatus(ctx.cwd));
         case "init":
@@ -163,8 +179,16 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
     },
   });
 
-  host.on("session_start", async (_event, ctx) => {
+  host.on("session_start", async (_event, incomingCtx) => {
     unsubscribeOperationRefresh?.();
+    let ctx: VoilaCtx;
+    try {
+      ctx = await rootBoundContext(incomingCtx);
+    } catch (error) {
+      incomingCtx.ui.notify(rootResolutionMessage(error), "error");
+      incomingCtx.ui.setWidget(HOME_WIDGET_KEY, ["Voila · project root unavailable"]);
+      return;
+    }
     const supervisor = operationSupervisor(ctx.cwd);
     unsubscribeOperationRefresh = supervisor.onLifecycle(() => {
       void restoreHomeView(ctx);
@@ -175,11 +199,25 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
   host.on("session_shutdown", async () => {
     unsubscribeOperationRefresh?.();
     unsubscribeOperationRefresh = undefined;
+    options.onShutdown?.();
   });
 
   // Hard boundary for general structured file tools. Supported Voila tools do not expose a raw
   // path and therefore continue through their own state/artifact invariants.
-  host.on("tool_call", async (event, ctx) => enforceProtectedPathMutation(event, ctx.cwd));
+  host.on("tool_call", async (event, ctx) => {
+    try {
+      const resolved = await resolveProjectRoot(ctx.cwd);
+      return enforceProtectedPathMutation(event, resolved.root);
+    } catch (error) {
+      if (isStructuredFileMutation(event)) {
+        return {
+          block: true,
+          reason: `${rootResolutionMessage(error)}. File mutation is blocked because the protected project boundary is unknown.`,
+        };
+      }
+      return undefined;
+    }
+  });
 
   // Assemble the deterministic capsule read-only. When it includes one delivered settlement, the
   // host then acknowledges that exact run so the same settlement is not injected twice.
@@ -187,8 +225,9 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
   // The turn's prompt is read here, at the single host boundary, so an explicit "Continue." produces
   // an action-oriented directive instead of a bare context dump. Anything that is not an explicit
   // continuation request is left alone.
-  host.on("before_agent_start", async (event, ctx) => {
+  host.on("before_agent_start", async (event, incomingCtx) => {
     try {
+      const ctx = await rootBoundContext(incomingCtx);
       const prompt = (event as { prompt?: unknown } | null | undefined)?.prompt;
       const envelope = await assembleContextEnvelope(ctx.cwd, {
         continuation: isContinuationRequest(typeof prompt === "string" ? prompt : undefined),
@@ -210,13 +249,62 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
   });
 }
 
+/** Unsupported hosts get one truthful, non-mutating command and no normal Voila surface. */
+export function registerCompatibilityVoila(
+  host: VoilaHost,
+  options: RegisterOptions,
+  compatibility: RuntimeCompatibility = assessRuntimeCompatibility(options),
+): void {
+  host.registerCommand("voila", {
+    description: "Voila compatibility information (normal runtime refused)",
+    getArgumentCompletions: (prefix) =>
+      "version".startsWith(prefix) || "doctor".startsWith(prefix)
+        ? ["version", "doctor"]
+            .filter((value) => value.startsWith(prefix))
+            .map((value) => ({ value, label: value }))
+        : null,
+    handler: async (_args, ctx) => {
+      const result = versionResult(compatibility);
+      ctx.ui.notify(result.lines.join("\n"), result.level);
+    },
+  });
+  host.on("session_shutdown", () => options.onShutdown?.());
+}
+
+async function rootBoundContext(ctx: VoilaCtx): Promise<VoilaCtx> {
+  const resolved = await resolveProjectRoot(ctx.cwd);
+  return resolved.root === ctx.cwd ? ctx : { ...ctx, cwd: resolved.root };
+}
+
+function rootBoundTool(tool: VoilaTool): VoilaTool {
+  return {
+    ...tool,
+    async execute(id, params, signal, onUpdate, ctx) {
+      const resolved = await resolveProjectRoot(ctx.cwd);
+      return tool.execute(id, params, signal, onUpdate, { ...ctx, cwd: resolved.root });
+    },
+  };
+}
+
+function rootResolutionMessage(error: unknown): string {
+  return error instanceof ProjectRootResolutionError
+    ? `Voila cannot resolve this project root: ${error.message}`
+    : `Voila cannot resolve this project root: ${error instanceof Error ? error.message : String(error)}`;
+}
+
+function isStructuredFileMutation(event: unknown): boolean {
+  if (typeof event !== "object" || event === null) return false;
+  const toolName = (event as { toolName?: unknown }).toolName;
+  return toolName === "write" || toolName === "edit";
+}
+
 export async function enforceProtectedPathMutation(
   event: unknown,
   root: string,
 ): Promise<{ block: true; reason: string } | undefined> {
   if (typeof event !== "object" || event === null) return undefined;
   const call = event as { toolName?: unknown; input?: unknown };
-  if (call.toolName !== "write" && call.toolName !== "edit") return undefined;
+  if (!isStructuredFileMutation(event)) return undefined;
   if (typeof call.input !== "object" || call.input === null) return undefined;
   const path = (call.input as { path?: unknown }).path;
   if (typeof path !== "string") return undefined;
