@@ -26,48 +26,47 @@ bite you. Read it before making changes after a break, or hand it to another ass
 
 ## Using Voila on other projects
 
-Voila lives in this repository as a project-local Pi extension, so out of the box it only loads
-here. Pi also loads `~/.pi/agent/extensions/` in **every** session, so one command makes Voila
-available everywhere:
+**L0.1 package acceptance passes.** The checkout exposes one explicit Pi package manifest with the
+extension and Project Steward skill under `pi-package/`; the old `.pi/` auto-discovery entries are
+gone. The retired `scripts/install-global.mjs` supports legacy-shim status/removal only and refuses
+installation.
+
+After reviewing the external user-settings effect, install this checkout with:
 
 ```bash
-node scripts/install-global.mjs           # install
-node scripts/install-global.mjs --status  # what is installed, and where it points
-node scripts/install-global.mjs --remove  # uninstall
+mise exec -- npm run pi -- install "$(pwd)"
 ```
 
-This writes a single shim that re-exports this checkout's adapter. It does **not** copy the code, so
-there is one source of truth and `git pull` here updates every project. It is reversible: `--remove`
-deletes the one file.
+On the dogfood machine this command was separately authorized and completed on 2026-07-27. Canonical
+state remains **per-project** in `.voila/`; real-package acceptance proves startup in an uninitialized
+project shows `/voila init` without creating state.
 
-Canonical state stays **per-project** in `.voila/`. A global install changes only where the code is
-loaded from. In a project with no `.voila/`, the ambient widget shows the `/voila init` hint and
-nothing is created until you ask for it.
+See [the L0.1 packet](docs/plans/L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md).
 
 ## Status
 
-**Roadmap reset 2026-07-26 — building the Project Steward operational loop.**
-[ADR-0009](docs/decisions/0009-project-steward-operational-realignment.md) superseded Phases 5–8 of
-the old plan. The foundation below is real and stays; the daily experience was wrong — the developer
-had become responsible for operating Voila. The active roadmap is
-[docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md), R1 through R7,
-toward **Project Steward Operational Loop v1**. Delegation and background execution moved from
-"deferred, optional" to product-critical. Approval-bundle self-hosting is **paused**.
+**Operational Roadmap v2 accepted 2026-07-27 — L0.1 is protected-complete; bounded G0 implementation is active.**
+[ADR-0010](docs/decisions/0010-local-distribution-and-safe-publication-sequence.md) and
+[the v2 roadmap](docs/plans/VOILA_OPERATIONAL_ROADMAP_V2.md) insert L0 local availability, G0 guarded
+local commits, and G1 guarded GitHub publication before the refined R3–R7 program. They preserve the
+Project Steward doctrine and completed R1/R2 history. **Project Steward Operational Loop v1** remains
+the milestone.
 
-**Not built yet:** multi-operation concurrency, watchers, dev servers, `list`/`wait` tools, Pi child
-workers (R3), cross-process coordination or adoption, and broader automatic integration. See the
-doctrine's built/not-built table. R1 (friction containment and ambient continuity) and bounded R2A
-(one finite supervised operation, `r2a.state-store-tests`) are accepted and protected-complete. On
-`feat/r2b-operation-visibility`, R2B adds exactly one fixed `r2b.repository-checks` operation to the
-same one-run supervisor plus runtime-backed widget, Console, and capsule visibility. Its automated
-gate and all four real acceptance tiers pass; NF-20 and NF-10 are protected-complete. Exact evidence
-is recorded in
+L0.1's repository, isolated-package, real global-install, and dogfood tiers pass; NF-22 completed
+through the protected transition. R1 and bounded R2A/R2B are also accepted, protected-complete, and
+merged. R2 provides exactly two fixed
+operations through one shared per-project supervisor: `r2a.state-store-tests` and
+`r2b.repository-checks`. Exact evidence is recorded in
 [docs/verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md](docs/verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md).
-Approval bundles remain paused.
 
-**What is built — Phase 0 + Packets 1–4 + Phase 6.** Voila is a runnable Pi extension:
-a thin adapter (`.pi/extensions/voila.ts`), canonical `.voila/` state with **explicit schema
-versioning/migration** (now v6), a compact **project-operations layer** (work items, decisions,
+**Not built yet:** G0 staging/commit execution, G1 push/PR execution, L0.2 tags, general background
+terminals, child workers, multi-operation concurrency,
+watchers, dev servers, `list`/`wait` tools, cross-process coordination, or automatic integration.
+DEC-30 through DEC-32 are proposed future authority only. The current Steward still does not stage,
+commit, push, mutate PRs, merge, or create/push tags.
+
+**What is built — Phase 0 + Packets 1–4 + Phase 6 + R1/R2 + L0.1.** Voila has a thin package adapter (`pi-package/extensions/voila.ts`), canonical `.voila/` state with
+**explicit schema versioning/migration** (now v6), a compact **project-operations layer** (work items, decisions,
 assumptions, risks), a keyboard-first **Steward Console** (`/voila home`), **planning intake +
 repository orientation**, and the **proof engine**: claims tied to exact acceptance criteria,
 executable verification recorded as immutable receipts, evidence freshness derived from a repository
@@ -80,9 +79,9 @@ report ([docs/design/FOCUS_CAPSULE.md](docs/design/FOCUS_CAPSULE.md)). Evidence 
 **content-addressed** ([ADR-0008](docs/decisions/0008-fingerprint-v2-content-addressed.md)), so
 committing receipts no longer invalidates them; orientation freshness follows the content it inspected,
 not git HEAD. Doctor separates structural health from expected development drift. Pinned to
-`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise); the current R2B branch passes
-**710 tests** (707 passed, 3 skipped). The repo
-**dogfoods its own** `.voila/` state.
+`@earendil-works/pi-coding-agent@0.82.0` on Node `22.23.1` (via mise). Real global-package dogfood
+passes with one user/package extension and Project Steward skill while canonical `.voila/` state
+remains project-local.
 
 **The boundary is explicit**: the model interprets (fallibly), Voila enforces (preservation,
 schemas, provenance, gating, persistence, idempotency), and *you* accept. Nothing enters canonical
@@ -97,13 +96,13 @@ longer revalidates). Verification runs a real command with a bounded timeout and
 **not a sandbox**. See [docs/design/PROOF_ENGINE.md](docs/design/PROOF_ENGINE.md).
 
 This is **not** the full product. There is no delegation or general background-terminal runtime;
-R2A's first explicit finite operation passed bounded acceptance on 2026-07-26, and R2B's second fixed
-operation remains acceptance-pending. There is no automatic integration, approval bundles,
-sandboxing, remote execution, broad model routing, cost tracking, or release
-automation. NF-2 remains open honestly: the authenticated Project-Steward
-acceptance run is still **pending**, so daily-use readiness is not yet claimed. See
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to run it and
-[docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md) for what comes next.
+R2A and R2B are bounded fixed operations, not workers or arbitrary commands. There is no accepted
+package distribution, Git-effect executor, automatic integration, approval/merge authority,
+sandboxing, remote execution, broad model routing, cost tracking, or general release automation.
+NF-2 remains open honestly: its authenticated Project-Steward acceptance run is still pending. See
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md),
+[docs/plans/VOILA_OPERATIONAL_ROADMAP_V2.md](docs/plans/VOILA_OPERATIONAL_ROADMAP_V2.md), and
+[docs/plans/L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md](docs/plans/L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md).
 
 ## What Voila is (and is not)
 
@@ -123,23 +122,25 @@ source; where the two disagree, the doctrine wins.
 
 ## Document map
 
-**Authority chain.** Three documents govern, in this order:
+**Authority chain.** These documents govern, in order:
 
 ```text
-PROJECT_REALIGNMENT_PLAN    controls current implementation sequencing
-PROJECT_STEWARD_DOCTRINE    controls Steward operating behavior and the product tests
-PRODUCT_DIRECTION           remains authoritative where it has not been superseded
+VOILA_OPERATIONAL_ROADMAP_V2  controls L0/G0/G1 insertions and current sequencing
+PROJECT_REALIGNMENT_PLAN      controls the retained doctrine foundation and R3–R7 program
+PROJECT_STEWARD_DOCTRINE      controls Steward behavior and product tests
+PRODUCT_DIRECTION             remains authoritative where not superseded
 ```
 
-The plan is the authored source, so it wins over the doctrine on sequencing. The doctrine wins over
-the v0.1 product direction on how the Steward behaves and what Voila is for. `PRODUCT_DIRECTION.md`
-is **not** obsolete — its vocabulary, role model, principles, and lifecycle still hold wherever the
-doctrine has not superseded them; its status banner marks exactly what changed.
+The v2 roadmap wins only for its explicit sequencing/publication changes. The doctrine wins over the
+v0.1 product direction on how the Steward behaves and what Voila is for.
 
 | Area | Document | Purpose |
 |------|----------|---------|
 | Product | [docs/product/PROJECT_STEWARD_DOCTRINE.md](docs/product/PROJECT_STEWARD_DOCTRINE.md) | **Authoritative** product statement, doctrine, No Managing the Manager gate |
-| Plans | [docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md) | **Active roadmap** — R0–R7 toward Operational Loop v1 |
+| Plans | [docs/plans/VOILA_OPERATIONAL_ROADMAP_V2.md](docs/plans/VOILA_OPERATIONAL_ROADMAP_V2.md) | **Active roadmap** — L0/G0/G1 insertions, refined R3–R7 |
+| Plans | [docs/plans/G0_GUARDED_LOCAL_COMMIT.md](docs/plans/G0_GUARDED_LOCAL_COMMIT.md) | Active bounded G0 implementation and acceptance packet |
+| Plans | [docs/plans/L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md](docs/plans/L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md) | Completed L0.1 implementation and acceptance packet |
+| Plans | [docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md) | Retained doctrine foundation and R0–R7 source program |
 | Product | [docs/product/PRODUCT_DIRECTION.md](docs/product/PRODUCT_DIRECTION.md) | Preserved v0.1 authored source; superseded as the operational statement |
 | Research | [docs/research/PI_CAPABILITY_AUDIT.md](docs/research/PI_CAPABILITY_AUDIT.md) | What current Pi natively provides |
 | Research | [docs/research/BEN_SETUP_AUDIT.md](docs/research/BEN_SETUP_AUDIT.md) | Audit of `davis7dotsh/my-pi-setup` |
@@ -150,7 +151,7 @@ doctrine has not superseded them; its status banner marks exactly what changed.
 | Plans | [docs/plans/MVP_IMPLEMENTATION_PLAN.md](docs/plans/MVP_IMPLEMENTATION_PLAN.md) | Phases 0–8. Phases 5–8 superseded; retained as history |
 | Plans | [docs/plans/SELF_HOSTING_ACCEPTANCE_PROJECT.md](docs/plans/SELF_HOSTING_ACCEPTANCE_PROJECT.md) | `voila-approval-bundles` self-hosting project |
 | Project | [docs/project/PROJECT_LEDGER.md](docs/project/PROJECT_LEDGER.md) | Manual project ledger during bootstrap |
-| Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records (0001–0009) |
+| Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records (0001–0010) |
 | Setup | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, pinned versions, commands, smoke test |
 | Verification | [docs/verification/PACKET_1_FOUNDATION.md](docs/verification/PACKET_1_FOUNDATION.md) | Packet 1 foundation verification record |
 | Verification | [docs/verification/PACKET_2_PROJECT_OPERATIONS.md](docs/verification/PACKET_2_PROJECT_OPERATIONS.md) | Packet 2 project-operations verification record |

@@ -63,16 +63,24 @@ without a model.
 
 ## Loading the extension
 
-- **Project-local (normal):** with `.pi/extensions/voila.ts` present, start Pi in the project;
-  after the project is trusted, the extension auto-loads.
-- **Explicit (any directory / testing):** `npm exec pi -- -e ./.pi/extensions/voila.ts`.
+L0.1 uses one explicit Pi package manifest:
 
-The file `.pi/extensions/voila.ts` is a thin adapter (ADR-0007); all logic lives in `src/`.
+- extension: `pi-package/extensions/voila.ts`;
+- skill root: `pi-package/skills`;
+- explicit repository testing: `npm exec pi -- -e ./pi-package/extensions/voila.ts`.
+
+The old `.pi/` auto-discovery entries are removed so package dogfood cannot silently load a second
+copy. The adapter remains thin (ADR-0007); all logic lives in `src/`.
+
+Real user-global installation remains unperformed. Do not run the install command until repository
+and isolated-package acceptance pass and the external settings effect is explicitly authorized. See
+[`L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md`](plans/L0_1_GLOBAL_LOCAL_PATH_PACKAGE.md).
 
 ## Commands
 
 | Command | Behavior |
 |---------|----------|
+| `/voila version` | Uninitialized-safe package/runtime descriptor: package version, exact Pi and Node support, schema/policy versions, compatibility, and bounded package-entry provenance. |
 | `/voila init` | Creates canonical `.voila/` state. Derives the display name from the repo directory. Refuses to overwrite (no force option). |
 | `/voila home` | Opens the **Steward Console** (interactive TUI). Falls back to `/voila status` outside a terminal. |
 | `/voila status` | Identity, phase, health, revision, update time, a compact operations summary, focus, next action, and the rationale when present. Warns if uninitialized or migration-required; errors on malformed state. |
@@ -225,8 +233,9 @@ applies.
 
 ### Project Steward skill
 
-A real Pi skill at [`.pi/skills/project-steward/SKILL.md`](../.pi/skills/project-steward/SKILL.md),
-with an ordered [orientation playbook](../.pi/skills/project-steward/references/ORIENTATION_PLAYBOOK.md).
+A real Pi package skill at
+[`pi-package/skills/project-steward/SKILL.md`](../pi-package/skills/project-steward/SKILL.md), with an
+ordered [orientation playbook](../pi-package/skills/project-steward/references/ORIENTATION_PLAYBOOK.md).
 It instructs the model to read canonical context first, preserve before interpreting, separate source
 from inference, respect locked decisions, surface conflicts, orient narrowly, use `voila_*` tools
 instead of writing `.voila/` by hand, and keep ownership. Project skills load after the project is
@@ -348,7 +357,7 @@ Pi's RPC mode (no provider auth required):
 
 ```bash
 # In a temporary git-initialized fixture directory, with the extension loaded via -e:
-pi --mode rpc --no-session -e /abs/path/to/.pi/extensions/voila.ts
+pi --mode rpc --no-session -e /abs/path/to/pi-package/extensions/voila.ts
 # then send JSONL commands on stdin, e.g.:
 {"type":"prompt","message":"/voila init"}
 {"type":"prompt","message":"/voila status"}
@@ -363,34 +372,27 @@ Recorded runs and results:
 [verification/PACKET_1_FOUNDATION.md](verification/PACKET_1_FOUNDATION.md) and
 [verification/PACKET_2_PROJECT_OPERATIONS.md](verification/PACKET_2_PROJECT_OPERATIONS.md).
 
-## Current limitations (through Packet 4)
+## Current limitations (through L0.1)
 
-- No approval bundles, delegation, background processes, sandboxing, remote execution, model routing,
-  cost tracking, packaging, or release/PR automation.
+- No approval/merge authority, G0/G1 Git-effect executor, R3 delegation, general background terminal,
+  sandboxing, remote execution, broad model routing, cost tracking, or general release automation.
+  R2 contains only two fixed supervised operations.
 - **Command verification only.** No manual evidence attestation, browser screenshots, or other
   verification types.
-- The completion gate defends Voila's state transition, not model prose and not a hand-edited
-  `project.json`.
-- Verification is **not sandboxed**: a verification command runs with the caller's privileges and may
-  have side effects.
-- Evidence is scoped to one repository fingerprint. A commit moves `HEAD`, so receipts recorded before
-  a commit read `stale` afterwards until verification is re-run.
-- A change confined entirely to `.voila/` does not invalidate evidence (a deliberate consequence of
-  excluding Voila's own bookkeeping from the fingerprint).
-- Without git, no evidence can be shown as current, so nothing can be completed.
-- Single-writer assumption still applies: a receipt whose reserved ID no longer matches the canonical
-  counter is refused rather than linked.
-- Interpretation is nondeterministic: Voila guarantees structure, provenance, gating, and
-  persistence — not that the model read the document correctly.
-- Duplicate detection is exact-match only; likely-but-inexact duplicates are surfaced for review.
-- Review feedback produces a new draft revision but is not itself stored durably (work item NF-8).
-- The authenticated Project Steward acceptance tier is **pending**; daily-use readiness is not claimed.
-- Generic tools cannot mark work `completed` (reserved for a future completion tool). The dogfooded
-  state reflects this honestly: nothing is marked complete.
-- The Steward Console is **read-mostly** — no editing forms; selection resets when switching views.
-- Console interactive rendering (resize, theme appearance) is verified by tests at the string level;
-  see the Packet 2.5 record for what was and was not observed interactively.
-- Single-writer assumption for `.voila/` (atomic writes, but no lock).
+- The completion gate defends Voila's state transition, not model prose or hand-edited canonical
+  files. Verification is **not sandboxed** and may have side effects.
+- Evidence uses a content-addressed repository fingerprint. `.voila/` bookkeeping and commit identity
+  are excluded deliberately; ordinary source changes still stale receipts.
+- Without Git, no evidence can be shown as current, so nothing can be completed.
+- Interpretation remains nondeterministic: Voila guarantees structure, provenance, gating, and
+  persistence, not that a model's interpretation is correct.
+- Duplicate intake detection is exact-match only; likely inexact duplicates are surfaced for review.
+- The authenticated NF-2 Project Steward acceptance tier remains pending; do not infer broad daily-use
+  readiness from L0.1 package acceptance.
+- The Steward Console is read-mostly. Interactive rendering has bounded human acceptance evidence;
+  automated tests prove layout strings, not visual quality on every terminal.
+- Canonical writes are atomic and in-process concurrent updates are serialized; there is no general
+  cross-process coordination or adoption.
 - `doctor` reports only; it never repairs or migrates.
 
 Recorded runs and results:

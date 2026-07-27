@@ -4,8 +4,12 @@ Manual project ledger for the Voila bootstrap period. This is a **precursor** to
 state; its format is intentionally provisional and must not be treated as the permanent runtime
 schema (that is a Phase 2 prototype decision). Update this file by hand until Voila manages it.
 
-- **Maintained by**: bootstrap (Claude-driven) until the self-hosting gate.
-- **Last updated**: 2026-07-26.
+- **Maintained by**: bootstrap narrative only; canonical state is `.voila/`.
+- **Last updated**: 2026-07-27.
+
+> **Current-status notice.** Most packet detail below is historical bootstrap record. Operational
+> Roadmap v2 and canonical `.voila/` state control current work; do not infer present focus, test
+> counts, or capability from an older packet paragraph.
 
 ## Objective
 
@@ -14,6 +18,8 @@ whose **Project Steward** keeps models, agents, tools, terminals, and handoffs a
 project intent, coordinates their work, preserves continuity, and quietly assembles the evidence
 needed to justify delivery. Authoritative direction:
 [../product/PROJECT_STEWARD_DOCTRINE.md](../product/PROJECT_STEWARD_DOCTRINE.md); active roadmap:
+[../plans/VOILA_OPERATIONAL_ROADMAP_V2.md](../plans/VOILA_OPERATIONAL_ROADMAP_V2.md), with the
+underlying R3–R7 program retained in
 [../plans/PROJECT_REALIGNMENT_PLAN.md](../plans/PROJECT_REALIGNMENT_PLAN.md).
 
 > **Objective restated 2026-07-26** by
@@ -26,10 +32,13 @@ needed to justify delivery. Authoritative direction:
 
 ## Current phase
 
-**R0 complete (2026-07-26); R1 next.** The roadmap below is superseded from Phase 5 onward — see
-[../plans/PROJECT_REALIGNMENT_PLAN.md](../plans/PROJECT_REALIGNMENT_PLAN.md). Canonical state now
-carries R1–R7 as NF-9..NF-15, focused on NF-9. The packet history that follows is retained as an
-accurate record of how the foundation was built.
+**R1, bounded R2, and L0.1 / NF-22 are protected-complete; bounded G0 / NF-23 implementation is
+active under DEC-34 as of 2026-07-27.** [ADR-0010](../decisions/0010-local-distribution-and-safe-publication-sequence.md)
+inserts L0, G0,
+and G1 before R3 while preserving the operational doctrine and R3–R7 program. G0 implementation is
+active but DEC-30 remains proposed; G1 and L0.2 are future guarded capabilities. None grants current
+Git-effect authority in the Voila development repository. The packet history below is
+retained as an accurate record of how the foundation was built.
 
 Phase 0 and Packets 1, 2, 2.5, 3 complete. **Packet 4 (claims, verification receipts, protected
 completion) — complete** as of 2026-07-25 on `feat/proof-engine` (not pushed): schema v4 with an
@@ -71,13 +80,13 @@ decision reconciles the two. Neither silently overwrites the other.
 | ID | Decision | ADR |
 |----|----------|-----|
 | D1 | Foundation is Pi (`@earendil-works/pi-coding-agent`); do not fork or vendor it. | [0001](../decisions/0001-adopt-pi-as-harness-foundation.md) |
-| D2 | Start as project-local Pi extensions; package second; SDK/RPC held in reserve. | [0002](../decisions/0002-extensions-first-architecture.md) |
+| D2 | Start as project-local Pi extensions; package second; SDK/RPC held in reserve. **Package sequencing superseded 2026-07-27; architecture rationale retained.** | [0002](../decisions/0002-extensions-first-architecture.md), [0010](../decisions/0010-local-distribution-and-safe-publication-sequence.md) |
 | D3 | Authoritative project state is a repo-visible human-readable ledger; repo wins over session on conflict. | [0003](../decisions/0003-authoritative-state-is-human-readable-ledger.md) |
 | D4 | Do not vendor or reuse reference-repo code; reimplement independently (Ben's setup has no license). | [0004](../decisions/0004-no-vendoring-of-reference-repositories.md) |
 | D5 | Roles are product concepts / skills / prompt templates in the MVP, not runtime agents. | [0005](../decisions/0005-roles-as-skills-not-runtime-agents.md) |
 | D6 | Sandboxing is optional and off by default; not an MVP prerequisite. | [0006](../decisions/0006-sandboxing-optional-not-mvp-prerequisite.md) |
 | D7 | Canonical state lives in `.voila/` (project.json authoritative, events.jsonl append-only, receipts/, generated views/PROJECT_STATUS.md); session entries are a non-authoritative cache; canonical loads first on resume; writes atomic. | [0003 (amended)](../decisions/0003-authoritative-state-is-human-readable-ledger.md) |
-| D8 | Thin Pi adapter (`.pi/extensions/voila.ts`); production logic in modular, package-ready `src/`. | [0007](../decisions/0007-thin-adapter-modular-src.md) |
+| D8 | Thin Pi adapter; production logic in modular, package-ready `src/`. L0.1 moves the adapter from project auto-discovery to `pi-package/extensions/`. | [0007](../decisions/0007-thin-adapter-modular-src.md), [0010](../decisions/0010-local-distribution-and-safe-publication-sequence.md) |
 | D9 | Pinned foundation: `@earendil-works/pi-coding-agent@0.82.0` (engines node >=22.19.0), Node `22.23.1`. | [0001 (amended)](../decisions/0001-adopt-pi-as-harness-foundation.md) |
 | D10 | Completion gate = rejecting the explicit `voila_complete_work_item` state transition unless a required receipt passes; Voila guarantees `project.json`, not model prose. | Packet 1 A3 |
 | D11 | Approval bundles use a proactive execution contract (declare phase + operation classes up front; enforce by interception; expire at boundary). Delegation is NOT required for the first self-hosting transition. | [self-hosting plan](../plans/SELF_HOSTING_ACCEPTANCE_PROJECT.md), Packet 1 A4/A5 |
@@ -157,6 +166,18 @@ decision reconciles the two. Neither silently overwrites the other.
 
 ## Work completed
 
+- W10 (2026-07-27): L0.1 repository and acceptance implementation under DEC-33. Moved the thin
+  adapter and Project Steward skill to one explicit `pi-package/` manifest; added compatibility
+  refusal, version/provenance reporting, duplicate-load prevention, worktree-root isolation, and
+  deterministic/real package checks. **Separately authorized external machine changes:** removed the
+  marker-owned legacy `~/.pi/agent/extensions/voila.ts` shim, then installed this checkout as one
+  user-global local-path Pi package. Real Pi RPC resolved exactly one Voila extension and skill as
+  user/package resources and passed the context matrix. No unrelated package or setting changed.
+  NF-22 then completed through all 11 protected gates; G0 planning became the next focus.
+- W11 (2026-07-27): **Separately authorized external machine convenience:** added a guarded `vpi`
+  alias to `~/.zshrc.d/aliases.zsh` that invokes the project-local Pi 0.82.0 CLI through mise's
+  pinned Node 22.23.1 from the caller's current directory. `zsh -n`, alias resolution, and
+  `vpi --version` passed. This user-dotfile change is not part of repository completion evidence.
 - W9 (2026-07-25): Packet 4 — the **proof engine**. Added schema v4 (`claims`, `receipts`,
   `sequences.claim`/`sequences.receipt`, `workItems[].requiredClaimIds`) with an explicit `3 → 4`
   migration chaining `1 → 2 → 3 → 4`, a read-only `schema-v3.ts` source validator, and
@@ -238,36 +259,21 @@ decision reconciles the two. Neither silently overwrites the other.
 
 ## Blockers / notes
 
-- B1: **Pi is not installed.** The only Pi copies on the machine were bundled inside `omp`/`openclaw`,
-  which were removed at the user's request (W1). Phase 1 must install Pi
-  (`@earendil-works/pi-coding-agent`) before any runtime work. Not a Phase 0 blocker (Phase 0 is
-  docs only).
-- B2: Several authenticated MCP servers and connectors are unauthenticated in this environment;
-  irrelevant to Phase 0.
+- No canonical blocker is recorded for NF-23 implementation.
+- DEC-34 rejects per-commit owner approval: protected completion plus a current deterministic plan is
+  the proposed G0 authority, and PR review is the routine future owner gate.
+- DEC-30 remains proposed. Real Git writes are confined to disposable acceptance repositories; no
+  current Steward authority exists to stage or commit in the Voila development repository.
+- Historical NF-2 interactive/authenticated acceptance remains held separately and is not a G0
+  prerequisite.
 
 ## Next justified action
 
-Packet 4 is committed on `feat/proof-engine` (not pushed). Because a commit moves `HEAD`, the
-receipts committed with it read `stale` immediately afterwards — by design. The first action is
-therefore to **re-run `/voila verify CLM-1 -- mise exec -- npm run verify`** on the committed tree
-so CLM-1 has current evidence again.
+Implement the pure PublicationPlan compiler/currentness/store and static enforcement descriptor,
+then the closed temporary-index transaction and hook state machine. Add plan/apply tools whose effect
+surface accepts only a plan ID and independently derives authority from protected completion and
+accepted publication policy.
 
-The rest of the queue is unchanged and still gated on Joshua — Packet 4 did not remove any of it:
-
-1. **Joshua — interactive Steward Console check** on `feat/project-operations` (12-item checklist in
-   [../verification/PACKET_2_5_STEWARD_CONSOLE.md](../verification/PACKET_2_5_STEWARD_CONSOLE.md) and
-   the Packet 3 record). Report the observed result so it can be recorded honestly.
-2. **Push and integrate Packet 2/2.5**: `git push -u origin feat/project-operations`, open a PR to
-   `main`, wait for **GitHub CI** (its first ever run), then merge with a **merge commit** (not squash —
-   `feat/intake-orientation` is stacked on that history).
-3. **Rebase Packet 3** onto the updated `main` and re-run `mise exec -- npm run verify`.
-4. **Joshua — authenticated Project Steward acceptance** (`/login`, then the 14-step checklist). This
-   run produces the first real draft revision 2 and `revision_requested` review record.
-5. Only then may the bounded daily-use claim be made.
-
-Additionally, from Packet 4: the **interactive Proof view check** (tier 6 checklist in the
-[Packet 4 record](../verification/PACKET_4_PROOF_ENGINE.md)) and the **authenticated Steward proof
-behavior check** (tier 7). Both need a real terminal and, for tier 7, `/login`.
-
-**NF-3 cannot be completed until NF-2 is**, and NF-2 waits on the authenticated intake acceptance
-above. This is the intended behavior of the gate, observed on real state rather than asserted.
+Run real Git effects only in disposable acceptance repositories. After all four tiers pass, request
+one final capability acceptance for DEC-30/NF-23. The owner retains every Git effect on the Voila
+development branch until then.
