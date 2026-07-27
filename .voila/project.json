@@ -4,20 +4,20 @@
   "displayName": "voila",
   "phase": "build",
   "health": "green",
-  "nextAction": "Owner commits and pushes completed NF-19, then runs the host-aware paste-safe `gh pr create` command to open the R2A pull request against main; do not begin R2B.",
-  "nextActionRationale": "The Steward now requires actionable PR commands and verifies the contract through RCP-127. GitHub CLI 2.96.0 and a GitHub origin are observed locally; authentication is intentionally not assumed. Current boundary receipts RCP-128 through RCP-131 also refresh NF-16, NF-17, and NF-18 at the same fingerprint, so one final owner commit and push can precede the explicit PR command.",
+  "nextAction": "Owner reviews and commits the protected-complete NF-21 CI fix, pushes feat/r2b-operation-visibility, and lets GitHub rerun the existing PR checks. If CI passes, return for final merge handoff; do not merge or start R3 yet.",
+  "nextActionRationale": "RCP-138 passes the complete local gate after replacing mise-dependent test fixtures, fixing fast-child output capture, and narrowing the rename-guard artifact exclusion. The remaining boundary is an owner-controlled commit and push so the Linux CI environment can confirm the fix.",
   "focusWorkItemId": null,
   "sequences": {
-    "workItem": 20,
-    "decision": 23,
+    "workItem": 22,
+    "decision": 24,
     "assumption": 5,
     "risk": 10,
-    "intake": 9,
+    "intake": 10,
     "orientation": 6,
-    "claim": 16,
-    "receipt": 132,
+    "claim": 19,
+    "receipt": 141,
     "operationDefinition": 1,
-    "operationRun": 6
+    "operationRun": 10
   },
   "workItems": [
     {
@@ -181,22 +181,24 @@
     {
       "id": "NF-10",
       "kind": "outcome",
-      "title": "R2: one supervised background terminal",
+      "title": "R2: one supervised background operation",
       "description": "Let the Steward launch and supervise one long-running local process without blocking the parent conversation. Operations: start, list, inspect, read output, stop, wait. Structured executable and args only -- no shell string execution. Each process records an operation ID, associated work item, executable and args, working directory, owner, start time, status, exit result, bounded output, and settlement result. Non-goals: remote processes, persistence across machine restart, arbitrary shell sessions, terminal multiplexing, concurrency beyond what proves the loop.",
-      "status": "backlog",
+      "status": "completed",
       "priority": "normal",
       "acceptanceCriteria": [
         "The Steward launches a test process, continues useful parent work while it runs, receives the result automatically without the developer checking, and acts on the outcome",
-        "The ordinary Pi surface shows an active-terminal indicator while a process runs, and a deeper view shows the process, its elapsed time, and the work item that owns it",
+        "The ordinary Pi surface shows an authoritative active-operation indicator while an owned operation runs, and the Steward Console shows the operation, its elapsed time, and the work item recorded as its owner",
         "A process result is delivered as one completion event and is never injected into an active stream"
       ],
       "dependsOn": [
         "NF-9",
         "NF-16"
       ],
-      "requiredClaimIds": [],
+      "requiredClaimIds": [
+        "CLM-17"
+      ],
       "createdAt": "2026-07-26T15:00:18.268Z",
-      "updatedAt": "2026-07-26T23:19:44.872Z"
+      "updatedAt": "2026-07-27T02:46:54.323Z"
     },
     {
       "id": "NF-11",
@@ -381,6 +383,50 @@
       ],
       "createdAt": "2026-07-27T00:07:25.439Z",
       "updatedAt": "2026-07-27T00:10:09.128Z"
+    },
+    {
+      "id": "NF-20",
+      "kind": "task",
+      "title": "Implement R2B background operation visibility",
+      "description": "Implement the owner-accepted DEC-23 R2B packet on the merged R2A base: register r2b.repository-checks, derive immutable ownership from canonical focus, present only runtime-owned/liveness-backed active truth through one shared projection, refresh Pi surfaces without polling, preserve proof and settlement boundaries, and pass all four real acceptance tiers before completing NF-10.",
+      "status": "completed",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "The registry contains exactly r2a.state-store-tests and r2b.repository-checks, with DEC-23 authority, zero automatic retry, a 300-second total timeout, shared one-run capacity, and no model-supplied executable, argv, ownership, cwd, timeout, or policy fields.",
+        "r2b.repository-checks derives an immutable valid owning work item from canonical focus during atomic reservation and denies without a run or process when valid focus is absent.",
+        "One pure shared projection distinguishes none, active_starting, active_running, settled_pending_delivery, and requires_reconciliation using canonical lifecycle plus current-runtime ownership and liveness.",
+        "The ordinary Pi widget and existing Steward Console Focus view consume the shared projection, remain bounded, expose no raw output/runtime internals, and refresh at verified natural event boundaries without polling or a continuous timer.",
+        "Both accepted definitions use the same admission, supervisor, output, finalization, capacity-release, next-turn delivery, and exact-run acknowledgement paths; operational results never create proof or retries automatically.",
+        "Focused automated tests and the full repository gate pass without weakening R2A admission, cancellation, timeout, redaction, race, proof, or settlement invariants.",
+        "Tier A deterministic UI, Tier B real TTY presentation, Tier C fresh Project Steward behavior, and Tier D stale-runtime truth all pass and are recorded with honest limitations.",
+        "Current-facing documentation and the Project Steward skill distinguish the implemented bounded operation from every explicit non-goal only after runtime and presentation behavior pass.",
+        "No list/wait/poll tool, PTY, service, watcher, queue, multiple-operation capacity, arbitrary command surface, cross-process coordination/adoption/repair, worker, R3 behavior, approval bundle, remote execution, push, PR, or merge is introduced."
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [
+        "CLM-16"
+      ],
+      "createdAt": "2026-07-27T00:19:45.559Z",
+      "updatedAt": "2026-07-27T02:46:51.034Z"
+    },
+    {
+      "id": "NF-21",
+      "kind": "defect",
+      "title": "Stabilize R2B CI and captured-output rename guard",
+      "description": "Investigate CI job 89878091765's three operation-test failures and one rename-guard failure on commit 0444dd52. Fix verified deterministic/timing causes without weakening operation lifecycle, output, presentation, or rename invariants.",
+      "status": "completed",
+      "priority": "high",
+      "acceptanceCriteria": [
+        "The operation lifecycle, capsule, and supervisor tests pass reliably under the repository test runner without weakening their assertions about bounded refresh, active presentation, or durable output.",
+        "The rename guard structurally excludes only bounded captured stdout/stderr artifacts under .voila/operations while continuing to scan canonical state, manifests, source, and other active surfaces.",
+        "The complete repository verification gate passes with current receipt evidence after the fix is documented."
+      ],
+      "dependsOn": [],
+      "requiredClaimIds": [
+        "CLM-18"
+      ],
+      "createdAt": "2026-07-27T03:13:28.426Z",
+      "updatedAt": "2026-07-27T03:19:54.538Z"
     }
   ],
   "decisions": [
@@ -586,6 +632,15 @@
       "status": "accepted",
       "createdAt": "2026-07-26T21:25:03.678Z",
       "updatedAt": "2026-07-26T21:25:03.678Z"
+    },
+    {
+      "id": "DEC-23",
+      "title": "DEC-23 is owner-accepted: R2 v1 is one supervised background operation, not a...",
+      "decision": "DEC-23 is owner-accepted: R2 v1 is one supervised background operation, not a terminal emulator; it reuses R2A and introduces no PTY, interactive stdin, service, watcher, arbitrary command surface, worker, queue, scheduler, polling loop, or cross-process coordination.",
+      "rationale": "From intake INT-9 finding F2.",
+      "status": "accepted",
+      "createdAt": "2026-07-27T01:11:27.949Z",
+      "updatedAt": "2026-07-27T01:11:27.949Z"
     }
   ],
   "assumptions": [
@@ -680,39 +735,41 @@
       "statement": "Cross-process state mutation: R2A supervisor and Steward live in the same Node/Pi process. If a second process opens this project root and mutates `.voila/project.json`, the supervisor's per-root async mutex does not protect it, and operation run state could be silently overwritten.",
       "likelihood": "low",
       "impact": "high",
-      "status": "open",
-      "mitigation": "Document the boundary explicitly in operation metadata and the R2A verification record; do not claim cross-process safety; reject `cwdRef` that does not match the focused worktree. Re-evaluate at R2B if a second process is introduced.",
+      "status": "accepted",
+      "mitigation": "Accepted for bounded R2 v1 only: one supervising Pi/Node process per repository root with same-process operation ownership. No cross-process mutation coordination, restart adoption, stale-lock recovery, crash-consistent event replay, automatic orphan adoption, services, workers, multiple active operations, remote execution, or multiple-writer safety is claimed. Runtime-backed presentation must show stale canonical active state as requires_reconciliation rather than active.",
       "linkedWorkItems": [
         "NF-10"
       ],
       "createdAt": "2026-07-26T19:19:43.244Z",
-      "updatedAt": "2026-07-26T19:19:43.244Z"
+      "updatedAt": "2026-07-27T01:14:51.999Z"
     },
     {
       "id": "RSK-7",
       "statement": "Settlement race: process exit, timeout, cancellation, startup failure, and output closure can race. Without an idempotent boundary the same run could record two settlements or two canonical writes for one transition.",
       "likelihood": "medium",
       "impact": "high",
-      "status": "open",
-      "mitigation": "Single async settlement guard keyed on run identity with state transition validation (only one of queued→starting→running→{passed|failed|cancelled|timed_out|supervisor_error}). Focused regression test races two settlement paths and asserts exactly one canonical result.",
+      "status": "mitigated",
+      "mitigation": "Mitigated for the two accepted bounded R2 definitions: both use the same idempotent finalizer, output finalization, capacity release, settlement-delivery, and exact-run acknowledgement paths; focused race regressions pass; and real RUN-9 produced one passing settlement, one next-turn delivery, and one acknowledgement with zero automatic retry. This does not claim multiple-operation or cross-process safety.",
       "linkedWorkItems": [
-        "NF-10"
+        "NF-10",
+        "NF-20"
       ],
       "createdAt": "2026-07-26T19:19:43.251Z",
-      "updatedAt": "2026-07-26T19:19:43.251Z"
+      "updatedAt": "2026-07-27T02:44:23.610Z"
     },
     {
       "id": "RSK-8",
       "statement": "Prompt injection through captured output: a malicious or coerced child process could emit text resembling instructions. If the Steward treats it as authoritative, arbitrary commands could be triggered by output alone.",
       "likelihood": "medium",
       "impact": "high",
-      "status": "open",
-      "mitigation": "Treat all child output as untrusted data. Output is redacted, classified secrets are stripped, and the settlement message marks output as data. Tool surface accepts only structured inputs from the model; no tool accepts free-text commands. Skill and focus-capsule text say so explicitly.",
+      "status": "mitigated",
+      "mitigation": "Mitigated for the bounded accepted-operation path only: the widget, Console active summary, and automatic authority/admission decisions omit process output; deliberate reads remain bounded, redacted, and labelled untrusted; model input is operation ID only; and focused tests prove instruction-like output cannot affect admission, ownership, capacity, retry, or create another run. No sandboxing or hostile-process containment is claimed.",
       "linkedWorkItems": [
-        "NF-10"
+        "NF-10",
+        "NF-20"
       ],
       "createdAt": "2026-07-26T19:19:43.254Z",
-      "updatedAt": "2026-07-26T19:19:43.254Z"
+      "updatedAt": "2026-07-27T02:44:28.060Z"
     },
     {
       "id": "RSK-9",
@@ -822,6 +879,19 @@
       "updatedAt": "2026-07-25T20:59:26.990Z",
       "acceptedDraftRevision": 3,
       "acceptedAt": "2026-07-25T20:59:26.990Z"
+    },
+    {
+      "id": "INT-9",
+      "title": "NF-20 / R2B — Background Operation Visibility and R2 Completion",
+      "sourceType": "conversation",
+      "sourceRef": "text:NF-20 / R2B — Background Operation Visibility and R2 Completion",
+      "sourceSha256": "0a85e7983a04f58c907164b6e463f7fc01b09fe0f5715a65c69551e28cca0499",
+      "status": "accepted",
+      "draftRevision": 2,
+      "createdAt": "2026-07-27T00:50:44.896Z",
+      "updatedAt": "2026-07-27T01:11:27.949Z",
+      "acceptedDraftRevision": 2,
+      "acceptedAt": "2026-07-27T01:11:27.949Z"
     }
   ],
   "orientations": [
@@ -1187,10 +1257,11 @@
         "RCP-116",
         "RCP-121",
         "RCP-122",
-        "RCP-128"
+        "RCP-128",
+        "RCP-132"
       ],
       "createdAt": "2026-07-26T23:11:09.110Z",
-      "updatedAt": "2026-07-27T00:11:36.978Z"
+      "updatedAt": "2026-07-27T01:13:04.854Z"
     },
     {
       "id": "CLM-12",
@@ -1272,6 +1343,68 @@
       ],
       "createdAt": "2026-07-27T00:09:39.348Z",
       "updatedAt": "2026-07-27T00:11:02.565Z"
+    },
+    {
+      "id": "CLM-16",
+      "workItemId": "NF-20",
+      "statement": "At the current repository fingerprint, the owner-accepted bounded DEC-23 R2B slice adds exactly one fixed repository-check operation to R2A's shared one-run supervisor, derives immutable ownership from canonical focus, presents only runtime-owned and liveness-backed active truth through one bounded shared projection, preserves proof and exactly-once settlement boundaries, passes focused and full automated verification, and records passing Tier A-D acceptance while every explicit broader capability remains a non-goal.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "The registry contains exactly r2a.state-store-tests and r2b.repository-checks, with DEC-23 authority, zero automatic retry, a 300-second total timeout, shared one-run capacity, and no model-supplied executable, argv, ownership, cwd, timeout, or policy fields.",
+        "r2b.repository-checks derives an immutable valid owning work item from canonical focus during atomic reservation and denies without a run or process when valid focus is absent.",
+        "One pure shared projection distinguishes none, active_starting, active_running, settled_pending_delivery, and requires_reconciliation using canonical lifecycle plus current-runtime ownership and liveness.",
+        "The ordinary Pi widget and existing Steward Console Focus view consume the shared projection, remain bounded, expose no raw output/runtime internals, and refresh at verified natural event boundaries without polling or a continuous timer.",
+        "Both accepted definitions use the same admission, supervisor, output, finalization, capacity-release, next-turn delivery, and exact-run acknowledgement paths; operational results never create proof or retries automatically.",
+        "Focused automated tests and the full repository gate pass without weakening R2A admission, cancellation, timeout, redaction, race, proof, or settlement invariants.",
+        "Tier A deterministic UI, Tier B real TTY presentation, Tier C fresh Project Steward behavior, and Tier D stale-runtime truth all pass and are recorded with honest limitations.",
+        "Current-facing documentation and the Project Steward skill distinguish the implemented bounded operation from every explicit non-goal only after runtime and presentation behavior pass.",
+        "No list/wait/poll tool, PTY, service, watcher, queue, multiple-operation capacity, arbitrary command surface, cross-process coordination/adoption/repair, worker, R3 behavior, approval bundle, remote execution, push, PR, or merge is introduced."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-133",
+        "RCP-135",
+        "RCP-136",
+        "RCP-139"
+      ],
+      "createdAt": "2026-07-27T02:44:41.072Z",
+      "updatedAt": "2026-07-27T03:21:02.349Z"
+    },
+    {
+      "id": "CLM-17",
+      "workItemId": "NF-10",
+      "statement": "Within the accepted fixed-operation R2 boundary, the repository-check loop starts non-blockingly, keeps the parent Steward useful, exposes authoritative runtime-owned active state in the ordinary Pi surface and bounded Console detail, and delivers exactly one settlement at the next parent boundary without developer monitoring or injection into an active stream.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "The Steward launches a test process, continues useful parent work while it runs, receives the result automatically without the developer checking, and acts on the outcome",
+        "The ordinary Pi surface shows an authoritative active-operation indicator while an owned operation runs, and the Steward Console shows the operation, its elapsed time, and the work item recorded as its owner",
+        "A process result is delivered as one completion event and is never injected into an active stream"
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-134",
+        "RCP-137",
+        "RCP-140"
+      ],
+      "createdAt": "2026-07-27T02:44:50.095Z",
+      "updatedAt": "2026-07-27T03:21:20.349Z"
+    },
+    {
+      "id": "CLM-18",
+      "workItemId": "NF-21",
+      "statement": "The R2B CI follow-up replaces external-tool-dependent presentation fixtures with controlled Node processes, captures fast child output before any awaited canonical write, and narrowly excludes only direct captured receipt/operation stdout and stderr from the legacy-brand guard while retaining all lifecycle, presentation, output, and rename protections.",
+      "confidence": "high",
+      "coveredAcceptanceCriteria": [
+        "The operation lifecycle, capsule, and supervisor tests pass reliably under the repository test runner without weakening their assertions about bounded refresh, active presentation, or durable output.",
+        "The rename guard structurally excludes only bounded captured stdout/stderr artifacts under .voila/operations while continuing to scan canonical state, manifests, source, and other active surfaces.",
+        "The complete repository verification gate passes with current receipt evidence after the fix is documented."
+      ],
+      "knownLimitations": [],
+      "receiptIds": [
+        "RCP-138"
+      ],
+      "createdAt": "2026-07-27T03:19:21.337Z",
+      "updatedAt": "2026-07-27T03:19:45.103Z"
     }
   ],
   "receipts": [
@@ -4119,6 +4252,204 @@
       "fingerprintAlgorithm": "v2",
       "gitHead": "90f57e9bdb2a4bd80c95713dee3750adbd83c345",
       "outputTruncated": true
+    },
+    {
+      "id": "RCP-132",
+      "claimId": "CLM-11",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-132",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T01:12:49.231Z",
+      "finishedAt": "2026-07-27T01:13:04.851Z",
+      "repositoryFingerprint": "7606c1bbf4dc9ce42e4aa7e0f9536af8999e445f92524a26034a1195043bb313",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b5e955ec61e0cd90c82fb53e5c2ebed9f08df47e",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-133",
+      "claimId": "CLM-16",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-133",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T02:45:06.327Z",
+      "finishedAt": "2026-07-27T02:45:21.531Z",
+      "repositoryFingerprint": "7f9ed0d95e711725c0ab44efb8c4345a4acb86f5c8be33194661a40315c6b736",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b5e955ec61e0cd90c82fb53e5c2ebed9f08df47e",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-134",
+      "claimId": "CLM-17",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-134",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T02:45:25.013Z",
+      "finishedAt": "2026-07-27T02:45:40.249Z",
+      "repositoryFingerprint": "7f9ed0d95e711725c0ab44efb8c4345a4acb86f5c8be33194661a40315c6b736",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b5e955ec61e0cd90c82fb53e5c2ebed9f08df47e",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-135",
+      "claimId": "CLM-16",
+      "result": "failed",
+      "artifactRef": "receipts/RCP-135",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 1,
+      "startedAt": "2026-07-27T02:47:57.814Z",
+      "finishedAt": "2026-07-27T02:48:13.164Z",
+      "repositoryFingerprint": "c1461fdd62dbe3574a768981a8e6489e13ca3ae5d84fccfcc433bfa109a746b6",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b5e955ec61e0cd90c82fb53e5c2ebed9f08df47e",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-136",
+      "claimId": "CLM-16",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-136",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T02:49:04.263Z",
+      "finishedAt": "2026-07-27T02:49:19.758Z",
+      "repositoryFingerprint": "48a4822df21b8fcc5e68af5061689a9cef9ab847872e7e2fb47a9a456345c132",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b5e955ec61e0cd90c82fb53e5c2ebed9f08df47e",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-137",
+      "claimId": "CLM-17",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-137",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T02:49:22.591Z",
+      "finishedAt": "2026-07-27T02:49:38.411Z",
+      "repositoryFingerprint": "48a4822df21b8fcc5e68af5061689a9cef9ab847872e7e2fb47a9a456345c132",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "b5e955ec61e0cd90c82fb53e5c2ebed9f08df47e",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-138",
+      "claimId": "CLM-18",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-138",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T03:19:29.781Z",
+      "finishedAt": "2026-07-27T03:19:45.100Z",
+      "repositoryFingerprint": "42b32cea27d7a2625b658ad1042faad61695a4730dd8eda87c06edcafa2fed54",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0444dd52dfa79f9fd85fcb443cc19277563e5a9f",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-139",
+      "claimId": "CLM-16",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-139",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T03:20:46.775Z",
+      "finishedAt": "2026-07-27T03:21:02.345Z",
+      "repositoryFingerprint": "42b32cea27d7a2625b658ad1042faad61695a4730dd8eda87c06edcafa2fed54",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0444dd52dfa79f9fd85fcb443cc19277563e5a9f",
+      "outputTruncated": true
+    },
+    {
+      "id": "RCP-140",
+      "claimId": "CLM-17",
+      "result": "passed",
+      "artifactRef": "receipts/RCP-140",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "cwdRef": ".",
+      "exitCode": 0,
+      "startedAt": "2026-07-27T03:21:05.177Z",
+      "finishedAt": "2026-07-27T03:21:20.346Z",
+      "repositoryFingerprint": "42b32cea27d7a2625b658ad1042faad61695a4730dd8eda87c06edcafa2fed54",
+      "fingerprintAlgorithm": "v2",
+      "gitHead": "0444dd52dfa79f9fd85fcb443cc19277563e5a9f",
+      "outputTruncated": true
     }
   ],
   "operationDefinitions": [
@@ -4198,6 +4529,85 @@
         "kind": "decision",
         "id": "DEC-22"
       }
+    },
+    {
+      "id": "r2b.repository-checks",
+      "version": 1,
+      "purpose": "Run the complete repository verification gate as an operational result.",
+      "kind": "finite",
+      "executable": "mise",
+      "args": [
+        "exec",
+        "--",
+        "npm",
+        "run",
+        "verify"
+      ],
+      "workingDirectory": "repository_root",
+      "environmentPolicy": {
+        "kind": "inherit"
+      },
+      "effectProfile": [
+        "local_read",
+        "bounded_temporary_write"
+      ],
+      "authorityRequirement": "accepted_project_operation",
+      "authoritySourceRef": {
+        "kind": "decision",
+        "id": "DEC-23"
+      },
+      "riskClassification": {
+        "riskClass": "safe_and_expected",
+        "impact": "Local read with bounded temporary writes inside the worktree.",
+        "externalEffects": "None expected.",
+        "networkRequired": false,
+        "privilegesRequired": "Normal user.",
+        "interactive": false,
+        "reversible": true,
+        "trustSource": "Explicit accepted project operation.",
+        "concurrency": "One active operation per project root."
+      },
+      "successContract": {
+        "exitCode": 0,
+        "description": "Process exits with code 0 within the total time budget."
+      },
+      "timeoutContract": {
+        "startupMs": 10000,
+        "totalMs": 300000,
+        "gracefulMs": 5000,
+        "forcedMs": 5000
+      },
+      "cancellationContract": {
+        "gracefulSignal": "SIGTERM",
+        "escalationSignal": "SIGKILL"
+      },
+      "outputPolicy": {
+        "maxChunkBytes": 16384,
+        "maxInMemoryTailBytes": 262144,
+        "maxDurableBytes": 1048576
+      },
+      "redactionPolicy": {
+        "secretVariableNames": [
+          "TOKEN",
+          "SECRET",
+          "PASSWORD",
+          "PASSWD",
+          "API_KEY",
+          "PRIVATE_KEY",
+          "AUTH",
+          "AUTHORIZATION",
+          "COOKIE",
+          "SESSION",
+          "CREDENTIAL"
+        ],
+        "redactAuthorizationHeaders": true,
+        "skipShortValues": true,
+        "minSecretLength": 6
+      },
+      "ownershipPolicy": "focused_work_item_required",
+      "displayLabel": "Repository checks",
+      "createdAt": "2026-07-27T02:08:45.571Z",
+      "updatedAt": "2026-07-27T02:08:45.571Z"
     }
   ],
   "operationRuns": [
@@ -4223,7 +4633,7 @@
         "redactionCount": 0,
         "redactedSecrets": false
       },
-      "deliveryState": "delivered",
+      "deliveryState": "acknowledged",
       "startedAt": "2026-07-26T19:46:59.764Z",
       "processIdentity": {
         "pid": 49428,
@@ -4269,7 +4679,7 @@
         "redactionCount": 0,
         "redactedSecrets": false
       },
-      "deliveryState": "delivered",
+      "deliveryState": "acknowledged",
       "startedAt": "2026-07-26T19:47:32.666Z",
       "processIdentity": {
         "pid": 61091,
@@ -4315,7 +4725,7 @@
         "redactionCount": 0,
         "redactedSecrets": false
       },
-      "deliveryState": "delivered",
+      "deliveryState": "acknowledged",
       "startedAt": "2026-07-26T19:50:05.764Z",
       "processIdentity": {
         "pid": 1145,
@@ -4436,11 +4846,219 @@
       "settlementReason": "passed",
       "endingFingerprint": "e648cb21f38301cebd2720acf53cbec06939ec6cb4f26fa5b0727027df558f15",
       "outputArtifactRef": "operations/RUN-5"
+    },
+    {
+      "id": "RUN-6",
+      "definitionId": "r2b.repository-checks",
+      "definitionVersion": 1,
+      "definitionFingerprint": "a5fe44cc2c087f15ef8de615cfae90c9fef36ee53b11afbf8db028820231e0ad",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "project-steward",
+        "owner": "current-runtime",
+        "workItemId": "NF-20"
+      },
+      "startingFingerprint": "a5a6af525a8ef3bd5230f965cfcdf0cbd27856a2473339e4fa5fcc82aa9ce07d",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-27T02:08:45.711Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "acknowledged",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.ALLOW_NEW",
+        "policyVersion": 1,
+        "explanationData": {
+          "operationId": "r2b.repository-checks",
+          "definitionVersion": 1
+        },
+        "decidedAt": "2026-07-27T02:08:45.711Z",
+        "authorityReference": {
+          "kind": "decision",
+          "id": "DEC-23"
+        }
+      },
+      "startedAt": "2026-07-27T02:08:45.719Z",
+      "processIdentity": {
+        "pid": 15263,
+        "processGroupId": 15263,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-27T02:09:01.441Z",
+      "processGroupCleaned": true,
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "endingFingerprint": "a5a6af525a8ef3bd5230f965cfcdf0cbd27856a2473339e4fa5fcc82aa9ce07d",
+      "outputArtifactRef": "operations/RUN-6"
+    },
+    {
+      "id": "RUN-7",
+      "definitionId": "r2b.repository-checks",
+      "definitionVersion": 1,
+      "definitionFingerprint": "a5fe44cc2c087f15ef8de615cfae90c9fef36ee53b11afbf8db028820231e0ad",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "project-steward",
+        "owner": "current-runtime",
+        "workItemId": "NF-20"
+      },
+      "startingFingerprint": "a5a6af525a8ef3bd5230f965cfcdf0cbd27856a2473339e4fa5fcc82aa9ce07d",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-27T02:20:50.094Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "acknowledged",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.ALLOW_NEW",
+        "policyVersion": 1,
+        "explanationData": {
+          "operationId": "r2b.repository-checks",
+          "definitionVersion": 1
+        },
+        "decidedAt": "2026-07-27T02:20:50.094Z",
+        "authorityReference": {
+          "kind": "decision",
+          "id": "DEC-23"
+        }
+      },
+      "startedAt": "2026-07-27T02:20:50.109Z",
+      "processIdentity": {
+        "pid": 65899,
+        "processGroupId": 65899,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-27T02:21:05.456Z",
+      "processGroupCleaned": true,
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "endingFingerprint": "a5a6af525a8ef3bd5230f965cfcdf0cbd27856a2473339e4fa5fcc82aa9ce07d",
+      "outputArtifactRef": "operations/RUN-7"
+    },
+    {
+      "id": "RUN-8",
+      "definitionId": "r2b.repository-checks",
+      "definitionVersion": 1,
+      "definitionFingerprint": "a5fe44cc2c087f15ef8de615cfae90c9fef36ee53b11afbf8db028820231e0ad",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "project-steward",
+        "owner": "current-runtime",
+        "workItemId": "NF-20"
+      },
+      "startingFingerprint": "ef4f03e5cf5795adbeaab993b4f3e079a20b87e44b72629997ca816c47e7167f",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-27T02:23:17.418Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "acknowledged",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.ALLOW_NEW",
+        "policyVersion": 1,
+        "explanationData": {
+          "operationId": "r2b.repository-checks",
+          "definitionVersion": 1
+        },
+        "decidedAt": "2026-07-27T02:23:17.418Z",
+        "authorityReference": {
+          "kind": "decision",
+          "id": "DEC-23"
+        }
+      },
+      "startedAt": "2026-07-27T02:23:17.429Z",
+      "processIdentity": {
+        "pid": 10104,
+        "processGroupId": 10104,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-27T02:23:53.672Z",
+      "processGroupCleaned": true,
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "endingFingerprint": "ef4f03e5cf5795adbeaab993b4f3e079a20b87e44b72629997ca816c47e7167f",
+      "outputArtifactRef": "operations/RUN-8"
+    },
+    {
+      "id": "RUN-9",
+      "definitionId": "r2b.repository-checks",
+      "definitionVersion": 1,
+      "definitionFingerprint": "a5fe44cc2c087f15ef8de615cfae90c9fef36ee53b11afbf8db028820231e0ad",
+      "projectId": "cd558164-a301-4175-8452-7304a8ff0ef6",
+      "repositoryRoot": "/Users/jenksed/Projects/voila",
+      "worktreeIdentity": "/Users/jenksed/Projects/voila",
+      "ownership": {
+        "requester": "project-steward",
+        "owner": "current-runtime",
+        "workItemId": "NF-20"
+      },
+      "startingFingerprint": "a10090987f1d74db168372cd5e541377f9586224ca7afc656ae3de9cccc28afd",
+      "changedDuringRun": false,
+      "lifecycleState": "passed",
+      "createdAt": "2026-07-27T02:29:08.094Z",
+      "outputSummary": {
+        "truncated": false,
+        "droppedBytes": 0,
+        "redactionCount": 0,
+        "redactedSecrets": false
+      },
+      "deliveryState": "acknowledged",
+      "admission": {
+        "result": "allow",
+        "ruleId": "ADMIT.OPERATIONS.ALLOW_NEW",
+        "policyVersion": 1,
+        "explanationData": {
+          "operationId": "r2b.repository-checks",
+          "definitionVersion": 1
+        },
+        "decidedAt": "2026-07-27T02:29:08.094Z",
+        "authorityReference": {
+          "kind": "decision",
+          "id": "DEC-23"
+        }
+      },
+      "startedAt": "2026-07-27T02:29:08.102Z",
+      "processIdentity": {
+        "pid": 99685,
+        "processGroupId": 99685,
+        "processGroupOwned": true,
+        "platform": "darwin"
+      },
+      "settledAt": "2026-07-27T02:29:23.740Z",
+      "processGroupCleaned": true,
+      "exitCode": 0,
+      "settlementReason": "passed",
+      "endingFingerprint": "a10090987f1d74db168372cd5e541377f9586224ca7afc656ae3de9cccc28afd",
+      "outputArtifactRef": "operations/RUN-9"
     }
   ],
-  "currentIntakeId": "INT-8",
+  "currentIntakeId": "INT-9",
   "currentOrientationId": "ORI-5",
   "createdAt": "2026-07-25T02:00:04.841Z",
-  "updatedAt": "2026-07-27T00:12:29.281Z",
-  "revision": 360
+  "updatedAt": "2026-07-27T03:21:20.349Z",
+  "revision": 432
 }

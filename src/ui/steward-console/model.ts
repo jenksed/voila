@@ -15,6 +15,7 @@ import type {
   ProofSummary,
 } from "../../domain/proof.ts";
 import type { Readiness } from "../../domain/readiness.ts";
+import type { ProjectOperationPresentation } from "../../domain/operation-presentation.ts";
 
 export interface RuntimeContext {
   branch?: string;
@@ -96,6 +97,7 @@ export interface ConsoleInput {
   pendingIntake?: PendingIntakeView | null;
   orientation?: OrientationView | null;
   proof?: ProofView | null;
+  operation?: ProjectOperationPresentation | null;
 }
 
 export type ConsoleView = "focus" | "work" | "proof" | "truth" | "understanding";
@@ -149,6 +151,7 @@ export interface ConsoleModel {
   orientation: OrientationView | null;
   /** Claims, receipts, and completion readiness for the Proof view. */
   proof: ProofView | null;
+  operation: ProjectOperationPresentation | null;
 }
 
 const EMPTY_PROOF_SUMMARY: ProofSummary = {
@@ -310,6 +313,7 @@ export function buildConsoleModel(input: ConsoleInput, runtime: RuntimeContext):
       pendingIntake: null,
       orientation: null,
       proof: null,
+      operation: null,
     };
   }
   const s = input.state;
@@ -354,6 +358,7 @@ export function buildConsoleModel(input: ConsoleInput, runtime: RuntimeContext):
     pendingIntake: input.pendingIntake ?? null,
     orientation: input.orientation ?? null,
     proof: input.proof ?? null,
+    operation: input.operation ?? null,
   };
 }
 

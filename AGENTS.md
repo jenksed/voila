@@ -22,20 +22,29 @@ migration, a project-operations layer, a Steward Console, planning intake with p
 repository orientation, the proof engine (claims, receipts, freshness, protected completion), and a
 delivery engine. Phase 7's self-hosting gate returned GO on capability, HOLD on backlog closure.
 
-**Current phase: R0, R1, and bounded R2A capability accepted; R2B not started.** As of
+**Current phase: R0, R1, and bounded R2 are accepted and protected-complete under DEC-23.** As of
 2026-07-26, [ADR-0009](docs/decisions/0009-project-steward-operational-realignment.md) superseded
 Phases 5–8 of the old plan. The active roadmap is
 [docs/plans/PROJECT_REALIGNMENT_PLAN.md](docs/plans/PROJECT_REALIGNMENT_PLAN.md): R1 friction
-containment, R2 one background terminal, R3 one bounded Pi child worker, R4 automatic settlement,
+containment, R2 one supervised background operation, R3 one bounded Pi child worker, R4 automatic settlement,
 R5 fresh-session continuity, R6 quiet boundary reconciliation, R7 uncoached dogfood acceptance. The
 milestone is **Project Steward Operational Loop v1**.
 
 Build only what the accepted R-packet calls for. Do **not** begin approval bundles, broad model
 routing, arbitrary workflow scripting, remote execution, or release automation before R7 passes.
-General background terminals and delegation do not exist yet. R2A contains only one explicit finite
-operation and must not be described as a service, watcher, PTY, worker, or arbitrary command
-facility; its gate and parent-Steward acceptance passed on 2026-07-26, with evidence in
-[docs/verification/R2A_FINITE_OPERATION.md](docs/verification/R2A_FINITE_OPERATION.md). R1's ambient continuity **does** exist (focus
+General background terminals and delegation do not exist yet. R2A accepted one explicit finite
+operation on 2026-07-26, with evidence in
+[docs/verification/R2A_FINITE_OPERATION.md](docs/verification/R2A_FINITE_OPERATION.md). The R2B
+working tree implements one additional fixed repository-check operation under DEC-23, shared
+one-operation capacity, and bounded runtime-backed presentation; automated verification and all four
+real acceptance tiers pass, and NF-20 plus NF-10 completed through the protected gate on 2026-07-27.
+Neither slice may be described as a
+service, watcher, PTY, worker, arbitrary command facility, or cross-process runtime. The accepted R2B
+boundary is
+[docs/plans/R2B_BACKGROUND_OPERATION_VISIBILITY.md](docs/plans/R2B_BACKGROUND_OPERATION_VISIBILITY.md),
+and current evidence is
+[docs/verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md](docs/verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md).
+R1's ambient continuity **does** exist (focus
 capsule, action-oriented `Continue.`, content-based orientation freshness, quiet development
 staleness, honest held readiness, verification-grouping seam); its evidence and limitations are in
 [docs/verification/R1_AMBIENT_CONTINUITY.md](docs/verification/R1_AMBIENT_CONTINUITY.md).

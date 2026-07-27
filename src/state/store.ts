@@ -299,6 +299,8 @@ function validateOperationDefinition(raw: unknown, i: number, problems: string[]
   }
   const o = raw as Record<string, unknown>;
   if (!isNonEmptyString(o.id)) problems.push(`${p}.id`);
+  if (o.displayLabel !== undefined && !isNonEmptyString(o.displayLabel))
+    problems.push(`${p}.displayLabel`);
   if (!isNonEmptyString(o.purpose)) problems.push(`${p}.purpose`);
   if (!inEnum(o.kind, ["finite"])) problems.push(`${p}.kind`);
   if (!isNonEmptyString(o.executable)) problems.push(`${p}.executable`);
@@ -405,6 +407,12 @@ function validateOperationDefinition(raw: unknown, i: number, problems: string[]
     if (typeof rd.minSecretLength !== "number" || !Number.isInteger(rd.minSecretLength)) {
       problems.push(`${p}.redactionPolicy.minSecretLength`);
     }
+  }
+  if (
+    o.ownershipPolicy !== undefined &&
+    !inEnum(o.ownershipPolicy, ["optional_metadata", "focused_work_item_required"])
+  ) {
+    problems.push(`${p}.ownershipPolicy`);
   }
   if (typeof o.version !== "number" || !Number.isInteger(o.version) || o.version < 1) {
     problems.push(`${p}.version`);

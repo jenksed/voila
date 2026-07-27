@@ -34,6 +34,7 @@ import { voilaTools, type VoilaTool } from "../tools/index.ts";
 import { openStewardConsole, type ConsoleUiSurface } from "../ui/steward-console/open.ts";
 import { operationSupervisor } from "../state/operations-runtime.ts";
 import { protectedMutationTarget } from "../state/path-boundary.ts";
+import { projectOperationPresentation } from "../domain/operation-presentation.ts";
 
 export interface VoilaUi {
   notify(message: string, level?: "info" | "warning" | "error"): void;
@@ -98,6 +99,7 @@ export const SUBCOMMANDS = [
 ] as const;
 
 export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
+  let unsubscribeOperationRefresh: (() => void) | undefined;
   for (const tool of voilaTools()) host.registerTool(tool);
 
   host.registerCommand("voila", {
@@ -162,7 +164,17 @@ export function registerVoila(host: VoilaHost, options: RegisterOptions): void {
   });
 
   host.on("session_start", async (_event, ctx) => {
+    unsubscribeOperationRefresh?.();
+    const supervisor = operationSupervisor(ctx.cwd);
+    unsubscribeOperationRefresh = supervisor.onLifecycle(() => {
+      void restoreHomeView(ctx);
+    });
     await restoreHomeView(ctx);
+  });
+
+  host.on("session_shutdown", async () => {
+    unsubscribeOperationRefresh?.();
+    unsubscribeOperationRefresh = undefined;
   });
 
   // Hard boundary for general structured file tools. Supported Voila tools do not expose a raw
@@ -332,5 +344,10 @@ export async function restoreHomeView(ctx: VoilaCtx): Promise<void> {
   if (state.claims.length > 0) {
     proof = proofSummary(state, await tryRepositoryFingerprint(ctx.cwd));
   }
-  ctx.ui.setWidget(HOME_WIDGET_KEY, homeViewLines(state, 80, proof));
+  const operation = projectOperationPresentation({
+    canonicalState: state,
+    runtimeOwnership: operationSupervisor(ctx.cwd).runtimeFacts(),
+    currentTime: Date.now(),
+  });
+  ctx.ui.setWidget(HOME_WIDGET_KEY, homeViewLines(state, 80, proof, operation));
 }

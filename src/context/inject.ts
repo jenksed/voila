@@ -19,13 +19,7 @@ import type { ProjectState } from "../domain/types.ts";
 import type { ProofSummary } from "../domain/proof.ts";
 import { abbreviate } from "../domain/status.ts";
 import { heldWork, holdSummary, outstandingLimitations } from "../domain/readiness.ts";
-import {
-  activeRun,
-  latestSettlement,
-  summarizeRun,
-  isFinalState,
-} from "../domain/operations-runtime.ts";
-import type { OperationSummary } from "../domain/operations-runtime.ts";
+import type { ProjectOperationPresentation } from "../domain/operation-presentation.ts";
 
 /** Default budget: the capsule aims to stay this small so it never crowds the real conversation. */
 export const CAPSULE_TARGET_CHARS = 1800;
@@ -85,7 +79,7 @@ export interface CapsuleInput {
   /** Bounded git observation, when available. */
   repository?: RepositoryObservation | null;
   /** Authoritative active or recently settled operation summary, when one exists. */
-  operation?: OperationSummary | null;
+  operation?: ProjectOperationPresentation | null;
 }
 
 /**
@@ -227,16 +221,21 @@ function observationLines(input: CapsuleInput): string[] {
 function operationLines(input: CapsuleInput): string[] {
   const op = input.operation;
   if (!op) return [];
-  const secs = op.durationMs === null ? "" : ` · ${(op.durationMs / 1000).toFixed(1)}s`;
-  const truncated = op.outputSummary.truncated ? " · output truncated" : "";
-  const redacted = op.outputSummary.redactedSecrets ? " · secrets redacted" : "";
-  if (op.pendingAcknowledgement) {
+  const label = op.displayLabel ?? op.definitionId ?? "operation";
+  const truncated = op.outputTruncated ? " · output truncated" : "";
+  const redacted = op.outputRedacted ? " · secrets redacted" : "";
+  if (op.state === "settled_pending_delivery") {
+    const secs = op.elapsedMs === undefined ? "" : ` · ${(op.elapsedMs / 1000).toFixed(1)}s`;
     return [
-      `  Settled operation: ${op.definitionId} · ${op.settlementReason ?? "settled"}${secs}${truncated}${redacted} — acknowledge on this turn`,
+      `  Settled operation: ${label} · ${op.settlementReason ?? "settled"}${secs}${truncated}${redacted} — acknowledge on this turn`,
     ];
   }
-  if (!isFinalState(op.lifecycleState)) {
-    return [`  Active operation: ${op.definitionId} · ${op.lifecycleState}${secs}`];
+  if (op.state === "active_starting" || op.state === "active_running") {
+    const owner = op.workItemId ? ` · owned by ${op.workItemId}` : "";
+    return [`  Active operation: ${label} · ${op.lifecycleState ?? "active"}${owner}`];
+  }
+  if (op.state === "requires_reconciliation") {
+    return [`  Operation state: ${label} · reconciliation required (not active)`];
   }
   return [];
 }

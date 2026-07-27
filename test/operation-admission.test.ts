@@ -9,6 +9,7 @@ import {
 } from "../src/domain/operation-admission.ts";
 import {
   R2A_STATE_STORE_OPERATION,
+  R2B_REPOSITORY_CHECKS_OPERATION,
   definitionFingerprint,
 } from "../src/domain/operations-runtime.ts";
 import { POLICY_VERSION } from "../src/domain/types.ts";
@@ -40,6 +41,8 @@ function context(overrides: Partial<OperationAdmissionContext> = {}): OperationA
     canonicalWorktreeIdentity: ROOT,
     requestWorktreeIdentity: ROOT,
     activeWorkItemId: "NF-16",
+    activeWorkItemValid: true,
+    activeRunRuntimeOwned: true,
     retry: { intent: "initial", remainingAutomaticRetries: 0 },
     structuralHealth: { valid: true, problemCodes: [] },
     authorityReferences: [AUTHORITY],
@@ -251,6 +254,50 @@ test("model, provider, prompt, and display metadata are not policy inputs", () =
     operationId: "r2a.state-store-tests",
   });
   assert.deepEqual(b, a);
+});
+
+test("R2B requires valid focus and resolves immutable ownership internally", () => {
+  const r2b = definition({
+    ...R2B_REPOSITORY_CHECKS_OPERATION,
+    createdAt: NOW,
+    updatedAt: NOW,
+  });
+  const missing = evaluateOperationAdmission(
+    context({
+      definition: r2b,
+      activeWorkItemId: null,
+      activeWorkItemValid: false,
+      authorityReferences: [{ kind: "decision", id: "DEC-23" }],
+    }),
+    { operationId: r2b.id },
+  );
+  assert.equal(missing.decision.result, "deny_invalid_state");
+  assert.equal(missing.decision.ruleId, ADMISSION_RULES.DENY_FOCUSED_WORK_ITEM_REQUIRED);
+  assert.equal(missing.authorizedStart, undefined);
+
+  const allowed = evaluateOperationAdmission(
+    context({
+      definition: r2b,
+      activeWorkItemId: "NF-20",
+      activeWorkItemValid: true,
+      authorityReferences: [{ kind: "decision", id: "DEC-23" }],
+    }),
+    { operationId: r2b.id },
+  );
+  assert.equal(allowed.decision.result, "allow");
+  assert.equal(allowed.authorizedStart?.resolvedWorkItemId, "NF-20");
+});
+
+test("canonical active state without runtime ownership blocks reuse and requires reconciliation", () => {
+  const def = definition();
+  const run = activeRun(def);
+  const result = evaluateOperationAdmission(
+    context({ activeRun: run, activeRunRuntimeOwned: false }),
+    { operationId: def.id },
+  );
+  assert.equal(result.decision.result, "deny_capacity");
+  assert.equal(result.decision.ruleId, ADMISSION_RULES.DENY_RECONCILIATION_REQUIRED);
+  assert.equal(result.authorizedStart, undefined);
 });
 
 test("stable explanations are derived from rule IDs", () => {

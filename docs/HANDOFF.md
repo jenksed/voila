@@ -4,10 +4,9 @@ Self-contained context for picking this project up cold. Written to be harness-n
 into any assistant, or read it yourself after a break.
 
 **Repo:** `git@github.com:jenksed/voila.git` · **Checkout:** `/Users/jenksed/Projects/voila`
-**Branch:** `feat/r1-ambient-continuity` · **Head at final completion:** `4d108fc` · **Gate:**
-626 tests passing
-**Proof:** 10 claims, 5 NF-9 required claims supported, 5 older claims stale from development · **Doctor:**
-structural health OK; development drift informational — §6
+**Branch:** `feat/r2b-operation-visibility` · **Starting SHA:** `b5e955e` · **Gate:**
+R2B passes 710 automated tests (707 passed, 3 skipped) and all four real acceptance tiers
+**Decision:** DEC-23 accepted · **Completion:** NF-20 and NF-10 protected-complete on 2026-07-27
 
 > Canonical revision is deliberately **not** pinned here. It increments on every canonical write,
 > including each verification receipt, so any number written into this file is stale before the
@@ -104,17 +103,19 @@ recap, no questions, no state-maintenance requests, no NF-2 work, and no claimed
 TTY tier also ran under a real pseudo-terminal. Transcript, scope, and limitations are in
 [docs/verification/R1_AMBIENT_CONTINUITY.md](verification/R1_AMBIENT_CONTINUITY.md).
 
-1. **Immediate action — review and deliver R2A.** The DEC-22 implementation, protected full gate,
-   and real parent-Steward sequence passed on `feat/r2a-finite-operation`; NF-16 completed through
-   the protected gate. Inspect the delivery summary and owner-reviewed commit boundary.
-2. **Then — plan R2B without completing NF-10.** The broader background-terminal work remains R2B
-   onward. There are no workers, services, watchers, PTYs, or arbitrary background terminals.
+1. **Prepare the bounded R2B branch for owner review.** All four acceptance tiers pass, risks are
+   reconciled, current claim receipts support NF-20 and NF-10, and both protected transitions passed.
+2. **Keep delivery owner-controlled.** Voila may summarize changes and propose commit boundaries, but
+   it never stages, commits, pushes, opens a PR, or merges.
+3. **Do not broaden R2B.** There are no workers, services, watchers, PTYs, arbitrary background
+   terminals, list/wait tools, cross-process coordination, or accepted R3 runtime changes.
 
 **NF-9 was completed on `4d108fc` and is no longer the focus.** R1's full evidence trail and its
 honest limitations are recorded
 ([docs/verification/R1_AMBIENT_CONTINUITY.md](verification/R1_AMBIENT_CONTINUITY.md)). R1 makes
-*invocation* immediately useful. R2A can supervise only its one accepted finite operation; no
-general background runtime exists.
+*invocation* immediately useful. R2A historically accepted one finite operation. This R2B branch
+adds one fixed repository-check operation to the same supervisor, still with one shared active-run
+capacity; no general background runtime exists.
 
 **What is built** (and is not being walked back): durable per-project state, planning intake with
 preserved provenance, repository orientation, work items and dependencies, claims and deterministic
@@ -124,14 +125,15 @@ content-based orientation freshness, quiet development staleness, honest held re
 verification-grouping seam), and **bounded R2A** (deterministic admission, one explicit accepted
 operation, atomic in-process reservation, the lifecycle supervisor, four operation tools, protected
 structured state paths, and automatic next-turn settlement through the bounded focus capsule). R2A
-acceptance passed on 2026-07-26. Phase 7's earlier gate returned GO on foundation capability, HOLD
-on backlog closure.
+acceptance passed on 2026-07-26. The R2B working tree now implements the second fixed definition,
+focus-derived ownership, runtime-backed projection, lifecycle refresh, and bounded widget/Console/
+capsule presentation; automated acceptance and all four real acceptance tiers pass. Phase
+7's earlier gate returned GO on foundation capability, HOLD on backlog closure.
 
-**What is not built:** R2B onward (multiple concurrent operations, watcher, dev server, `list`
-and `wait` tools), R3 (Pi child workers), R4 (automatic settlement and integration), R5
-(fresh-session continuity), R6 (quiet boundary reconciliation), R7 (uncoached dogfood
-acceptance), and any cross-process coordination. The doctrine document carries an explicit
-built/not-built table. Do not describe any of it as present.
+**What is not built:** concurrent operations, watchers, dev servers, `list` or `wait` tools, R3 Pi
+child workers, broader automatic integration, cross-process coordination or adoption, arbitrary
+commands, services, PTYs, queues, and approval or release automation. Do not describe any broader
+capability as present.
 
 Backlog:
 
@@ -142,9 +144,12 @@ NF-3 backlog       claims/receipts/completion gate (shipped as Packet 4, depende
 NF-4 backlog       delivery behavior               (shipped as Phase 6, dependency-blocked)
 NF-5..NF-8 backlog
 NF-9  completed    R1 friction containment          (R1, completed 4d108fc)
-NF-10 backlog      R2 background terminal          (R2A accepted; R2B–R7 not built)
+NF-10 completed    R2 supervised background operation (protected completion passed)
 NF-16 completed    R2A finite operation supervision (protected completion passed)
 NF-17 completed    repair canonical DEC counter    (protected completion passed)
+NF-18 completed    paste-safe command handoff       (protected completion passed)
+NF-19 completed    actionable PR command handoff    (protected completion passed)
+NF-20 completed    implement bounded R2B visibility (protected completion passed)
 NF-11..NF-15       R3..R7, sequenced by dependency
 ```
 
@@ -152,10 +157,13 @@ NF-11..NF-15       R3..R7, sequenced by dependency
 the gate during the walk-through and then reverted — see §5. The realignment does **not** release
 them; NF-2's authenticated intake is still owed.
 
-**R2A passed bounded acceptance on `feat/r2a-finite-operation` and does NOT complete NF-10.** NF-10
-remains backlog because the full R2 packet (multiple concurrent operations, watcher, dev server,
-`list`/`wait` tools, R2B+) is unimplemented. Evidence and capability limits are recorded in
-[docs/verification/R2A_FINITE_OPERATION.md](verification/R2A_FINITE_OPERATION.md).
+**R2A passed bounded acceptance and merged through PR #12; it did NOT itself complete NF-10.** R2B
+then passed real TTY, fresh-Steward, stale-runtime, risk, and proof gates; NF-20 and NF-10 completed
+through their protected transitions on 2026-07-27. NF-20's accepted packet is runtime authority only for the bounded
+operation-visibility scope. R2A evidence remains in
+[docs/verification/R2A_FINITE_OPERATION.md](verification/R2A_FINITE_OPERATION.md); current R2B
+status is in
+[docs/verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md](verification/R2B_BACKGROUND_OPERATION_VISIBILITY.md).
 
 ---
 

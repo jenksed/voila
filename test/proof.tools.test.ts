@@ -574,6 +574,56 @@ test("doctor passes on a healthy proof state", async () => {
   );
 });
 
+test("doctor surfaces canonical active operation state without current-runtime ownership", async () => {
+  const root = await projectRoot();
+  await updateState(root, (cur) => ({
+    ...cur,
+    sequences: { ...cur.sequences, operationRun: 2 },
+    operationRuns: [
+      {
+        id: "RUN-1",
+        definitionId: "r2b.repository-checks",
+        definitionVersion: 1,
+        definitionFingerprint: "f".repeat(64),
+        projectId: cur.projectId,
+        repositoryRoot: root,
+        worktreeIdentity: root,
+        ownership: { requester: "project-steward", owner: "prior-runtime", workItemId: "NF-1" },
+        startingFingerprint: "a".repeat(64),
+        changedDuringRun: false,
+        lifecycleState: "running",
+        createdAt: "2026-07-27T00:00:00.000Z",
+        startedAt: "2026-07-27T00:00:01.000Z",
+        processIdentity: {
+          pid: 123,
+          processGroupId: 123,
+          processGroupOwned: true,
+          platform: process.platform,
+        },
+        outputSummary: {
+          truncated: false,
+          droppedBytes: 0,
+          redactionCount: 0,
+          redactedSecrets: false,
+        },
+        deliveryState: "created",
+        admission: {
+          result: "allow",
+          ruleId: "ADMIT.OPERATIONS.ALLOW_NEW",
+          policyVersion: 1,
+          authorityReference: { kind: "decision", id: "DEC-23" },
+          decidedAt: "2026-07-27T00:00:00.000Z",
+        },
+      },
+    ],
+  }));
+
+  const runtime = check(await runDoctor(doctorInput(root)), "operation runtime ownership");
+  assert.equal(runtime.level, "warn");
+  assert.match(runtime.detail, /RUN-1 requires reconciliation/);
+  assert.match(runtime.detail, /does not own a live process/);
+});
+
 test("doctor warns when a project has no claims at all", async () => {
   const root = await projectRoot();
   const checks = await runDoctor(doctorInput(root));

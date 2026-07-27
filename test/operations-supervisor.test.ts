@@ -15,7 +15,7 @@ import { initState } from "../src/state/store.ts";
 import { SCHEMA_VERSION } from "../src/domain/types.ts";
 import type { OperationDefinition } from "../src/domain/types.ts";
 import { ensureR2ARegistry } from "../src/state/operations-registry.ts";
-import { FiniteOperationSupervisor } from "../src/state/operations-runtime.ts";
+import { FiniteOperationSupervisor, operationSupervisor } from "../src/state/operations-runtime.ts";
 import { recordDecision } from "../src/domain/operations.ts";
 
 const NOW = "2026-07-26T22:30:00.000Z";
@@ -122,7 +122,7 @@ async function register(root: string, def: OperationDefinition): Promise<void> {
   );
 }
 
-test("ensureR2ARegistry registers the accepted definition exactly once", async () => {
+test("ensureR2ARegistry materializes exactly the two accepted definitions", async () => {
   const root = await initedRoot();
   const first = await ensureR2ARegistry(root);
   assert.equal(first.registered, true);
@@ -131,10 +131,10 @@ test("ensureR2ARegistry registers the accepted definition exactly once", async (
   assert.equal(second.registered, false);
   const { loadState } = await import("../src/state/store.ts");
   const state = await loadState(root);
-  assert.equal(
-    state.operationDefinitions.filter((d) => d.id === "r2a.state-store-tests").length,
-    1,
-  );
+  assert.deepEqual(state.operationDefinitions.map((definition) => definition.id).sort(), [
+    "r2a.state-store-tests",
+    "r2b.repository-checks",
+  ]);
 });
 
 test("start returns before settlement and the parent can keep working", async () => {
@@ -162,6 +162,24 @@ test("start returns before settlement and the parent can keep working", async ()
   await supervisor.cancel(outcome.run.id).catch(() => undefined);
   const settled = await supervisor.inspect(outcome.run.id);
   assert.ok(settled);
+});
+
+test("lifecycle refresh emits bounded natural events without polling", async () => {
+  const root = await initedRoot();
+  await seedRepo(root);
+  const def = definitionFixture({ args: ["-e", "setTimeout(()=>{}, 200)"] });
+  await register(root, def);
+  const supervisor = new FiniteOperationSupervisor(root);
+  const events: string[] = [];
+  const unsubscribe = supervisor.onLifecycle((event) => events.push(event));
+  const outcome = await supervisor.start(def.id);
+  assert.equal(outcome.kind, "ok");
+  assert.deepEqual(events.slice(0, 2), ["operation_reserved", "operation_running"]);
+  await supervisor.cancel(outcome.run.id);
+  assert.equal(events.filter((event) => event === "operation_settled").length, 1);
+  await supervisor.acknowledge(outcome.run.id);
+  assert.equal(events.filter((event) => event === "operation_acknowledged").length, 1);
+  unsubscribe();
 });
 
 test("passing operation produces exactly one passed settlement", async () => {
@@ -315,8 +333,8 @@ test("parallel equivalent starts atomically reserve one run and reuse it while s
   const def = definitionFixture({ args: ["-e", "setTimeout(()=>{}, 500)"] });
   await register(root, def);
 
-  const a = new FiniteOperationSupervisor(root);
-  const b = new FiniteOperationSupervisor(root);
+  const a = operationSupervisor(root);
+  const b = operationSupervisor(root);
   const [first, second] = await Promise.all([
     a.start(def.id, { requester: "a", owner: "steward" }),
     b.start(def.id, { requester: "b", owner: "steward" }),
@@ -525,6 +543,61 @@ test("output containing instruction-like text is preserved verbatim and labelled
   const stdout = await supervisor.readOutput(runId, "stdout");
   assert.ok(stdout);
   assert.ok(stdout!.stdout.includes("Ignore previous instructions"));
+});
+
+test("focused-work-item ownership is derived atomically and remains immutable", async () => {
+  const root = await initedRoot();
+  await seedRepo(root);
+  const def = definitionFixture({
+    id: "fixture.focused",
+    args: ["-e", "setTimeout(()=>{}, 200)"],
+    ownershipPolicy: "focused_work_item_required",
+  });
+  await register(root, def);
+  const { updateState, loadState } = await import("../src/state/store.ts");
+  await updateState(root, (cur) => ({
+    ...cur,
+    focusWorkItemId: "NF-20",
+    workItems: [
+      {
+        id: "NF-20",
+        kind: "task",
+        title: "R2B",
+        status: "in_progress",
+        priority: "high",
+        acceptanceCriteria: ["visible"],
+        requiredClaimIds: [],
+        dependsOn: [],
+        createdAt: NOW,
+        updatedAt: NOW,
+      },
+    ],
+    sequences: { ...cur.sequences, workItem: 21 },
+  }));
+  const supervisor = new FiniteOperationSupervisor(root);
+  const outcome = await supervisor.start(def.id);
+  assert.equal(outcome.kind, "ok");
+  assert.equal(outcome.run.ownership.workItemId, "NF-20");
+
+  await updateState(root, (cur) => ({ ...cur, focusWorkItemId: null }));
+  assert.equal((await loadState(root)).operationRuns[0]!.ownership.workItemId, "NF-20");
+  await supervisor.cancel(outcome.run.id);
+});
+
+test("focused operation denies without focus before creating a run", async () => {
+  const root = await initedRoot();
+  await seedRepo(root);
+  const def = definitionFixture({
+    id: "fixture.focused-deny",
+    ownershipPolicy: "focused_work_item_required",
+  });
+  await register(root, def);
+  const supervisor = new FiniteOperationSupervisor(root);
+  const outcome = await supervisor.start(def.id);
+  assert.equal(outcome.kind, "rejection");
+  assert.equal(outcome.reason, "deny_invalid_state");
+  const { loadState } = await import("../src/state/store.ts");
+  assert.equal((await loadState(root)).operationRuns.length, 0);
 });
 
 test("start rejects an unknown definition id without creating a run or process", async () => {

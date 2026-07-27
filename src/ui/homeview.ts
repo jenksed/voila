@@ -3,6 +3,7 @@
 
 import type { ProjectState } from "../domain/types.ts";
 import type { ProofSummary } from "../domain/proof.ts";
+import type { ProjectOperationPresentation } from "../domain/operation-presentation.ts";
 import { abbreviate } from "../domain/status.ts";
 
 /**
@@ -32,14 +33,33 @@ export function homeViewLines(
   state: ProjectState | null,
   width = 80,
   proof?: ProofSummary | null,
+  operation?: ProjectOperationPresentation | null,
 ): string[] {
   if (state === null) {
     return ["Voila · not initialized — run /voila init"];
   }
 
-  const head = ["Voila", state.phase.toUpperCase(), state.health.toUpperCase()];
-  if (state.focusWorkItemId) head.push(`Focus ${state.focusWorkItemId}`);
-  const line1 = abbreviate(head.join(" · "), Math.max(20, width));
+  const budget = Math.max(20, width);
+  const operationIsActive =
+    operation?.state === "active_starting" || operation?.state === "active_running";
+  const head = operationIsActive
+    ? ["Voila", "operation active", operation.displayLabel ?? operation.definitionId ?? ""]
+    : operation?.state === "requires_reconciliation"
+      ? ["Voila", "operation state needs reconciliation"]
+      : ["Voila", state.phase.toUpperCase(), state.health.toUpperCase()];
+  if (
+    state.focusWorkItemId &&
+    operation?.state !== "active_starting" &&
+    operation?.state !== "active_running" &&
+    operation?.state !== "requires_reconciliation"
+  )
+    head.push(`Focus ${state.focusWorkItemId}`);
+  const fullHead = head.join(" · ");
+  const activeCore = "Voila · operation active";
+  const line1 = abbreviate(
+    operationIsActive && fullHead.length > budget ? activeCore : fullHead,
+    budget,
+  );
 
   const counts: string[] = [];
   const blocked = state.workItems.filter((w) => w.status === "blocked").length;
@@ -49,7 +69,6 @@ export function homeViewLines(
   const warning = proofWarning(proof);
   if (warning) counts.push(warning);
 
-  const budget = Math.max(20, width);
   const tail = counts.length > 0 ? ` · ${counts.join(" · ")}` : "";
   const nextBudget = Math.max(12, budget - tail.length - 6);
   const line2 = `Next: ${abbreviate(state.nextAction, nextBudget)}${tail}`;

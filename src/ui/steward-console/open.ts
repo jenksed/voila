@@ -17,6 +17,8 @@ import { getRuntimeContext } from "./runtime.ts";
 import { createConsoleComponent, type ConsoleComponent } from "./component.ts";
 import type { Styler, StyleToken } from "./render.ts";
 import { plainStyler } from "./render.ts";
+import { operationSupervisor } from "../../state/operations-runtime.ts";
+import { projectOperationPresentation } from "../../domain/operation-presentation.ts";
 
 /** Minimal structural shape of Pi's Theme that the console needs. */
 export interface ThemeLike {
@@ -99,7 +101,15 @@ export async function buildModelForRoot(root: string, piVersion?: string): Promi
 
     const proof = await buildProofViewForState(root, state);
 
-    return buildConsoleModel({ status: "ok", state, pendingIntake, orientation, proof }, runtime);
+    const operation = projectOperationPresentation({
+      canonicalState: state,
+      runtimeOwnership: operationSupervisor(root).runtimeFacts(),
+      currentTime: Date.now(),
+    });
+    return buildConsoleModel(
+      { status: "ok", state, pendingIntake, orientation, proof, operation },
+      runtime,
+    );
   } catch (error) {
     if (error instanceof StateNotFoundError) {
       return buildConsoleModel({ status: "uninitialized" }, runtime);
@@ -196,8 +206,9 @@ export interface OpenConsoleCtx {
  */
 export async function openStewardConsole(ctx: OpenConsoleCtx, piVersion?: string): Promise<void> {
   const initialModel = await buildModelForRoot(ctx.cwd, piVersion);
-  await ctx.ui.custom<void>((tui, theme, _keybindings, done) =>
-    createConsoleComponent({
+  let unsubscribe: (() => void) | undefined;
+  await ctx.ui.custom<void>((tui, theme, _keybindings, done) => {
+    const component = createConsoleComponent({
       initialModel,
       styler: themeStyler(theme),
       requestRender: () => tui.requestRender(),
@@ -234,6 +245,9 @@ export async function openStewardConsole(ctx: OpenConsoleCtx, piVersion?: string
         ctx.ui.notify(result.lines.join("\n"), result.level);
         return buildModelForRoot(ctx.cwd, piVersion);
       },
-    }),
-  );
+    });
+    unsubscribe = operationSupervisor(ctx.cwd).onLifecycle(() => component.refresh());
+    return component;
+  });
+  unsubscribe?.();
 }

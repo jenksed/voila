@@ -114,6 +114,22 @@ export const R2A_STATE_STORE_OPERATION: Readonly<
   cancellationContract: R2A_DEFAULT_CANCELLATION,
   outputPolicy: R2A_DEFAULT_OUTPUT_POLICY,
   redactionPolicy: R2A_DEFAULT_REDACTION,
+  ownershipPolicy: "optional_metadata",
+};
+
+/** The accepted R2B repository checks operation. */
+export const R2B_REPOSITORY_CHECKS_OPERATION: Readonly<
+  Omit<OperationDefinition, "createdAt" | "updatedAt">
+> = {
+  ...R2A_STATE_STORE_OPERATION,
+  id: "r2b.repository-checks",
+  version: 1,
+  displayLabel: "Repository checks",
+  purpose: "Run the complete repository verification gate as an operational result.",
+  args: ["exec", "--", "npm", "run", "verify"],
+  authoritySourceRef: { kind: "decision", id: "DEC-23" },
+  timeoutContract: { ...R2A_DEFAULT_TIMEOUTS, totalMs: 300_000 },
+  ownershipPolicy: "focused_work_item_required",
 };
 
 /** True when a state is one of the canonical final states. */
@@ -155,6 +171,7 @@ export function definitionFingerprint(definition: OperationDefinition): string {
     cancellationContract: definition.cancellationContract,
     outputPolicy: definition.outputPolicy,
     redactionPolicy: definition.redactionPolicy,
+    ownershipPolicy: definition.ownershipPolicy ?? "optional_metadata",
   };
   return sha256Hex(JSON.stringify(canonical));
 }
@@ -214,6 +231,13 @@ export function validateDefinition(input: unknown): OperationDefinition {
   validateCancellationContract(o.cancellationContract);
   validateOutputPolicy(o.outputPolicy);
   validateRedactionPolicy(o.redactionPolicy);
+  if (
+    o.ownershipPolicy !== undefined &&
+    o.ownershipPolicy !== "optional_metadata" &&
+    o.ownershipPolicy !== "focused_work_item_required"
+  ) {
+    throw new ProjectOperationError(`Unsupported ownership policy: ${String(o.ownershipPolicy)}.`);
+  }
 
   return o as unknown as OperationDefinition;
 }
